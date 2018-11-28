@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.3.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.3.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="断断续续的看Beej’s Guide to Network Programming这本小册子,最近看了select函数的用法,感觉这个函数挺有用而且听特殊,理解上有点儿难度,因此记录下来关于这个函数的一些东西.  函数定义#include &amp;lt;sys/time.h&amp;gt; #include &amp;lt;sys/types.h&amp;gt; #include &amp;lt;unistd.h&amp;gt; int s">
+<meta name="keywords" content="ctf web IT">
+<meta property="og:type" content="article">
+<meta property="og:title" content="对select()的理解">
+<meta property="og:url" content="https://hexo.imagemlt.xyz/post/thinkings-on-select/index.html">
+<meta property="og:site_name" content="Image&#39;s blog">
+<meta property="og:description" content="断断续续的看Beej’s Guide to Network Programming这本小册子,最近看了select函数的用法,感觉这个函数挺有用而且听特殊,理解上有点儿难度,因此记录下来关于这个函数的一些东西.  函数定义#include &amp;lt;sys/time.h&amp;gt; #include &amp;lt;sys/types.h&amp;gt; #include &amp;lt;unistd.h&amp;gt; int s">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-06-02T13:33:25.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="对select()的理解">
+<meta name="twitter:description" content="断断续续的看Beej’s Guide to Network Programming这本小册子,最近看了select函数的用法,感觉这个函数挺有用而且听特殊,理解上有点儿难度,因此记录下来关于这个函数的一些东西.  函数定义#include &amp;lt;sys/time.h&amp;gt; #include &amp;lt;sys/types.h&amp;gt; #include &amp;lt;unistd.h&amp;gt; int s">
+
+
+
+
+
+
+  <link rel="canonical" href="https://hexo.imagemlt.xyz/post/thinkings-on-select/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>对select()的理解 | Image's blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+	<a href="https://github.com/imagemlt"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:1" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Image's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Welcome to Image's Blog</h1>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-links">
+    <a href="/links/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-link"></i> <br>Links</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/thinkings-on-select/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">对select()的理解
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-12-15 00:56:25" itemprop="dateCreated datePublished" datetime="2017-12-15T00:56:25+08:00">2017-12-15</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2018-06-02 21:33:25" itemprop="dateModified" datetime="2018-06-02T21:33:25+08:00">2018-06-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/人生杂谈/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>断断续续的看<strong>Beej’s Guide to Network Programming</strong>这本小册子,最近看了select函数的用法,感觉这个函数挺有用而且听特殊,理解上有点儿难度,因此记录下来关于这个函数的一些东西.</p>
+</blockquote>
+<h2 id="函数定义"><a href="#函数定义" class="headerlink" title="函数定义"></a>函数定义</h2><pre><code>#include &lt;sys/time.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+int select(int numfds, fd_set *readfds, fd_set *writefds,
+fd_set *exceptfds, struct timeval *timeout);
+</code></pre><h3 id="fd-set"><a href="#fd-set" class="headerlink" title="fd_set"></a><code>fd_set</code></h3><p>这里的fd_set类型相当于一个file descriptor的集合.<br>当select()函数返回时,readfs中只含有可以读的file descriptor.writefs包含可写的descriptor,exceptfds包含出错的file descriptor .(此三个参数不必都有) fd_set有一些列的操作函数:</p>
+<pre><code>FD_SET(int fd, fd_set *set); //Add fd to the set .
+FD_CLR(int fd, fd_set *set); //Remove fd from the set .
+FD_ISSET(int fd, fd_set *set); //Return true if fd is in the set .
+FD_ZERO(fd_set *set); //Clear all entries from the set .
+</code></pre><h3 id="timeval结构体"><a href="#timeval结构体" class="headerlink" title="timeval结构体"></a><code>timeval</code>结构体</h3><pre><code>struct timeval {
+int tv_sec; //seconds
+int tv_usec;// microseconds
+};
+</code></pre><p>此结构体表示select函数的超时时间.设置为NULL则永远等待. 此函数使用时,numfds应设置为最高的file descriptor的值.</p>
+<h3 id="返回值"><a href="#返回值" class="headerlink" title="返回值"></a>返回值</h3><p>返回set中最后剩下的的数目.0表示超时,-1表示出错.</p>
+<h2 id="此函数如何使用的理解"><a href="#此函数如何使用的理解" class="headerlink" title="此函数如何使用的理解"></a>此函数如何使用的理解</h2><p>我们可以在开始的时候使用<code>FD_SET</code>将我们创建的服务端套接字描述符填入一个fd_set中,然后把这个fd_set复制一下传如select的readfds参数中然后用select监听,select有返回值后则遍历所有descriptors</p>
+<ul>
+<li>如果这个descriptor在这个新的readfds中(<code>FD_ISSET</code>)则说明可以read<ul>
+<li>如果这个descriptor正好是我们最初的那个服务端套接字  <ul>
+<li>则可以进行accept操作,然后将读到的这个socksetfd就可以传入我们的fd_set中,判断这个socketfd是否比原有的最大的socketfd大,大则替换<code>select()</code>函数的第一个参数为这个新的socketfd+1.</li>
+</ul>
+</li>
+<li>如果这个descriptor不是最初的那个服务端套接字<ul>
+<li>则说明是与某个主机的一个连接,则可以调用这个套接字的<code>recv()</code>方法接收数据,如果返回0说明这个套接字已经断开,可调用<code>FD_CLR</code>将其从最初的fd_set中清除出去.否则则进行其他的一些列操作.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="一个简单的demo"><a href="#一个简单的demo" class="headerlink" title="一个简单的demo"></a>一个简单的demo</h2><pre><code>/*
+** ChatServer.cpp - a practise on select()
+*/
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;netdb.h&gt;
+
+#define PORT &quot;3456&quot;
+#define STDIN 0
+
+void *get_in_addr(struct sockaddr *sa)
+{
+    if (sa-&gt;sa_family == AF_INET)
+    {
+        return &amp;(((struct sockaddr_in *)sa)-&gt;sin_addr);
+    }
+    else
+        return &amp;(((struct sockaddr_in6 *)sa)-&gt;sin6_addr);
+}
+
+int main(void)
+{
+    fd_set master;
+    fd_set read_fds;
+    int fd_max;
+
+    int listener;
+    int newfd;
+    struct sockaddr_storage remoteaddr;
+    socklen_t addrlen;
+
+    char buf[256];
+    char mess[256];
+    int nbytes;
+
+    char remoteIP[INET6_ADDRSTRLEN];
+
+    int yes = 1;
+    int i, j, rv;
+    struct addrinfo hints, *ai, *p;
+
+    FD_ZERO(&amp;master);
+    FD_ZERO(&amp;read_fds);
+
+    memset(&amp;hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+    if ((rv = getaddrinfo(NULL, PORT, &amp;hints, &amp;ai)) != 0)
+    {
+        fprintf(stderr, &quot;selectserver:%s\n&quot;, gai_strerror(rv));
+        exit(1);
+    }
+
+    for (p = ai; p != NULL; p = p-&gt;ai_next)
+    {
+        listener = socket(p-&gt;ai_family, p-&gt;ai_socktype, p-&gt;ai_protocol);
+        if (listener &lt; 0)
+        {
+            continue;
+        }
+        setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &amp;yes, sizeof(int));
+        if (bind(listener, p-&gt;ai_addr, p-&gt;ai_addrlen) &lt; 0)
+        {
+            close(listener);
+            continue;
+        }
+        break;
+    }
+    if (p == NULL)
+    {
+        fprintf(stderr, &quot;selectserver: failed to bind\n&quot;);
+        exit(2);
+    }
+    freeaddrinfo(ai);
+    if (listen(listener, 10) == -1)
+    {
+        perror(&quot;listen&quot;);
+        exit(3);
+    }
+    FD_SET(listener, &amp;master);
+    FD_SET(STDIN, &amp;master);
+    fd_max = listener &gt; STDIN ? listener : STDIN;
+
+    for (;;)
+    {
+        read_fds = master;
+        if (select(fd_max + 1, &amp;read_fds, NULL, NULL, NULL) == -1)
+        {
+            perror(&quot;select&quot;);
+            exit(4);
+        }
+        for (i = 0; i &lt;= fd_max; i++)
+        {
+            if (FD_ISSET(i, &amp;read_fds))
+            { //we got one!!
+                if (i == STDIN)
+                {
+                    fgets(buf, sizeof buf, stdin);
+                    memset(mess, 0, sizeof mess);
+                    sprintf(mess, &quot;server said:%s&quot;, buf);
+                    for (j = 0; j &lt;= fd_max; j++)
+                    {
+                        if (FD_ISSET(j, &amp;master))
+                        {
+                            if (j != listener &amp;&amp; j != i &amp;&amp; j != STDIN)
+                            {
+                                if (send(j, mess, strlen(mess), 0) == -1)
+                                {
+                                    perror(&quot;send&quot;);
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (i == listener)
+                {
+                    addrlen = sizeof remoteaddr;
+                    newfd = accept(listener, (struct sockaddr *)&amp;remoteaddr, &amp;addrlen);
+                    if (newfd == -1)
+                    {
+                        perror(&quot;accept&quot;);
+                    }
+                    else
+                    {
+                        FD_SET(newfd, &amp;master);
+                        if (newfd &gt; fd_max)
+                        {
+                            fd_max = newfd;
+                        }
+                        printf(&quot;selectserver:new connection from %s on socket %d\n&quot;,
+                               inet_ntop(remoteaddr.ss_family, get_in_addr((struct sockaddr *)&amp;remoteaddr), remoteIP, INET6_ADDRSTRLEN), newfd);
+                        sprintf(buf, &quot;hello!!! your socket id is %d\n&quot;, newfd);
+                        if (send(newfd, buf, strlen(buf), 0) == -1)
+                        {
+                            perror(&quot;send&quot;);
+                        }
+                        sprintf(buf, &quot;socket %d joined chatroom\n&quot;, newfd);
+                        for (j = 0; j &lt; fd_max; j++)
+                        {
+                            if (FD_ISSET(j, &amp;master))
+                            {
+                                if (j != i &amp;&amp; j != listener &amp;&amp; j != STDIN)
+                                {
+                                    if (send(j, buf, strlen(buf), 0) == -1)
+                                        perror(&quot;send&quot;);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if ((nbytes = recv(i, buf, sizeof buf, 0)) &lt;= 0)
+                    {
+                        if (nbytes == 0)
+                        {
+                            sprintf(buf, &quot;select server: socket %d hung up\n&quot;, i);
+                            printf(&quot;%s&quot;, buf);
+                            for (j = 0; j &lt;= fd_max; j++)
+                            {
+                                if (FD_ISSET(j, &amp;master))
+                                    if (j != listener &amp;&amp; j != i &amp;&amp; j != STDIN)
+                                    {
+                                        if (send(j, buf, strlen(buf), 0) == -1)
+                                        {
+                                            perror(&quot;send&quot;);
+                                        }
+                                    }
+                            }
+                        }
+                        else
+                        {
+                            perror(&quot;recv&quot;);
+                        }
+                        close(i);
+                        FD_CLR(i, &amp;master);
+                    }
+                    else
+                    {
+                        if (nbytes &lt;= 2)
+                            nbytes = 3;
+                        memset(mess, 0, sizeof mess);
+                        strncpy(mess, buf, nbytes - 2);
+                        printf(&quot;recv data %s from socket %d\n&quot;, mess, i);
+                        sprintf(buf, &quot;socket %d says: %s\n&quot;, i, mess);
+                        for (j = 0; j &lt;= fd_max; j++)
+                        {
+                            if (FD_ISSET(j, &amp;master))
+                            {
+                                if (j != listener &amp;&amp; j != i &amp;&amp; j != STDIN)
+                                {
+                                    if (send(j, buf, strlen(buf), 0) == -1)
+                                    {
+                                        perror(&quot;send&quot;);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
+</code></pre><blockquote>
+<p>要特别注意一次select操作后readfs中只剩下了当前可读的fd.所以每次要复制一个副本穿进去.</p>
+</blockquote>
+<h2 id="题外话"><a href="#题外话" class="headerlink" title="题外话"></a>题外话</h2><p>还是认真学习认真思考能让人不那么丧…..庆幸自己找到了自己真正的兴趣所在.<br>不要让一些没意义的东西麻痹了自己. 要时刻提醒自己生存不易.<br>不高兴了就更更博,耐心看看技术书,让自己静一静.闲了就容易生事.<br>keep on moving!!!</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/phpcmsv9sqli/index.html" rel="next" title="phpcms-v9.6.0sql注入漏洞分析[挖坟]">
+                <i class="fa fa-chevron-left"></i> phpcms-v9.6.0sql注入漏洞分析[挖坟]
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/post/tmux-notes/index.html" rel="prev" title="tmux快捷键记录">
+                tmux快捷键记录 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4" alt="Imagemlt">
+            
+              <p class="site-author-name" itemprop="name">Imagemlt</p>
+              <p class="site-description motion-element" itemprop="description">personal blog</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">46</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/imagemlt" target="_blank" title="GitHub" rel="external nofollow"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#函数定义"><span class="nav-number">1.</span> <span class="nav-text">函数定义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#fd-set"><span class="nav-number">1.1.</span> <span class="nav-text">fd_set</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#timeval结构体"><span class="nav-number">1.2.</span> <span class="nav-text">timeval结构体</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#返回值"><span class="nav-number">1.3.</span> <span class="nav-text">返回值</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#此函数如何使用的理解"><span class="nav-number">2.</span> <span class="nav-text">此函数如何使用的理解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一个简单的demo"><span class="nav-number">3.</span> <span class="nav-text">一个简单的demo</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#题外话"><span class="nav-number">4.</span> <span class="nav-text">题外话</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Imagemlt</span>
+
+  
+
+  
+</div>
+
+
+  
+
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" rel="external nofollow" href="https://hexo.io">Hexo</a> v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a>
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" rel="external nofollow" href="https://github.com/theme-next/hexo-theme-next">NexT.Pisces</a> v6.3.0</div>
+
+
+
+
+  <script src="https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js"></script>
+  <script>
+    if (window.mermaid) {
+//alert("mermaid!!!");
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

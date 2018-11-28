@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.3.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.3.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="flask自定义decorator的坑点在一次开发中需要做一个权限验证的修饰器，由于之前并没有太多的flask编程经验，没有写过这种修饰器，于是便直接写出了以下的代码： 123456def is_admin(func):    def wrapper(*args,**kargs):        if not session[&apos;is_admin&apos;]:            return redir">
+<meta name="keywords" content="技术学习">
+<meta property="og:type" content="article">
+<meta property="og:title" content="flask自定义decorator的坑点">
+<meta property="og:url" content="https://hexo.imagemlt.xyz/post/flask自定义decorator的坑点/index.html">
+<meta property="og:site_name" content="Image&#39;s blog">
+<meta property="og:description" content="flask自定义decorator的坑点在一次开发中需要做一个权限验证的修饰器，由于之前并没有太多的flask编程经验，没有写过这种修饰器，于是便直接写出了以下的代码： 123456def is_admin(func):    def wrapper(*args,**kargs):        if not session[&apos;is_admin&apos;]:            return redir">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-06-27T18:17:02.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="flask自定义decorator的坑点">
+<meta name="twitter:description" content="flask自定义decorator的坑点在一次开发中需要做一个权限验证的修饰器，由于之前并没有太多的flask编程经验，没有写过这种修饰器，于是便直接写出了以下的代码： 123456def is_admin(func):    def wrapper(*args,**kargs):        if not session[&apos;is_admin&apos;]:            return redir">
+
+
+
+
+
+
+  <link rel="canonical" href="https://hexo.imagemlt.xyz/post/flask自定义decorator的坑点/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>flask自定义decorator的坑点 | Image's blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+	<a href="https://github.com/imagemlt"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:1" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Image's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Welcome to Image's Blog</h1>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-links">
+    <a href="/links/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-link"></i> <br>Links</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/flask自定义decorator的坑点/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">flask自定义decorator的坑点
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-06-28 01:23:54 / Modified: 02:17:02" itemprop="dateCreated datePublished" datetime="2018-06-28T01:23:54+08:00">2018-06-28</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="flask自定义decorator的坑点"><a href="#flask自定义decorator的坑点" class="headerlink" title="flask自定义decorator的坑点"></a>flask自定义decorator的坑点</h2><p>在一次开发中需要做一个权限验证的修饰器，由于之前并没有太多的flask编程经验，没有写过这种修饰器，于是便直接写出了以下的代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">is_admin</span><span class="params">(func)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">wrapper</span><span class="params">(*args,**kargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> session[<span class="string">'is_admin'</span>]:</span><br><span class="line">            <span class="keyword">return</span> redirect(<span class="string">'/admin/login'</span>)</span><br><span class="line">        <span class="keyword">return</span> func(args,kargs)</span><br><span class="line">    <span class="keyword">return</span> wrapper</span><br></pre></td></tr></table></figure>
+<p>写完后直接运行报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">existing endpoint function: %s&apos; % endpoint)</span><br><span class="line">AssertionError: View function mapping is overwriting an existing endpoint function: admin.wrapper</span><br></pre></td></tr></table></figure>
+<p>一开始的时候百思不得其解，并不懂这个错误出现的原因。后来联系报错的提示为已经存在了一个注册过的函数admin.wrapper.<br>可以判断为，经过修饰器修饰后，当传入flask自己的修饰器后修饰器获取到的当前函数的名称为wrapper，所以所有被这个修饰器修饰过得函数传入flask的修饰器中获取到的函数名都是wrapper，因此产生了冲突从而报错。</p>
+<p>查看报错的地方的源码，位于<em>app.py</em>中：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add_url_rule</span><span class="params">(self, rule, endpoint=None, view_func=None,</span></span></span><br><span class="line"><span class="function"><span class="params">                 provide_automatic_options=None, **options)</span>:</span></span><br><span class="line">    <span class="string">"""Connects a URL rule.  Works exactly like the :meth:`route`</span></span><br><span class="line"><span class="string">    decorator.  If a view_func is provided it will be registered with the</span></span><br><span class="line"><span class="string">    endpoint.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Basically this example::</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        @app.route('/')</span></span><br><span class="line"><span class="string">        def index():</span></span><br><span class="line"><span class="string">            pass</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Is equivalent to the following::</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        def index():</span></span><br><span class="line"><span class="string">            pass</span></span><br><span class="line"><span class="string">        app.add_url_rule('/', 'index', index)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    If the view_func is not provided you will need to connect the endpoint</span></span><br><span class="line"><span class="string">    to a view function like so::</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        app.view_functions['index'] = index</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Internally :meth:`route` invokes :meth:`add_url_rule` so if you want</span></span><br><span class="line"><span class="string">    to customize the behavior via subclassing you only need to change</span></span><br><span class="line"><span class="string">    this method.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    For more information refer to :ref:`url-route-registrations`.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    .. versionchanged:: 0.2</span></span><br><span class="line"><span class="string">       `view_func` parameter added.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    .. versionchanged:: 0.6</span></span><br><span class="line"><span class="string">       ``OPTIONS`` is added automatically as method.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    :param rule: the URL rule as string</span></span><br><span class="line"><span class="string">    :param endpoint: the endpoint for the registered URL rule.  Flask</span></span><br><span class="line"><span class="string">                     itself assumes the name of the view function as</span></span><br><span class="line"><span class="string">                     endpoint</span></span><br><span class="line"><span class="string">    :param view_func: the function to call when serving a request to the</span></span><br><span class="line"><span class="string">                      provided endpoint</span></span><br><span class="line"><span class="string">    :param provide_automatic_options: controls whether the ``OPTIONS``</span></span><br><span class="line"><span class="string">        method should be added automatically. This can also be controlled</span></span><br><span class="line"><span class="string">        by setting the ``view_func.provide_automatic_options = False``</span></span><br><span class="line"><span class="string">        before adding the rule.</span></span><br><span class="line"><span class="string">    :param options: the options to be forwarded to the underlying</span></span><br><span class="line"><span class="string">                    :class:`~werkzeug.routing.Rule` object.  A change</span></span><br><span class="line"><span class="string">                    to Werkzeug is handling of method options.  methods</span></span><br><span class="line"><span class="string">                    is a list of methods this rule should be limited</span></span><br><span class="line"><span class="string">                    to (``GET``, ``POST`` etc.).  By default a rule</span></span><br><span class="line"><span class="string">                    just listens for ``GET`` (and implicitly ``HEAD``).</span></span><br><span class="line"><span class="string">                    Starting with Flask 0.6, ``OPTIONS`` is implicitly</span></span><br><span class="line"><span class="string">                    added and handled by the standard request handling.</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="keyword">if</span> endpoint <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">        endpoint = _endpoint_from_view_func(view_func)</span><br><span class="line">    options[<span class="string">'endpoint'</span>] = endpoint</span><br><span class="line">    methods = options.pop(<span class="string">'methods'</span>, <span class="keyword">None</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># if the methods are not given and the view_func object knows its</span></span><br><span class="line">    <span class="comment"># methods we can use that instead.  If neither exists, we go with</span></span><br><span class="line">    <span class="comment"># a tuple of only ``GET`` as default.</span></span><br><span class="line">    <span class="keyword">if</span> methods <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">        methods = getattr(view_func, <span class="string">'methods'</span>, <span class="keyword">None</span>) <span class="keyword">or</span> (<span class="string">'GET'</span>,)</span><br><span class="line">    <span class="keyword">if</span> isinstance(methods, string_types):</span><br><span class="line">        <span class="keyword">raise</span> TypeError(<span class="string">'Allowed methods have to be iterables of strings, '</span></span><br><span class="line">                        <span class="string">'for example: @app.route(..., methods=["POST"])'</span>)</span><br><span class="line">    methods = set(item.upper() <span class="keyword">for</span> item <span class="keyword">in</span> methods)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Methods that should always be added</span></span><br><span class="line">    required_methods = set(getattr(view_func, <span class="string">'required_methods'</span>, ()))</span><br><span class="line"></span><br><span class="line">    <span class="comment"># starting with Flask 0.8 the view_func object can disable and</span></span><br><span class="line">    <span class="comment"># force-enable the automatic options handling.</span></span><br><span class="line">    <span class="keyword">if</span> provide_automatic_options <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">        provide_automatic_options = getattr(view_func,</span><br><span class="line">            <span class="string">'provide_automatic_options'</span>, <span class="keyword">None</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> provide_automatic_options <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">        <span class="keyword">if</span> <span class="string">'OPTIONS'</span> <span class="keyword">not</span> <span class="keyword">in</span> methods:</span><br><span class="line">            provide_automatic_options = <span class="keyword">True</span></span><br><span class="line">            required_methods.add(<span class="string">'OPTIONS'</span>)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            provide_automatic_options = <span class="keyword">False</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># Add the required methods now.</span></span><br><span class="line">    methods |= required_methods</span><br><span class="line"></span><br><span class="line">    rule = self.url_rule_class(rule, methods=methods, **options)</span><br><span class="line">    rule.provide_automatic_options = provide_automatic_options</span><br><span class="line"></span><br><span class="line">    self.url_map.add(rule)</span><br><span class="line">    <span class="keyword">if</span> view_func <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">        old_func = self.view_functions.get(endpoint)</span><br><span class="line">        <span class="keyword">if</span> old_func <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span> <span class="keyword">and</span> old_func != view_func:</span><br><span class="line">            <span class="keyword">raise</span> AssertionError(<span class="string">'View function mapping is overwriting an '</span></span><br><span class="line">                                 <span class="string">'existing endpoint function: %s'</span> % endpoint)</span><br><span class="line">        self.view_functions[endpoint] = view_func</span><br></pre></td></tr></table></figure>
+<p>这里的view_functions是一个dict，存储endpoint-view_func键值对。而endpoint是指一个标记各个url的一个字符串，通常为函数的名称。endpoint与不同的函数一一对应。<br>出错的原因在于相同的endpoint被指向了两次，且指向的函数不同，但是这两个不同的函数却拥有相同的名字<strong><strong>name</strong></strong>，因此便对应了相同的endpoint。所以便导致了重复出现的错误。</p>
+<p>那么怎么解决这个问题？这里使用了一个叫做functools的库中定义的一个修饰器@functool.wraps.<br>更改后的代码为:<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">is_admin</span><span class="params">(func)</span>:</span></span><br><span class="line"><span class="meta">    @functools.wraps(func)</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">wrapper</span><span class="params">(*args,**kargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> session[<span class="string">'is_admin'</span>]:</span><br><span class="line">            <span class="keyword">return</span> redirect(<span class="string">'/admin/login'</span>)</span><br><span class="line">        <span class="keyword">return</span> func(args,kargs)</span><br><span class="line">    <span class="keyword">return</span> wrapper</span><br></pre></td></tr></table></figure></p>
+<p>再次调试可以看到这次程序运行后对应的函数的<strong>name</strong>不同，从而没有再出现bug。再次调试可以发现最后的函数的<strong>name</strong>与对应的endpoint值均不同。</p>
+<p>注：@functools.wraps(func)的作用就是保留原有函数的名称和docstring</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://segmentfault.com/a/1190000006658289">记录一次使用Flask开发过程中的bug</a></p>
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>经过这次拍错发现自己对flask的实现机制产生了浓厚的兴趣。。。。那就立个flag，今年要把flask的源码好好看一看，至少弄懂flask背后的设计原理。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/技术学习/" rel="tag"># 技术学习</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/红帽杯线下赛AWD题目分析/index.html" rel="next" title="红帽杯线下赛AWD题目分析">
+                <i class="fa fa-chevron-left"></i> 红帽杯线下赛AWD题目分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/post/pwn的初体验-qctf-Xman-stack2-writeup/index.html" rel="prev" title="pwn的初体验-qctf Xman-stack2 writeup">
+                pwn的初体验-qctf Xman-stack2 writeup <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4" alt="Imagemlt">
+            
+              <p class="site-author-name" itemprop="name">Imagemlt</p>
+              <p class="site-description motion-element" itemprop="description">personal blog</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">46</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/imagemlt" target="_blank" title="GitHub" rel="external nofollow"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#flask自定义decorator的坑点"><span class="nav-number">1.</span> <span class="nav-text">flask自定义decorator的坑点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">2.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#后记"><span class="nav-number">3.</span> <span class="nav-text">后记</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Imagemlt</span>
+
+  
+
+  
+</div>
+
+
+  
+
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" rel="external nofollow" href="https://hexo.io">Hexo</a> v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a>
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" rel="external nofollow" href="https://github.com/theme-next/hexo-theme-next">NexT.Pisces</a> v6.3.0</div>
+
+
+
+
+  <script src="https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js"></script>
+  <script>
+    if (window.mermaid) {
+//alert("mermaid!!!");
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

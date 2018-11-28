@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.3.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.3.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="整理sus沙龙以及xman的前端ppt的笔记 0x01 JS能用来做什么 请求资源 提交表单 修改html 响应事件   0x02 一个含有js的html文件是怎样变成一个动态网页的浏览器解析方式 在HTML中有五类元素  语言的解析一般分为词法分析（lexical analysis）和语法分析（Syntax analysis）两个阶段，WebKit中的 html解析也不例外，本文主要讨论词法分析">
+<meta name="keywords" content="ctf web IT">
+<meta property="og:type" content="article">
+<meta property="og:title" content="XSS">
+<meta property="og:url" content="https://hexo.imagemlt.xyz/post/xss/index.html">
+<meta property="og:site_name" content="Image&#39;s blog">
+<meta property="og:description" content="整理sus沙龙以及xman的前端ppt的笔记 0x01 JS能用来做什么 请求资源 提交表单 修改html 响应事件   0x02 一个含有js的html文件是怎样变成一个动态网页的浏览器解析方式 在HTML中有五类元素  语言的解析一般分为词法分析（lexical analysis）和语法分析（Syntax analysis）两个阶段，WebKit中的 html解析也不例外，本文主要讨论词法分析">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-06-04T10:33:40.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="XSS">
+<meta name="twitter:description" content="整理sus沙龙以及xman的前端ppt的笔记 0x01 JS能用来做什么 请求资源 提交表单 修改html 响应事件   0x02 一个含有js的html文件是怎样变成一个动态网页的浏览器解析方式 在HTML中有五类元素  语言的解析一般分为词法分析（lexical analysis）和语法分析（Syntax analysis）两个阶段，WebKit中的 html解析也不例外，本文主要讨论词法分析">
+
+
+
+
+
+
+  <link rel="canonical" href="https://hexo.imagemlt.xyz/post/xss/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>XSS | Image's blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+	<a href="https://github.com/imagemlt"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:1" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Image's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Welcome to Image's Blog</h1>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-links">
+    <a href="/links/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-link"></i> <br>Links</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/xss/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">XSS
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-08-27 12:08:09" itemprop="dateCreated datePublished" datetime="2017-08-27T12:08:09+08:00">2017-08-27</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2018-06-04 18:33:40" itemprop="dateModified" datetime="2018-06-04T18:33:40+08:00">2018-06-04</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="整理sus沙龙以及xman的前端ppt的笔记"><a href="#整理sus沙龙以及xman的前端ppt的笔记" class="headerlink" title="整理sus沙龙以及xman的前端ppt的笔记"></a>整理sus沙龙以及xman的前端ppt的笔记</h4><hr>
+<h2 id="0x01-JS能用来做什么"><a href="#0x01-JS能用来做什么" class="headerlink" title="0x01 JS能用来做什么"></a>0x01 JS能用来做什么</h2><ul>
+<li>请求资源</li>
+<li>提交表单</li>
+<li>修改html</li>
+<li>响应事件</li>
+</ul>
+<hr>
+<h2 id="0x02-一个含有js的html文件是怎样变成一个动态网页的"><a href="#0x02-一个含有js的html文件是怎样变成一个动态网页的" class="headerlink" title="0x02 一个含有js的html文件是怎样变成一个动态网页的"></a>0x02 一个含有js的html文件是怎样变成一个动态网页的</h2><p><strong>浏览器解析方式</strong> 在HTML中有五类元素 <em> 语言的解析一般分为<code>词法分析（lexical analysis）</code>和<code>语法分析（Syntax analysis）</code>两个阶段，WebKit中的 html解析也不例外，本文主要讨论词法分析。 </em> 词法分析的任务是对输入字节流进行逐字扫描，根据构词规则识别单词和符号，分词。 <em> 在WebKit中，有两个类，同词法分析密切相关，它是<code>HTMLToken</code>和<code>HTMLTokenizer</code>类，可以简单将HTMLToken类理 解 为标记，HTMLTokenizer类理解为词法解析器。HTML词法解析的任务，就是将输入的字节流解析成一个个的<code>标记（HTMLToken）</code>，然后由 语法解析器进行下一步的分析。 \</em> 在XML/HTML的文档解析中，token这个词经常用到，我将其理解为一个<code>有完整语义的单元（也就是分出来的 “词”）</code>，一个元素通常对应于3 个 token，一个是<code>元素的起始标签</code>，一个是<code>元素的结束标签</code>，一个是元素的<code>内容</code>，这点同DOM树是不一样的，在DOM树上，起始标签和结束标签对应于一个元素节点，而元素内容对应另一个节点。 * 除了<code>起始标签(StartTag)</code>、<code>结束标签(EndTag)</code>和<code>元素内容（Character）</code>，HTML标签还有<code>DOCTYPE（文档类 型）</code>,<code>Comment（注释）</code>，<code>Uninitialized（默认类型）</code>和<code>EndOfFile（文档结束）</code>等类型，参见HTMLToken.h中的 Type枚举 <strong>在HTML中有五类元素：</strong></p>
+<ol>
+<li><strong>空元素(Void elements)</strong>，如<code>&lt;area&gt;</code>,<code>&lt;br&gt;</code>,<code>&lt;base&gt;</code>等等</li>
+<li><strong>原始文本元素(Raw text elements)</strong>，有<code>&lt;script&gt;</code>和<code>&lt;style&gt;</code></li>
+<li><strong>RCDATA元素(RCDATA elements)</strong>，有<code>&lt;textarea&gt;</code>和<code>&lt;title&gt;</code></li>
+<li><strong>外部元素(Foreign elements)</strong>，例如<code>MathML命名空间</code>或者<code>SVG命名空间</code>的元素</li>
+<li><strong>基本元素(Normal elements)</strong>，即除了以上4种元素以外的元素</li>
+</ol>
+<p><strong>五类元素的区别如下：</strong></p>
+<ol>
+<li><strong>空元素</strong>，不能容纳任何内容（因为它们没有闭合标签，没有内容能够放在开始标签和闭合标签中间）。</li>
+<li><strong>原始文本元素</strong>，可以容纳文本。</li>
+<li><strong>RCDATA元素</strong>，可以容纳文本和字符引用。 （&amp;#60）</li>
+<li><strong>外部元素</strong>，可以容纳文本、字符引用、CDATA段、其他元素和注释</li>
+<li><strong>基本元素</strong>，可以容纳文本、字符引用、其他元素和注释</li>
+</ol>
+<blockquote>
+<p>如果我们回头看HTML解析器的规则，其中有一种可以容纳字符引用的情况是“RCDATA状态中的字符引用”。 这意味着在<code>&lt;textarea&gt;</code>和<code>&lt;title&gt;</code>标签中的字符引用会被HTML解析器解码。这里要再提醒一次，在解析这些字符 引用的过程中不会进入“标签开始状态”。这样就可以解释问题5了。另外，对RCDATA有个特殊的情况。在浏 览器解析RCDATA元素的过程中，解析器会进入<code>RCDATA状态</code>。在这个状态中，如果遇到<code>&lt;</code>字符，它会转 换到<code>RCDATA小于号状态</code>。如果<code>&lt;</code>字符后没有紧跟着<code>/</code>和对应的标签名，解析器会转换回<code>RCDATA状 态</code>。这意味着在RCDATA元素标签的内容中（例如<code>&lt;textarea&gt;</code>或<code>&lt;title&gt;</code>的内容中），唯一能够被解析器认做是 标签的就是<code>&lt;/textarea&gt;</code>或者<code>&lt;/title&gt;</code>。当然，这要看开始标签是哪一个。因此，在<code>&lt;textarea&gt;</code>和<code>&lt;title&gt;”</code>的内容中不会创建标签，就不会有脚本能够执行。</p>
+</blockquote>
+<hr>
+<h2 id="0x03-XSS是什么"><a href="#0x03-XSS是什么" class="headerlink" title="0x03 XSS是什么"></a>0x03 XSS是什么</h2><p>恶意攻击者往Web页面里插入恶意html代码，当用户浏览该页之时，嵌入其中Web里面的html代码会被执行，从而达到恶意攻击用户的特殊目的.通过xss可以进行一系列的越权操作，或者窃取用户cookies从而登录用户账户。 <strong>说白了就是 插js, html耍流氓</strong></p>
+<hr>
+<h2 id="0x04-XSS的分类"><a href="#0x04-XSS的分类" class="headerlink" title="0x04 XSS的分类"></a>0x04 XSS的分类</h2><p><strong>反射型XSS：</strong></p>
+<ul>
+<li>恶意代码通常存在于URL中</li>
+<li>需要用户去点击相应的链接才会触发，隐蔽性较差</li>
+<li>而且，而且可能会被浏览器的XSS Filter干掉</li>
+<li>流程：输入–输出</li>
+</ul>
+<p><strong>存储型XSS：</strong></p>
+<ul>
+<li>恶意代码通常存在于数据库中</li>
+<li>用户浏览被植入payload的“正常页面”时即可触发，隐蔽性较 强，成功率高，稳定性好。</li>
+<li>流程：输入–进入数据库–取出数据库–输出</li>
+</ul>
+<hr>
+<h2 id="0x05-XSS漏洞挖掘技巧"><a href="#0x05-XSS漏洞挖掘技巧" class="headerlink" title="0x05 XSS漏洞挖掘技巧"></a>0x05 XSS漏洞挖掘技巧</h2><ul>
+<li>输入在标签间的情况：测试<code>&lt;&gt;</code>是否被过滤或转义，若无则直接<code>&lt;img src=1 onerror=alert(1)&gt;</code></li>
+<li>输入在script标签内：我们需要在保证内部JS语法正确的前提下，去插入我们的payload。 如果我们的输出在字符串内部，测试字符串能否被闭合。如果我 们无法闭合包裹字符串的引号，这个点就很难利用了。 可能的解决方案：可以控制两处输入且\可用、存在宽字节</li>
+<li>输入在HTML属性内：首先查看属性是否有双引号包裹、没有则直接添加新的事件属性； 有双引号包裹则测试双引号是否可用，可用则闭合属性之后添加 新的事件属性； TIP：HTML的属性，如果被进行HTML实体编码(形如<code>&amp;#039</code>;<code>&amp;#x27</code>)，那么 HTML会对其进行自动解码，从而我们可以在属性里以HTML实体编 码的方式引入任意字符，从而方便我们在事件属性里以JS的方式构 造payload。</li>
+<li>输出在JS中，空格被过滤：使用<code>/**/</code>代替空格。</li>
+<li>输出在JS注释中： 设法插入换行符<code>%0A，</code>使其逃逸出来。</li>
+<li>输入在JS字符串内： 可以利用JS的十六进制、八进制、unicode编码。</li>
+<li>输入在src/href/action等属性内：可以利用<code>javascript:alert(1)</code>，以及 <code>data:text/html;base64;</code>加上base64编码后的HTML。</li>
+<li>onxxx事件的js脚本可以用html编码来绕过对某些关键字的过滤。</li>
+<li>Chrome下iframe自身的弹框姿势：<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">    <span class="tag">&lt;<span class="name">iframe</span> <span class="attr">onload</span>=<span class="string">"alert(1)"</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span>   </span><br><span class="line">    <span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">"javascript:alert(2)"</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">"data:text/html,&lt;script&gt;alert(3)&lt;/script&gt;"</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span>   </span><br><span class="line">    <span class="tag">&lt;<span class="name">iframe</span> <span class="attr">srcdoc</span>=<span class="string">"&lt;script&gt;alert(4)&lt;/script&gt;"</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span></span><br><span class="line">```    </span><br><span class="line"></span><br><span class="line">*   坑点之自带HtmlEncode(转义)功能的标签：</span><br><span class="line">```html</span><br><span class="line">    <span class="tag">&lt;<span class="name">textarea</span>&gt;</span><span class="tag">&lt;/<span class="name">textarea</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span><span class="tag">&lt;/<span class="name">title</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">iframe</span>&gt;</span><span class="tag">&lt;/<span class="name">iframe</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">noscript</span>&gt;</span><span class="tag">&lt;/<span class="name">noscript</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">noframes</span>&gt;</span><span class="tag">&lt;/<span class="name">noframes</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">xmp</span>&gt;</span><span class="tag">&lt;/<span class="name">xmp</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">plaintext</span>&gt;</span><span class="tag">&lt;/<span class="name">plaintext</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>当我们的XSS payload位于这些标签中间时，并不会解析，除非我们把它们闭合掉。</p>
+<hr>
+<h2 id="0x06-XSS练习网站、资料"><a href="#0x06-XSS练习网站、资料" class="headerlink" title="0x06 XSS练习网站、资料"></a>0x06 XSS练习网站、资料</h2><ul>
+<li><a href="http://xss-quiz.int21h.jp/">xss-quiz</a></li>
+<li><a href="https://alf.nu/alert1">alert(1) to win</a></li>
+<li><a href="http://prompt.ml/0">prompt(1) to win</a></li>
+<li><a href="http://html5sec.org/">html5 Security Cheatsheet</a></li>
+<li><a href="http://ssv.sebug.net/XSS_Cheat_Sheet">XSS Cheatsheet</a></li>
+<li><a href="https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet">OWASP XSS Filter Evasion Cheat Sheet</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/apache-order-allow/index.html" rel="next" title="Apache Order Allow">
+                <i class="fa fa-chevron-left"></i> Apache Order Allow
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/post/tianyi6/index.html" rel="prev" title="天翼杯线下赛总结">
+                天翼杯线下赛总结 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4" alt="Imagemlt">
+            
+              <p class="site-author-name" itemprop="name">Imagemlt</p>
+              <p class="site-description motion-element" itemprop="description">personal blog</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">46</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/imagemlt" target="_blank" title="GitHub" rel="external nofollow"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#整理sus沙龙以及xman的前端ppt的笔记"><span class="nav-number">1.</span> <span class="nav-text">整理sus沙龙以及xman的前端ppt的笔记</span></a></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01-JS能用来做什么"><span class="nav-number"></span> <span class="nav-text">0x01 JS能用来做什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02-一个含有js的html文件是怎样变成一个动态网页的"><span class="nav-number"></span> <span class="nav-text">0x02 一个含有js的html文件是怎样变成一个动态网页的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03-XSS是什么"><span class="nav-number"></span> <span class="nav-text">0x03 XSS是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x04-XSS的分类"><span class="nav-number"></span> <span class="nav-text">0x04 XSS的分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x05-XSS漏洞挖掘技巧"><span class="nav-number"></span> <span class="nav-text">0x05 XSS漏洞挖掘技巧</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x06-XSS练习网站、资料"><span class="nav-number"></span> <span class="nav-text">0x06 XSS练习网站、资料</span></a></li></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Imagemlt</span>
+
+  
+
+  
+</div>
+
+
+  
+
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" rel="external nofollow" href="https://hexo.io">Hexo</a> v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a>
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" rel="external nofollow" href="https://github.com/theme-next/hexo-theme-next">NexT.Pisces</a> v6.3.0</div>
+
+
+
+
+  <script src="https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js"></script>
+  <script>
+    if (window.mermaid) {
+//alert("mermaid!!!");
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

