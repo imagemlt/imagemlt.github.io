@@ -111,15 +111,15 @@
   <meta name="description" content="spring-jndi反序列化众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的org.springframeworkl.transation.jta.JtaTransationManager类存在JDNI反序列化的问题，可以加载我们注册的RMI链接，然后">
 <meta name="keywords" content="Web">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Spring-jndi 反序列化复现">
+<meta property="og:title" content="Spring-jndi 反序列化漏洞分析复现">
 <meta property="og:url" content="https://hexo.imagemlt.xyz/post/java-unserialize-learning-2/index.html">
 <meta property="og:site_name" content="Image&#39;s blog">
 <meta property="og:description" content="spring-jndi反序列化众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的org.springframeworkl.transation.jta.JtaTransationManager类存在JDNI反序列化的问题，可以加载我们注册的RMI链接，然后">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://ws3.sinaimg.cn/large/006tNc79ly1g02nr05wyuj317r0o1qem.jpg">
-<meta property="og:updated_time" content="2019-02-11T10:30:46.391Z">
+<meta property="og:updated_time" content="2019-02-11T12:40:15.370Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Spring-jndi 反序列化复现">
+<meta name="twitter:title" content="Spring-jndi 反序列化漏洞分析复现">
 <meta name="twitter:description" content="spring-jndi反序列化众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的org.springframeworkl.transation.jta.JtaTransationManager类存在JDNI反序列化的问题，可以加载我们注册的RMI链接，然后">
 <meta name="twitter:image" content="https://ws3.sinaimg.cn/large/006tNc79ly1g02nr05wyuj317r0o1qem.jpg">
 
@@ -138,7 +138,7 @@
   };
 </script>
 
-  <title>Spring-jndi 反序列化复现 | Image's blog</title>
+  <title>Spring-jndi 反序列化漏洞分析复现 | Image's blog</title>
   
 
 
@@ -336,7 +336,7 @@
 
         
         
-          <h2 class="post-title" itemprop="name headline">Spring-jndi 反序列化复现
+          <h2 class="post-title" itemprop="name headline">Spring-jndi 反序列化漏洞分析复现
               
             
           </h2>
@@ -361,7 +361,7 @@
                 
               
 
-              <time title="Created: 2019-02-11 17:35:22 / Modified: 18:30:46" itemprop="dateCreated datePublished" datetime="2019-02-11T17:35:22+08:00">2019-02-11</time>
+              <time title="Created: 2019-02-11 17:35:22 / Modified: 20:40:15" itemprop="dateCreated datePublished" datetime="2019-02-11T17:35:22+08:00">2019-02-11</time>
             
 
             
