@@ -317,6 +317,259 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/greedy-snake/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/greedy-snake/index.html" itemprop="url">
+                  双向链表与easyx实现简易贪吃蛇
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-01-29 11:30:10" itemprop="dateCreated datePublished" datetime="2017-01-29T11:30:10+08:00">2017-01-29</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>/<strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>**</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong><br><strong>文件:snake.cpp
+</strong>编写者:image<br><strong>编写日期:2017年1月28号
+</strong>简要描述:贪吃蛇游戏，可加速<br><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>**</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong>/</p>
+<p>#include “stdafx.h”</p>
+<p>#include #include #include #include #define FRAME_WIDTH 50</p>
+<p>#define FRAME_HEIGHT 50<br>using namespace std;<br>enum direction { t, b, l, r };<br>class Snake;<br>struct food{<br>    int pos_x, pos_y;<br>};<br>class section {<br>    section<em> front;<br>    section</em> rear;<br>    direction direct;<br>    int pos_x, pos_y;<br>    friend class Snake;<br>public:<br>    section(section<em> fr=NULL,direction dir=t, section</em> re = NULL ) {<br>        front=fr;<br>        rear = re;<br>        direct = dir;<br>        pos_x = pos_y = 25;<br>    }<br>    section<em> makenext() {<br>        rear = new section(this,this-&gt;direct);<br>        switch (this-&gt;direct) {<br>        case 0: {<br>            rear-&gt;pos_x = this-&gt;pos_x;<br>            rear-&gt;pos_y = this-&gt;pos_y + 1;<br>            break;<br>        }<br>        case 1: {<br>            rear-&gt;pos_x = this-&gt;pos_x;<br>            rear-&gt;pos_y = this-&gt;pos_y - 1;<br>            break;<br>        }<br>        case 2: {<br>            rear-&gt;pos_x = this-&gt;pos_x + 1;<br>            rear-&gt;pos_y = this-&gt;pos_y;<br>            break;<br>        }<br>        case 3: {<br>            rear-&gt;pos_x = this-&gt;pos_x - 1;<br>            rear-&gt;pos_y = this-&gt;pos_y;<br>            break;<br>        }<br>        }<br>        return rear;<br>    }<br>    void move() {<br>        setcolor(BLACK);<br>        setfillcolor(BLACK);<br>        fillcircle(pos_x </em> 480 / FRAME_WIDTH, pos_y <em> 480 / FRAME_HEIGHT, 480 / FRAME_WIDTH / 2);<br>            switch (this-&gt;direct) {<br>            case 0: {<br>                this-&gt;pos_x = this-&gt;pos_x;<br>                this-&gt;pos_y = this-&gt;pos_y - 1;<br>                break;<br>            }<br>            case 1: {<br>                this-&gt;pos_x = this-&gt;pos_x;<br>                this-&gt;pos_y = this-&gt;pos_y + 1;<br>                break;<br>            }<br>            case 2: {<br>                this-&gt;pos_x = this-&gt;pos_x - 1;<br>                this-&gt;pos_y = this-&gt;pos_y;<br>                break;<br>            }<br>            case 3: {<br>                this-&gt;pos_x = this-&gt;pos_x + 1;<br>                this-&gt;pos_y = this-&gt;pos_y;<br>                break;<br>            }<br>            }<br>            if (this-&gt;front == NULL)<br>                setfillcolor(RED);<br>            else<br>                setfillcolor(GREEN);<br>            fillcircle(pos_x </em> 480/FRAME_WIDTH, pos_y * 480/FRAME_HEIGHT, 480 / FRAME_WIDTH/2);<br>        if(this-&gt;rear!=NULL)<br>            this-&gt;rear-&gt;move();<br>        if (this-&gt;front != NULL&amp;&amp;this-&gt;direct != this-&gt;front-&gt;direct)<br>            this-&gt;direct = this-&gt;front-&gt;direct;<br>    }</p>
+<p>};<br>class Snake {<br>    section<em> head;<br>    section</em> tail;<br>    int length;<br>    int eatentimes;<br>public:<br>    food foo;<br>    Snake() {<br>        this-&gt;head =this-&gt;tail= new section();<br>        this-&gt;length = 1;<br>        eatentimes = 0;<br>    }<br>    void Add() {<br>        tail=tail-&gt;makenext();<br>        length++;<br>    }<br>    bool is_alive() {<br>        section<em> p = head-&gt;rear;<br>        while(p != NULL) {<br>            if (p-&gt;pos_x == head-&gt;pos_x&amp;&amp;p-&gt;pos_y == head-&gt;pos_y) {<br>                return false;<br>            }<br>            p = p-&gt;rear;<br>        }<br>        return head-&gt;pos_x != 0 &amp;&amp; head-&gt;pos_y != 0 &amp;&amp; head-&gt;pos_x != FRAME_WIDTH &amp;&amp; head-&gt;pos_y != FRAME_HEIGHT;<br>    }<br>    void move() {<br>        head-&gt;move();<br>        if (is_Food()) {<br>            if (eatentimes  == 5) {<br>                for (int i = 0; i &lt; 5; i++)<br>                    Add();<br>                eatentimes = 0;<br>                setfillcolor(BLACK);<br>                fillcircle(foo.pos_x </em> 480 / FRAME_WIDTH, foo.pos_y * 480 / FRAME_HEIGHT, 480 / FRAME_WIDTH);<br>                makeFood();</p>
+<pre><code>        }
+        else {
+            Add();
+            makeFood();
+        }
+    }
+}
+void turn(direction dir) {
+    head-&gt;direct = dir;
+}
+int getSpeed() {
+    return 5000/length;
+}
+void makeFood() {
+    int random\_X = rand() % (FRAME\_WIDTH-1)+1;
+    int random\_Y = rand() % (FRAME\_HEIGHT-1)+1;
+    section *p = head;
+    while (p != NULL) {
+        if (p-&gt;pos\_x == random\_X&amp;&amp;p-&gt;pos\_y == random\_Y) {
+            random\_X = rand() % FRAME\_WIDTH;
+            random\_Y = rand() % FRAME\_HEIGHT;
+    }
+        p = p-&gt;rear;
+    }
+    foo.pos\_x = random\_X;
+    foo.pos\_y = random\_Y;
+    setfillcolor(YELLOW);
+    if(eatentimes==4)
+        fillcircle(foo.pos\_x * 480 / FRAME\_WIDTH, foo.pos\_y * 480 / FRAME\_HEIGHT, 480 / FRAME_WIDTH );
+    else
+        fillcircle(foo.pos\_x * 480 / FRAME\_WIDTH, foo.pos\_y * 480 / FRAME\_HEIGHT, 480 / FRAME_WIDTH /2);
+    eatentimes++;
+
+}
+bool is_Food() {
+    return head-&gt;pos\_x == foo.pos\_x&amp;&amp;head-&gt;pos\_y == foo.pos\_y;
+}
+void Init() {
+    initgraph(480, 480);
+    char ch;
+    makeFood();
+    for (int i = 0; i &lt; 5; i++) {
+        Add();
+    }
+    while(true) {
+        int speed = getSpeed();
+        if (_kbhit()) {
+            if (_kbhit()) {
+                speed /= 2;
+            }
+            ch = _getch();
+            switch (ch) {
+            case &apos;w&apos;: turn(t); break;
+            case &apos;s&apos;: turn(b); break;
+            case &apos;a&apos;:turn(l); break;
+            case &apos;d&apos;:turn(r); break;
+            }
+
+        }
+        Sleep(speed);
+        move();
+        if (!is_alive())
+            break;
+    }
+    settextcolor(WHITE);
+    outtext(_T(&quot;蛇死掉了 按任意键退出游戏&quot;));
+    _getch();
+}
+</code></pre><p>};<br>int main() {<br>    srand(time(0));<br>    Snake snake;<br>    snake.Init();</p>
+<p>}</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/python-ddos/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -1964,181 +2217,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/hello-world-1/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/hello-world-1/index.html" itemprop="url">
-                  世界，您好！
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2016-11-27 20:18:21" itemprop="dateCreated datePublished" datetime="2016-11-27T20:18:21+08:00">2016-11-27</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>我的wordpress博客终于建成了！ 以后好好学习，做一个大佬。</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left" aria-label="Previous page"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span>
+    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left" aria-label="Previous page"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
   </nav>
 
 
@@ -2183,7 +2266,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">50</span>
+                    <span class="site-state-item-count">51</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
