@@ -317,6 +317,254 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/编译原理——第一课-绪论-笔记/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/编译原理——第一课-绪论-笔记/index.html" itemprop="url">
+                  编译原理——第一课-绪论-笔记
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-09-28 22:05:47" itemprop="dateCreated datePublished" datetime="2018-09-28T22:05:47+08:00">2018-09-28</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="第一课-绪论"><a href="#第一课-绪论" class="headerlink" title="第一课 绪论"></a>第一课 绪论</h2><h4 id="编译器在语言处理系统中的位置"><a href="#编译器在语言处理系统中的位置" class="headerlink" title="编译器在语言处理系统中的位置"></a>编译器在语言处理系统中的位置</h4><div id="flowchart-0" class="flow-chart"></div>
+
+
+
+<h4 id="编译器的结构"><a href="#编译器的结构" class="headerlink" title="编译器的结构"></a>编译器的结构</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">graph TD;</span><br><span class="line">	字符流--&gt;词法分析器;</span><br><span class="line">	词法分析器--&gt;|词法单元流|语法分析器;</span><br><span class="line">	语法分析器--&gt;|语法树|语义分析器;</span><br><span class="line">	语义分析器--&gt;|语法树|中间代码生成器;</span><br><span class="line">	中间代码生成器--&gt;|中间表示形式|机器无关代码优化器;</span><br><span class="line">	机器无关代码优化器--&gt;|中间表示形式|目标代码生成器;</span><br><span class="line">	目标代码生成器--&gt;|目标机器语言|机器相关代码优化器;</span><br><span class="line">	机器相关代码优化器--&gt;目标机器语言;</span><br></pre></td></tr></table></figure>
+<h5 id="词法分析-扫描-Scanning"><a href="#词法分析-扫描-Scanning" class="headerlink" title="词法分析/扫描(Scanning)"></a>词法分析/扫描(Scanning)</h5><ul>
+<li><p>主要任务</p>
+<p>从左向右逐行扫描源程序的字符，识别各个单词并确定类型，表示为<strong><em>词法单元(token)</em></strong>格式;</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>单词类型</th>
+<th>种类</th>
+<th>种别码</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>关键字</td>
+<td>program、if、else、then、…</td>
+<td>一词一码</td>
+</tr>
+<tr>
+<td>标识符</td>
+<td>变量名、数组名、记录名、过程名、…</td>
+<td>多词一码</td>
+</tr>
+<tr>
+<td>常量</td>
+<td>整型、浮点型、字符型、布尔型、…</td>
+<td>一型一码</td>
+</tr>
+<tr>
+<td>运算符</td>
+<td>算数 关系 逻辑</td>
+<td>一词一码或者一型一码</td>
+</tr>
+<tr>
+<td>界限符</td>
+<td>; () = {}…</td>
+<td>一词一码</td>
+</tr>
+</tbody>
+</table>
+<h5 id="语法分析-parsing"><a href="#语法分析-parsing" class="headerlink" title="语法分析(parsing)"></a>语法分析(parsing)</h5><ul>
+<li>从词法分析器的token序列中识别短语，构造语法分析树(parse tree)</li>
+</ul>
+<h5 id="语义分析"><a href="#语义分析" class="headerlink" title="语义分析"></a>语义分析</h5><ul>
+<li>主要任务：<ul>
+<li>收集标识符的属性信息<ul>
+<li>种属<ul>
+<li>简单变量、符合变量（数组、记录、…)、过程</li>
+</ul>
+</li>
+<li>类型</li>
+<li>存储位置、长度</li>
+<li>值</li>
+<li>作用域</li>
+<li>参数与返回值信息</li>
+</ul>
+</li>
+<li>语义检查</li>
+</ul>
+</li>
+</ul>
+<h5 id="中间代码生成"><a href="#中间代码生成" class="headerlink" title="中间代码生成"></a>中间代码生成</h5><ul>
+<li>常用的中间表示形式<ul>
+<li>三地址码<ul>
+<li>类似汇编</li>
+<li>每个指令最多三个操作数</li>
+</ul>
+</li>
+<li>语法结构树/语法树(Syntax Trees)</li>
+</ul>
+</li>
+</ul>
+<h5 id="目标代码生成器"><a href="#目标代码生成器" class="headerlink" title="目标代码生成器"></a>目标代码生成器</h5><ul>
+<li>以源程序的中间表示形式作为输入并映射到目标语言</li>
+<li>重要任务：分配合理的寄存器</li>
+</ul>
+<h5 id="代码优化"><a href="#代码优化" class="headerlink" title="代码优化"></a>代码优化</h5><ul>
+<li>等价程序变换以优化时空效率<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">title: 
+start=>start: 源程序
+preprocessor=>operation: 预处理器(preprocessor)
+compiler=>operation: 编译器(compiler)
+assembler=>operation: 汇编器(assembler)
+linker_and_loader=>operation: 链接器(Linker)/加载器(Loader)
+end=>end: 目标机器代码
+
+start->preprocessor
+preprocessor->compiler
+compiler->assembler
+assembler->linker_and_loader
+linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script></li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/设计模式-第一课-六大原则/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -2066,224 +2314,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/file-upload-attacks/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/file-upload-attacks/index.html" itemprop="url">
-                  文件上传漏洞的总结
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2018-04-24 00:37:10" itemprop="dateCreated datePublished" datetime="2018-04-24T00:37:10+08:00">2018-04-24</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="防御文件上传的一些思路"><a href="#防御文件上传的一些思路" class="headerlink" title="防御文件上传的一些思路"></a>防御文件上传的一些思路</h2><ul>
-<li>客户端javascript校验（通常校验扩展名）</li>
-<li>检查文件扩展名</li>
-<li>检查MIME类型</li>
-<li>随机文件名</li>
-<li>隐藏路径</li>
-<li>重写内容（影响效率）imagecreatefromjpeg…</li>
-<li>检查内容是否合法</li>
-</ul>
-<h2 id="绕过技巧"><a href="#绕过技巧" class="headerlink" title="绕过技巧"></a>绕过技巧</h2><ul>
-<li>$_FILES[‘file’][‘type’]:burp抓包可修改</li>
-<li>内容检查：<ul>
-<li><code>&lt;script language=“php”&gt;&lt;/script&gt;</code></li>
-</ul>
-</li>
-<li>文件名拓展检查：黑名单绕过 ○ Php3 php5 phtml PPHP pHp phtm inc ○ Jsp jspx jspf ○ Asp asa cer aspx ○ Exe exee ○ 后缀名加空格 ○ 00截断 ○ 双重后缀名绕过</li>
-<li>常配合文件包含漏洞达到特殊效果</li>
-<li>通过比较gd函数处理前后的文件找到不产生变化的区块写入特殊的payload<a href="http://www.freebuf.com/articles/web/54086.html">http://www.freebuf.com/articles/web/54086.html</a></li>
-<li>phpinfo+lfi</li>
-<li>htaccess攻击<ul>
-<li>AddType application/x-httpd-php .jpg</li>
-</ul>
-</li>
-</ul>
-<pre><code>&lt;FilesMatch &quot;95zz.gif&quot;&gt;
-SetHandler application/x-httpd-php
-&lt;/FilesMatch&gt;
-</code></pre><ul>
-<li>opcache文件getshell(利用phpinfo获得缓存目录后上传shell)<a href="https://www.exehack.net/3272.html">https://www.exehack.net/3272.html</a><ul>
-<li>如果内存缓存的优先级高于文件缓存，那么重写opcache文件并不会执行我们的webshell</li>
-<li>开启了validate_timestamp的绕过:<ul>
-<li>Wordpress某些文件时间戳一样</li>
-</ul>
-</li>
-<li><a href="https://github.com/GoSecure/php7-opcache-override">opcache-override</a></li>
-</ul>
-</li>
-<li>文件头检测方法：将木马后缀到文件末(常见的是通过getimagesize()函数)</li>
-<li>file_put_contents 数组绕过</li>
-<li>当代码中存在spl_autoload_register()函数时可以上传.inc文件(laravel、composer中常用)(湖湘杯)<ul>
-<li>spl_autoload_register()函数使用后将会自动调用inc文件</li>
-</ul>
-</li>
-<li><p>move_uploaded_file() 名称可控时可上传至任意位置，aaaa/../index.php/.绕过后缀名检测</p>
-</li>
-<li><p>上传模板文件</p>
-</li>
-<li>上传绕过 parse_url函数可以通过多个斜杠来绕过</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2333,7 +2363,7 @@ SetHandler application/x-httpd-php
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">51</span>
+                    <span class="site-state-item-count">52</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
@@ -2370,7 +2400,9 @@ SetHandler application/x-httpd-php
                     
                       
                     
-                    <span class="site-state-item-count">12</span>
+                      
+                    
+                    <span class="site-state-item-count">13</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>

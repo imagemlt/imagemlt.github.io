@@ -317,6 +317,187 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/PHPINFO中的敏感信息记录/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/PHPINFO中的敏感信息记录/index.html" itemprop="url">
+                  PHPINFO中的敏感信息记录
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-02-28 19:22:47" itemprop="dateCreated datePublished" datetime="2019-02-28T19:22:47+08:00">2019-02-28</time>
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/技术学习/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>去年滴滴面试的时候提到过phpinfo中有哪些安全相关的信息，当时答的不算很好，今年也要面临校招，所以在这篇文章中总结一下。</p>
+<ul>
+<li><code>Configuration File (php.ini) Path</code><br>加载的php.ini文件的位置</li>
+<li><code>Registered PHP Streams</code><br>支持的php流，主要用于文件包含、反序列化等等的应用。  </li>
+<li><code>Registered Stream Filters</code><br>支持的php流过滤器，应用如上。</li>
+<li><code>allow_url_fopen</code>与<code>allow_url_include</code><br>文件包含有关</li>
+<li><code>disable_functions</code><br>禁止的函数，RCE时需要特别注意</li>
+<li><code>display_errors</code> <code>display_startup_errors</code><br>错误提示相关</li>
+<li><code>open_basedir</code><br>重要属性，（线下赛中在WAF设置一个可以废掉所有的文件包含漏洞）</li>
+<li><code>enable_dl</code><br>是否能够动态加载php模块，可用于bypass disable_functions</li>
+<li><code>extension_dir</code><br>模块位置</li>
+<li><code>include_path</code><br>php include时的默认路径</li>
+<li><code>short_open_tag</code><br>判断服务器是否支持短标签</li>
+<li><code>session.save_path</code><br>session存储路径</li>
+<li><code>session.save_handler</code><br>用户自定义存储函数</li>
+<li><code>session.auto_start</code><br>是否自动开启session</li>
+<li><code>session.serialize_handler</code><br>反序列化器</li>
+<li>_SERVER相关</li>
+<li><code>fastcgi</code><br>远程命令执行、解析漏洞</li>
+<li><code>expose_php</code><br>在http包中显示php版本等</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/java-unserialize-learning-3/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -2014,254 +2195,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/编译原理——第一课-绪论-笔记/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/编译原理——第一课-绪论-笔记/index.html" itemprop="url">
-                  编译原理——第一课-绪论-笔记
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2018-09-28 22:05:47" itemprop="dateCreated datePublished" datetime="2018-09-28T22:05:47+08:00">2018-09-28</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="第一课-绪论"><a href="#第一课-绪论" class="headerlink" title="第一课 绪论"></a>第一课 绪论</h2><h4 id="编译器在语言处理系统中的位置"><a href="#编译器在语言处理系统中的位置" class="headerlink" title="编译器在语言处理系统中的位置"></a>编译器在语言处理系统中的位置</h4><div id="flowchart-0" class="flow-chart"></div>
-
-
-
-<h4 id="编译器的结构"><a href="#编译器的结构" class="headerlink" title="编译器的结构"></a>编译器的结构</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">graph TD;</span><br><span class="line">	字符流--&gt;词法分析器;</span><br><span class="line">	词法分析器--&gt;|词法单元流|语法分析器;</span><br><span class="line">	语法分析器--&gt;|语法树|语义分析器;</span><br><span class="line">	语义分析器--&gt;|语法树|中间代码生成器;</span><br><span class="line">	中间代码生成器--&gt;|中间表示形式|机器无关代码优化器;</span><br><span class="line">	机器无关代码优化器--&gt;|中间表示形式|目标代码生成器;</span><br><span class="line">	目标代码生成器--&gt;|目标机器语言|机器相关代码优化器;</span><br><span class="line">	机器相关代码优化器--&gt;目标机器语言;</span><br></pre></td></tr></table></figure>
-<h5 id="词法分析-扫描-Scanning"><a href="#词法分析-扫描-Scanning" class="headerlink" title="词法分析/扫描(Scanning)"></a>词法分析/扫描(Scanning)</h5><ul>
-<li><p>主要任务</p>
-<p>从左向右逐行扫描源程序的字符，识别各个单词并确定类型，表示为<strong><em>词法单元(token)</em></strong>格式;</p>
-</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>单词类型</th>
-<th>种类</th>
-<th>种别码</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>关键字</td>
-<td>program、if、else、then、…</td>
-<td>一词一码</td>
-</tr>
-<tr>
-<td>标识符</td>
-<td>变量名、数组名、记录名、过程名、…</td>
-<td>多词一码</td>
-</tr>
-<tr>
-<td>常量</td>
-<td>整型、浮点型、字符型、布尔型、…</td>
-<td>一型一码</td>
-</tr>
-<tr>
-<td>运算符</td>
-<td>算数 关系 逻辑</td>
-<td>一词一码或者一型一码</td>
-</tr>
-<tr>
-<td>界限符</td>
-<td>; () = {}…</td>
-<td>一词一码</td>
-</tr>
-</tbody>
-</table>
-<h5 id="语法分析-parsing"><a href="#语法分析-parsing" class="headerlink" title="语法分析(parsing)"></a>语法分析(parsing)</h5><ul>
-<li>从词法分析器的token序列中识别短语，构造语法分析树(parse tree)</li>
-</ul>
-<h5 id="语义分析"><a href="#语义分析" class="headerlink" title="语义分析"></a>语义分析</h5><ul>
-<li>主要任务：<ul>
-<li>收集标识符的属性信息<ul>
-<li>种属<ul>
-<li>简单变量、符合变量（数组、记录、…)、过程</li>
-</ul>
-</li>
-<li>类型</li>
-<li>存储位置、长度</li>
-<li>值</li>
-<li>作用域</li>
-<li>参数与返回值信息</li>
-</ul>
-</li>
-<li>语义检查</li>
-</ul>
-</li>
-</ul>
-<h5 id="中间代码生成"><a href="#中间代码生成" class="headerlink" title="中间代码生成"></a>中间代码生成</h5><ul>
-<li>常用的中间表示形式<ul>
-<li>三地址码<ul>
-<li>类似汇编</li>
-<li>每个指令最多三个操作数</li>
-</ul>
-</li>
-<li>语法结构树/语法树(Syntax Trees)</li>
-</ul>
-</li>
-</ul>
-<h5 id="目标代码生成器"><a href="#目标代码生成器" class="headerlink" title="目标代码生成器"></a>目标代码生成器</h5><ul>
-<li>以源程序的中间表示形式作为输入并映射到目标语言</li>
-<li>重要任务：分配合理的寄存器</li>
-</ul>
-<h5 id="代码优化"><a href="#代码优化" class="headerlink" title="代码优化"></a>代码优化</h5><ul>
-<li>等价程序变换以优化时空效率<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">title: 
-start=>start: 源程序
-preprocessor=>operation: 预处理器(preprocessor)
-compiler=>operation: 编译器(compiler)
-assembler=>operation: 汇编器(assembler)
-linker_and_loader=>operation: 链接器(Linker)/加载器(Loader)
-end=>end: 目标机器代码
-
-start->preprocessor
-preprocessor->compiler
-compiler->assembler
-assembler->linker_and_loader
-linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script></li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2311,7 +2244,7 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">51</span>
+                    <span class="site-state-item-count">52</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
@@ -2348,7 +2281,9 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
                     
                       
                     
-                    <span class="site-state-item-count">12</span>
+                      
+                    
+                    <span class="site-state-item-count">13</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
