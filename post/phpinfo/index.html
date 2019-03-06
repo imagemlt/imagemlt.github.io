@@ -116,7 +116,7 @@
 <meta property="og:site_name" content="Image&#39;s blog">
 <meta property="og:description" content="去年滴滴面试的时候提到过phpinfo中有哪些安全相关的信息，当时答的不算很好，今年也要面临校招，所以在这篇文章中总结一下。  Configuration File (php.ini) Path加载的php.ini文件的位置 Registered PHP Streams支持的php流，主要用于文件包含、反序列化等等的应用。   Registered Stream Filters支持的php流过滤器">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-02-28T11:22:47.640Z">
+<meta property="og:updated_time" content="2019-03-06T16:19:27.228Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="PHPINFO中的敏感信息记录">
 <meta name="twitter:description" content="去年滴滴面试的时候提到过phpinfo中有哪些安全相关的信息，当时答的不算很好，今年也要面临校招，所以在这篇文章中总结一下。  Configuration File (php.ini) Path加载的php.ini文件的位置 Registered PHP Streams支持的php流，主要用于文件包含、反序列化等等的应用。   Registered Stream Filters支持的php流过滤器">
@@ -136,7 +136,7 @@
   };
 </script>
 
-  <title>Image's blog &mdash; Welcome to Image's Blog</title>
+  <title>PHPINFO中的敏感信息记录 | Image's blog</title>
   
 
 
@@ -183,8 +183,7 @@
     
   
 
-  <div class="container sidebar-position-left 
-  ">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
@@ -301,15 +300,229 @@
           
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-  </section>
 
   
-  <nav class="pagination">
-    
-  </nav>
 
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/phpinfo/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">PHPINFO中的敏感信息记录
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-02-28 19:22:47" itemprop="dateCreated datePublished" datetime="2019-02-28T19:22:47+08:00">2019-02-28</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-03-07 00:19:27" itemprop="dateModified" datetime="2019-03-07T00:19:27+08:00">2019-03-07</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/技术学习/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>去年滴滴面试的时候提到过phpinfo中有哪些安全相关的信息，当时答的不算很好，今年也要面临校招，所以在这篇文章中总结一下。</p>
+<ul>
+<li><code>Configuration File (php.ini) Path</code><br>加载的php.ini文件的位置</li>
+<li><code>Registered PHP Streams</code><br>支持的php流，主要用于文件包含、反序列化等等的应用。  </li>
+<li><code>Registered Stream Filters</code><br>支持的php流过滤器，应用如上。</li>
+<li><code>allow_url_fopen</code>与<code>allow_url_include</code><br>文件包含有关</li>
+<li><code>disable_functions</code><br>禁止的函数，RCE时需要特别注意</li>
+<li><code>display_errors</code> <code>display_startup_errors</code><br>错误提示相关</li>
+<li><code>open_basedir</code><br>重要属性，（线下赛中在WAF设置一个可以废掉所有的文件包含漏洞）</li>
+<li><code>enable_dl</code><br>是否能够动态加载php模块，可用于bypass disable_functions</li>
+<li><code>extension_dir</code><br>模块位置</li>
+<li><code>include_path</code><br>php include时的默认路径</li>
+<li><code>short_open_tag</code><br>判断服务器是否支持短标签</li>
+<li><code>session.save_path</code><br>session存储路径</li>
+<li><code>session.save_handler</code><br>用户自定义存储函数</li>
+<li><code>session.auto_start</code><br>是否自动开启session</li>
+<li><code>session.serialize_handler</code><br>反序列化器</li>
+<li>_SERVER相关</li>
+<li><code>fastcgi</code><br>远程命令执行、解析漏洞</li>
+<li><code>expose_php</code><br>在http包中显示php版本等</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Web/" rel="tag"># Web</a>
+          
+            <a href="/tags/CTF/" rel="tag"># CTF</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/java-unserialize-learning-3/index.html" rel="next" title="fastjson反序列化的两种利用方法的原理剖析">
+                <i class="fa fa-chevron-left"></i> fastjson反序列化的两种利用方法的原理剖析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/post/tp5_rce/index.html" rel="prev" title="thinkphp5.0 RCE分析">
+                thinkphp5.0 RCE分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -618,6 +831,10 @@ Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pag
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
 
   
 
