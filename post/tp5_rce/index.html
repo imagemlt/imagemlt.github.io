@@ -121,7 +121,7 @@
 <meta property="og:image" content="https://ws2.sinaimg.cn/large/006tKfTcly1g0tjby7hrij309903d3yo.jpg">
 <meta property="og:image" content="https://ws4.sinaimg.cn/large/006tKfTcly1g0tiz031joj30zq05t765.jpg">
 <meta property="og:image" content="https://ws2.sinaimg.cn/large/006tKfTcly1g0tiyvyb17j30iv08x0tr.jpg">
-<meta property="og:updated_time" content="2019-03-06T16:24:37.970Z">
+<meta property="og:updated_time" content="2019-03-07T05:37:25.292Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="thinkphp5.0 RCE分析">
 <meta name="twitter:description" content="Thinkphp5.0 RCE分析迟到的关于年末爆出的tp5的RCE的分析文章。 我们先来分析以下的poc 1?s=index/\think\app/invokefunction&amp;amp;function=call_user_func_array&amp;amp;vars[0]=phpinfo&amp;amp;vars[1][]=1 分析一个MVC的框架首先最重要的一步就是要搞清楚这个框架的路由规则。我们从ind">
@@ -365,7 +365,7 @@
                 
               
 
-              <time title="Created: 2019-03-07 00:13:14 / Modified: 00:24:37" itemprop="dateCreated datePublished" datetime="2019-03-07T00:13:14+08:00">2019-03-07</time>
+              <time title="Created: 2019-03-07 00:13:14 / Modified: 13:37:25" itemprop="dateCreated datePublished" datetime="2019-03-07T00:13:14+08:00">2019-03-07</time>
             
 
             
@@ -482,7 +482,7 @@
 <p>在这行代码后的代码处下断点调试</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1g0tiyvyb17j30iv08x0tr.jpg" alt="7A4DEE2D-287B-4B00-852A-7D593E6308C7"></p>
 <p>可以看到这些类都是tp中可用的用来RCE的类，我们只需要再多研究便可发现其他的利用链。</p>
-<p>修复方法也是很简单粗暴，只需要过滤掉反引号即可。</p>
+<p>修复方法也是很简单粗暴，只需要过滤掉反斜杠即可。</p>
 
       
     </div>
