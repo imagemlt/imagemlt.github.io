@@ -317,6 +317,443 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/playfair/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/playfair/index.html" itemprop="url">
+                  playfair
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2016-12-13 07:07:21" itemprop="dateCreated datePublished" datetime="2016-12-13T07:07:21+08:00">2016-12-13</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Crypto/" itemprop="url" rel="index"><span itemprop="name">Crypto</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Crypto/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>它有一些不太明显的特征：密文的字母数一定是偶数；任意两个同组的字母都不会相同，如果出现这种字符必是乱码和虚码。 编写分三步：1.编制密码表 2.整理明文 3.编写密文 构成部分：1.密钥 2.明文3.密文4.注明的某个字母代替的另一个字母。</p>
+<h2 id="加密"><a href="#加密" class="headerlink" title="加密"></a>加密</h2><p><strong>编制密码表</strong></p>
+<p>第一步是编制密码表。在这个5*5的密码表中，共有5行5列字母。第一列（或第一行）是密钥,其余按照字母顺序。密钥是一个单词或词组，若有重复字母，可将后面重复的字母去掉。当然也要把使用频率最少的字母去掉。如：密钥是Live and learn,去掉后则为liveandr。如果密钥过长可占用第二列或行。</p>
+<p>如密钥crazy dog，可编制成</p>
+<p>C</p>
+<p>D</p>
+<p>F</p>
+<p>M</p>
+<p>T</p>
+<p>R</p>
+<p>O</p>
+<p>H</p>
+<p>N</p>
+<p>U</p>
+<p>A</p>
+<p>G</p>
+<p>I ( J )</p>
+<p>P</p>
+<p>V</p>
+<p>Z</p>
+<p>B</p>
+<p>K</p>
+<p>Q</p>
+<p>W</p>
+<p>Y</p>
+<p>E</p>
+<p>L</p>
+<p>S</p>
+<p>X</p>
+<h3 id="整理明文"><a href="#整理明文" class="headerlink" title="整理明文"></a>整理明文</h3><p>第二步整理明文。将明文每两个字母组成一对。如果成对后有两个相同字母紧挨或最后一个字母是单个的，就插入一个字母X（或者Q）。</p>
+<p>如，communist，应成为co,mx,mu,ni,st。</p>
+<h3 id="编写密文"><a href="#编写密文" class="headerlink" title="编写密文"></a>编写密文</h3><p>最后编写密文。对明文加密规则如下：</p>
+<p>1 若p1 p2在同一行，对应密文c1 c2分别是紧靠p1 p2 右端的字母。其中第一列被看做是最后一列的右方。如，按照前表，ct对应dc</p>
+<p>2 若p1 p2在同一列，对应密文c1 c2分别是紧靠p1 p2 下方的字母。其中第一行被看做是最后一行的下方。</p>
+<p>3 若p1 p2不在同一行，不在同一列，则c1 c2是由p1 p2确定的矩形的其他两角的字母（至于横向替换还是纵向替换要事先约好，或自行尝试）。如，按照前表，wh对应ku或uk。</p>
+<p>如，依照上表，明文where there is life,there is hope.</p>
+<p>可先整理为：WH ER ET HE RE IS LI FE TH ER EI SH OP EX</p>
+<p>然后密文为：KU YO XD OL OY PL FK DL FU YO LG LN NG LY</p>
+<p>将密文变成大写，然后几个字母一组排列。</p>
+<p>如5个一组就是KUYOX DOLOY PLFKD LFUYO LGLNN GLY</p>
+<h2 id="解密"><a href="#解密" class="headerlink" title="解密"></a>解密</h2><p>Playfair解密算法首先将密钥填写在一个5*5的矩阵中（去Q留Z），矩阵中其它未用到的字母按顺序填在矩阵剩余位置中，根据替换矩阵由密文得到明文。</p>
+<p>对密文解密规则如下：</p>
+<p>1 若c1 c2在同一行，对应明文p1 p2分别是紧靠c1 c2 左端的字母。其中最后一列被看做是第一列的左方。</p>
+<p>2 若c1 c2在同一列，对应明文p1 p2分别是紧靠c1 c2 上方的字母。其中最后一行被看做是第一行的上方。</p>
+<p>3 若c1 c2不在同一行，不在同一列，则p1 p2是由c1 c2确定的矩形的其他两角的字母。</p>
+<p>其实就是反其道而行之。</p>
+<h2 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h2><p>一： 密钥：boys and girls are students ( 按行填充密钥, 不在同一行的明文字母, 行不变列变)</p>
+<p>密文 GUUID BCYXN YOETK RUGAB EMBCE TDICQ LDHYB JRMRD IRCV</p>
+<p>明文(原文)：It is not a problem. It is a challenge. Enjoy facing it.</p>
+<p>二：密钥：father ( 按行填充密钥, 不在同一行的明文字母, 行变列不变)</p>
+<p>密文：OPHEN UMRFP EFPVI DLRGQ NRRNW RHKNR SVNYF HSVFI IJRQP AFK</p>
+<p>明文(原文)：Nothing in the world is difficult, if you set your mind to it.</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/bacon/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/bacon/index.html" itemprop="url">
+                  培根密码
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2016-12-13 00:15:34" itemprop="dateCreated datePublished" datetime="2016-12-13T00:15:34+08:00">2016-12-13</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Crypto/" itemprop="url" rel="index"><span itemprop="name">Crypto</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Crypto/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h3 id="第一种方式"><a href="#第一种方式" class="headerlink" title="第一种方式"></a>第一种方式</h3><p>A aaaaa</p>
+<p>B aaaab</p>
+<p>C aaaba</p>
+<p>D aaabb</p>
+<p>E aabaa</p>
+<p>F aabab</p>
+<p>G aabba</p>
+<p>H aabbb</p>
+<p>I abaaa</p>
+<p>J abaab</p>
+<p>K ababa</p>
+<p>L ababb</p>
+<p>M abbaa</p>
+<p>N abbab</p>
+<p>O abbba</p>
+<p>P abbbb</p>
+<p>Q baaaa</p>
+<p>R baaab</p>
+<p>S baaba</p>
+<p>T baabb</p>
+<p>U babaa</p>
+<p>V babab</p>
+<p>W babba</p>
+<p>X babbb</p>
+<p>Y bbaaa</p>
+<p>Z bbaab</p>
+<h3 id="第二种方式"><a href="#第二种方式" class="headerlink" title="第二种方式"></a>第二种方式</h3><p>a AAAAA g AABBA n ABBAA t BAABA</p>
+<p>b AAAAB h AABBB o ABBAB u-v BAABB</p>
+<p>c AAABA i-j ABAAA p ABBBA w BABAA</p>
+<p>d AAABB k ABAAB q ABBBB x BABAB</p>
+<p>e AABAA l ABABA r BAAAA y BABBA</p>
+<p>f AABAB m ABABB s BAAAB z BABBB</p>
+<h2 id="举例"><a href="#举例" class="headerlink" title="举例"></a>举例</h2><p>如：密文是LOVE，用“随意选取句子和文”加密，得到结果就是“SuIyI XuaNq uJUzi HEwEN”（这里用小写代表斜体）</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/rot13/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -871,7 +1308,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">53</span>
+                    <span class="site-state-item-count">55</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
