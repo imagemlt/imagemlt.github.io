@@ -108,20 +108,20 @@
 
 
 
-  <meta name="description" content="java apache common collections 反序列化分析apache common collections是15年左右爆出来的一个反序列化利用链，影响范围广泛。这篇文章中便复现一下这个利用过程。 复现的第一步：项目依赖项配置新版本的apache common collections添加了对这个漏洞的修复，在apache common collections4中Tranformer">
+  <meta name="description" content="打包发布于安全客https://www.anquanke.com/post/id/173459  java apache common collections 反序列化分析apache common collections是15年左右爆出来的一个反序列化利用链，影响范围广泛。这篇文章中便复现一下这个利用过程。 复现的第一步：项目依赖项配置新版本的apache common collections">
 <meta name="keywords" content="Web">
 <meta property="og:type" content="article">
 <meta property="og:title" content="java apache common collections 反序列化分析">
 <meta property="og:url" content="https://hexo.imagemlt.xyz/post/apache-common-collections/index.html">
 <meta property="og:site_name" content="Image&#39;s blog">
-<meta property="og:description" content="java apache common collections 反序列化分析apache common collections是15年左右爆出来的一个反序列化利用链，影响范围广泛。这篇文章中便复现一下这个利用过程。 复现的第一步：项目依赖项配置新版本的apache common collections添加了对这个漏洞的修复，在apache common collections4中Tranformer">
+<meta property="og:description" content="打包发布于安全客https://www.anquanke.com/post/id/173459  java apache common collections 反序列化分析apache common collections是15年左右爆出来的一个反序列化利用链，影响范围广泛。这篇文章中便复现一下这个利用过程。 复现的第一步：项目依赖项配置新版本的apache common collections">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://hexo.imagemlt.xyz/post/apache-common-collections/F0D6679D-9008-4677-84C4-0B76725033AF.png">
 <meta property="og:image" content="https://hexo.imagemlt.xyz/post/apache-common-collections/image-20190206104745142.png">
-<meta property="og:updated_time" content="2019-02-14T08:39:19.683Z">
+<meta property="og:updated_time" content="2019-03-22T00:33:22.653Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="java apache common collections 反序列化分析">
-<meta name="twitter:description" content="java apache common collections 反序列化分析apache common collections是15年左右爆出来的一个反序列化利用链，影响范围广泛。这篇文章中便复现一下这个利用过程。 复现的第一步：项目依赖项配置新版本的apache common collections添加了对这个漏洞的修复，在apache common collections4中Tranformer">
+<meta name="twitter:description" content="打包发布于安全客https://www.anquanke.com/post/id/173459  java apache common collections 反序列化分析apache common collections是15年左右爆出来的一个反序列化利用链，影响范围广泛。这篇文章中便复现一下这个利用过程。 复现的第一步：项目依赖项配置新版本的apache common collections">
 <meta name="twitter:image" content="https://hexo.imagemlt.xyz/post/apache-common-collections/F0D6679D-9008-4677-84C4-0B76725033AF.png">
 
 
@@ -379,7 +379,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-02-14 16:39:19" itemprop="dateModified" datetime="2019-02-14T16:39:19+08:00">2019-02-14</time>
+                <time title="Modified: 2019-03-22 08:33:22" itemprop="dateModified" datetime="2019-03-22T08:33:22+08:00">2019-03-22</time>
               
             
           </span>
@@ -412,7 +412,10 @@
       
 
       
-        <h1 id="java-apache-common-collections-反序列化分析"><a href="#java-apache-common-collections-反序列化分析" class="headerlink" title="java apache common collections 反序列化分析"></a>java apache common collections 反序列化分析</h1><p>apache common collections是15年左右爆出来的一个反序列化利用链，影响范围广泛。这篇文章中便复现一下这个利用过程。</p>
+        <blockquote>
+<p>打包发布于安全客<a href="https://www.anquanke.com/post/id/173459">https://www.anquanke.com/post/id/173459</a></p>
+</blockquote>
+<h1 id="java-apache-common-collections-反序列化分析"><a href="#java-apache-common-collections-反序列化分析" class="headerlink" title="java apache common collections 反序列化分析"></a>java apache common collections 反序列化分析</h1><p>apache common collections是15年左右爆出来的一个反序列化利用链，影响范围广泛。这篇文章中便复现一下这个利用过程。</p>
 <h2 id="复现的第一步：项目依赖项配置"><a href="#复现的第一步：项目依赖项配置" class="headerlink" title="复现的第一步：项目依赖项配置"></a>复现的第一步：项目依赖项配置</h2><p>新版本的apache common collections添加了对这个漏洞的修复，在<code>apache common collections4</code>中Tranformer类取消了<code>Seralizable</code>,而其他高版本则需要设置环境来允许序列化才可以，因此我们使用旧版本的apache common collections来复现这个漏洞。这里贴一下我的maven的依赖项配置：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"> <span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>junit<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>junit<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>4.11<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">scope</span>&gt;</span>test<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>commons-collections<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-collections<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br></pre></td></tr></table></figure>
 <h2 id="pop链分析"><a href="#pop链分析" class="headerlink" title="pop链分析"></a>pop链分析</h2><p>apache common collections的反序列化主要依托于transformer这个类，以及TransformedMap类。顾名思义Transformer类适用于描述一个变换过程，而TransformedMap就是将这个变换过程应用到一个Map上对Map进行变换。当我们修改Map中的某个值时就会调用预先设置好的Transformer来对Map进行处理操作。</p>
