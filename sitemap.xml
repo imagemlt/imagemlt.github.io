@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://hexo.imagemlt.xyz/post/karaf-arbitrary-file-write/index.html</loc>
+    
+    <lastmod>2019-03-25T13:43:49.694Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://hexo.imagemlt.xyz/post/apache-common-collections/index.html</loc>
     
     <lastmod>2019-03-22T00:33:22.653Z</lastmod>
