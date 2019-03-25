@@ -317,289 +317,6 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/socket-structures/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/socket-structures/index.html" itemprop="url">
-                  socket网络编程笔记 与地址相关的常见struct
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2017-11-27 20:51:20" itemprop="dateCreated datePublished" datetime="2017-11-27T20:51:20+08:00">2017-11-27</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <hr>
-<h3 id="addrinfo"><a href="#addrinfo" class="headerlink" title="addrinfo"></a>addrinfo</h3><pre><code>struct addrinfo {
-    int              ai_flags;     // AI_PASSIVE, AI_CANONNAME, etc.
-    int              ai_family;    // AF_INET(ipv4), AF_INET6(ipv6), AF_UNSPEC
-    int              ai_socktype;  // SOCK_STREAM, SOCK_DGRAM
-    int              ai_protocol;  // use 0 for &quot;any&quot;
-    size_t           ai_addrlen;   // size of ai_addr in bytes
-    struct sockaddr *ai_addr;      // struct sockaddr_in or _in6
-    char            *ai_canonname; // full canonical hostname
-    struct addrinfo *ai_next;      // linked list, next node
-};
-</code></pre><ul>
-<li>获取此结构的函数:getaddrinfo()</li>
-</ul>
-<h3 id="sockaddr"><a href="#sockaddr" class="headerlink" title="sockaddr"></a>sockaddr</h3><pre><code>struct sockaddr {
-    unsigned short    sa_family;    // address family, AF_xxx
-    char              sa_data[14];  // 14 bytes of protocol address,contains a destination address and port number for the socket. 
-}; 
-</code></pre><h3 id="sockaddr-in"><a href="#sockaddr-in" class="headerlink" title="sockaddr_in"></a>sockaddr_in</h3><pre><code>// (IPv4 only--see struct sockaddr_in6 for IPv6)
-struct sockaddr_in {
-    short int          sin_family;  // Address family, AF_INET
-    unsigned short int sin_port;    // Port number
-    struct in_addr     sin_addr;    // Internet address
-    unsigned char      sin_zero[8]; // Same size as struct sockaddr
-};
-</code></pre><ul>
-<li><strong>sin_zero</strong>(which is included to pad the structure to the length of a struct sockaddr) should be set to all zeros with the function <strong>memset()</strong></li>
-<li><strong>sin_family</strong> corresponds to <strong>sa_family</strong> in a struct <strong>sockaddr</strong> and should be set to <strong>_AF_INET_</strong>.</li>
-<li>the <strong>sin_port</strong> must be in <strong><em>Network Byte Order</em></strong> (by using <strong>htons()</strong>!)</li>
-</ul>
-<h3 id="in-addr"><a href="#in-addr" class="headerlink" title="in_addr"></a>in_addr</h3><pre><code>// (IPv4 only--see struct in6_addr for IPv6)
-// Internet address (a structure for historical reasons)
-struct in_addr {
-    uint32_t s_addr; // that&apos;s a 32-bit int (4 bytes)
-};
-</code></pre><ul>
-<li>used to be a union</li>
-<li>referes to the 4-byte IP address</li>
-</ul>
-<h3 id="structs-in-ipv6-similar"><a href="#structs-in-ipv6-similar" class="headerlink" title="structs in ipv6(similar)"></a>structs in ipv6(similar)</h3><pre><code>// (IPv6 only--see struct sockaddr_in and struct in_addr for IPv4)
-struct sockaddr_in6 {
-    u_int16_t       sin6_family;   // address family, AF_INET6
-    u_int16_t       sin6_port;     // port number, Network Byte Order
-    u_int32_t       sin6_flowinfo; // IPv6 flow information
-    struct in6_addr sin6_addr;     // IPv6 address
-    u_int32_t       sin6_scope_id; // Scope ID
-};
-struct in6_addr {
-    unsigned char   s6_addr[16];   // IPv6 address
-};
-</code></pre><h3 id="sockaddr-storage-a-structure-large-enough-to-hold-both-ipv4-and-ipv6-structrues"><a href="#sockaddr-storage-a-structure-large-enough-to-hold-both-ipv4-and-ipv6-structrues" class="headerlink" title="sockaddr_storage (a structure large enough to hold both ipv4 and ipv6 structrues)"></a>sockaddr_storage (a structure large enough to hold both ipv4 and ipv6 structrues)</h3><pre><code>struct sockaddr_storage {
-    sa_family_t  ss_family;     // address family
-    // all this is padding, implementation specific, ignore it:
-    char      __ss_pad1[_SS_PAD1SIZE];
-    int64_t   __ss_align;
-    char      __ss_pad2[_SS_PAD2SIZE];
-};
-</code></pre><ul>
-<li>you can cast it to a struct sockaddr_in or struct sockaddr_in6 if you wanna</li>
-</ul>
-<h2 id="manipulate-IP-address"><a href="#manipulate-IP-address" class="headerlink" title="manipulate IP address"></a>manipulate IP address</h2><h3 id="inet-pton-cast-string-form-to-binary-form"><a href="#inet-pton-cast-string-form-to-binary-form" class="headerlink" title="inet_pton(): cast string form to binary form"></a>inet_pton(): cast string form to binary form</h3><pre><code>struct sockaddr_in sa; // IPv4
-struct sockaddr_in6 sa6; // IPv6
-inet_pton(AF_INET, &quot;10.12.110.57&quot;, &amp;(sa.sin_addr)); // IPv4
-inet_pton(AF_INET6, &quot;2001:db8:63b3:1::3490&quot;, &amp;(sa6.sin6_addr)); // IPv6
-</code></pre><ul>
-<li>old way: <strong>_inet_addr()_</strong> <strong>_inet_aton()_</strong> (not compatible with IPv6)</li>
-</ul>
-<h3 id="inet-ntop-cast-binary-from-to-string-from"><a href="#inet-ntop-cast-binary-from-to-string-from" class="headerlink" title="inet_ntop(): cast binary from to string from"></a>inet_ntop(): cast binary from to string from</h3><pre><code>// IPv4:
-char ip4[INET_ADDRSTRLEN];
-struct sockaddr_in sa;
-// space to hold the IPv4 string
-// pretend this is loaded with something
-inet_ntop(AF_INET, &amp;(sa.sin_addr), ip4, INET_ADDRSTRLEN);
-printf(&quot;The IPv4 address is: %s\n&quot;, ip4);
-// IPv6:
-char ip6[INET6_ADDRSTRLEN]; // space to hold the IPv6 string
-struct sockaddr_in6 sa6;
-// pretend this is loaded with something
-inet_ntop(AF_INET6, &amp;(sa6.sin6_addr), ip6, INET6_ADDRSTRLEN);
-printf(&quot;The address is: %s\n&quot;, ip6);
-</code></pre><blockquote>
-<p>only work with numeric IP addresses,won’t do any nameserver DNS lookup on a hostname. Use <strong><em>getaddrinfo()</em></strong> to do that.</p>
-</blockquote>
-<h2 id="Other-Notes"><a href="#Other-Notes" class="headerlink" title="Other Notes"></a>Other Notes</h2><ul>
-<li><strong><em>Layered Network Model</em></strong><ul>
-<li>Seven layers<ol>
-<li><strong>Application</strong> (应用层)</li>
-<li><strong>Presentaion</strong> (表示层)</li>
-<li><strong>Session</strong> (会话层)</li>
-<li><strong>Transport</strong> (传输层)</li>
-<li><strong>Network</strong> (网络层)</li>
-<li><strong>Data Link</strong> (数据链路层)</li>
-<li><strong>Physical</strong> (物理层)</li>
-</ol>
-</li>
-<li>Simplified Four Layers<ul>
-<li><strong>Application Layer</strong>(应用层:telnet,ftp,etc.)</li>
-<li><strong>Host-to-Host Layer</strong>(传输层:TCP UDP)</li>
-<li><strong>Internet Layer</strong>(网络互连层:IP and routing)</li>
-<li><strong>Network Access Layer</strong>(主机到网络层:Ethernet,wi-fi,whatever)</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>Some common IP addresses<ul>
-<li>10.x.x.x<ul>
-<li>only be used either of fully disconnected networks or the networks behind firewalls</li>
-</ul>
-</li>
-<li>192.168.x.x x in range(0,256)</li>
-<li>172.y.x.x y in rarnge(16,32)</li>
-</ul>
-</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/tianyi6/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -2378,6 +2095,176 @@ void search(bool ans=1) {
 
 
     
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/ctf-tools/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/ctf-tools/index.html" itemprop="url">
+                  漏洞练习平台总结
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-03-08 21:35:07" itemprop="dateCreated datePublished" datetime="2017-03-08T21:35:07+08:00">2017-03-08</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>漏洞及渗透练习平台： WebGoat漏洞练习环境 <a href="https://github.com/WebGoat/WebGoat">https://github.com/WebGoat/WebGoat</a> <a href="https://github.com/WebGoat/WebGoat-Legacy">https://github.com/WebGoat/WebGoat-Legacy</a> Damn Vulnerable Web Application(漏洞练习平台) <a href="https://github.com/RandomStorm/DVWA">https://github.com/RandomStorm/DVWA</a> 数据库注入练习平台 <a href="https://github.com/Audi-1/sqli-labs">https://github.com/Audi-1/sqli-labs</a> 用node编写的漏洞练习平台，like OWASP Node Goat <a href="https://github.com/cr0hn/vulnerable-node">https://github.com/cr0hn/vulnerable-node</a> 花式扫描器 ： 端口扫描器Nmap <a href="https://github.com/nmap/nmap">https://github.com/nmap/nmap</a> 本地网络扫描器 <a href="https://github.com/SkyLined/LocalNetworkScanner">https://github.com/SkyLined/LocalNetworkScanner</a> 子域名扫描器 <a href="https://github.com/lijiejie/subDomainsBrute">https://github.com/lijiejie/subDomainsBrute</a> 漏洞路由扫描器 <a href="https://github.com/jh00nbr/Routerhunter-2.0">https://github.com/jh00nbr/Routerhunter-2.0</a> 迷你批量信息泄漏扫描脚本 <a href="https://github.com/lijiejie/BBScan">https://github.com/lijiejie/BBScan</a> Waf类型检测工具 <a href="https://github.com/EnableSecurity/wafw00f">https://github.com/EnableSecurity/wafw00f</a> 信息搜集工具 : 社工插件，可查找以email、phone、username的注册的所有网站账号信息 <a href="https://github.com/n0tr00t/Sreg">https://github.com/n0tr00t/Sreg</a> Github信息搜集，可实时扫描查询git最新上传有关邮箱账号密码信息 <a href="https://github.com/sea-god/gitscan">https://github.com/sea-god/gitscan</a> github Repo信息搜集工具 <a href="https://github.com/metac0rtex/GitHarvester">https://github.com/metac0rtex/GitHarvester</a> WEB： webshell大合集 <a href="https://github.com/tennc/webshell">https://github.com/tennc/webshell</a> 渗透以及web攻击脚本 <a href="https://github.com/brianwrf/hackUtils">https://github.com/brianwrf/hackUtils</a> web渗透小工具大合集 <a href="https://github.com/rootphantomer/hack\_tools\_for\_me">https://github.com/rootphantomer/hack\_tools\_for\_me</a> XSS数据接收平台 <a href="https://github.com/firesunCN/BlueLotus\_XSSReceiver">https://github.com/firesunCN/BlueLotus\_XSSReceiver</a> XSS与CSRF工具 <a href="https://github.com/evilcos/xssor">https://github.com/evilcos/xssor</a> Short for command injection exploiter，web向命令注入检测工具 <a href="https://github.com/stasinopoulos/commix">https://github.com/stasinopoulos/commix</a> 数据库注入工具 <a href="https://github.com/sqlmapproject/sqlmap">https://github.com/sqlmapproject/sqlmap</a> Web代理，通过加载sqlmap api进行sqli实时检测 <a href="https://github.com/zt2/sqli-hunter">https://github.com/zt2/sqli-hunter</a> 新版中国菜刀 <a href="https://github.com/Chora10/Cknife">https://github.com/Chora10/Cknife</a> .git泄露利用EXP <a href="https://github.com/lijiejie/GitHack">https://github.com/lijiejie/GitHack</a> 浏览器攻击框架 <a href="https://github.com/beefproject/beef">https://github.com/beefproject/beef</a> 自动化绕过WAF脚本 <a href="https://github.com/khalilbijjou/WAFNinja">https://github.com/khalilbijjou/WAFNinja</a> http命令行客户端，可以从命令行构造发送各种http请求（类似于Curl） <a href="https://github.com/jkbrzt/httpie">https://github.com/jkbrzt/httpie</a> 浏览器调试利器 <a href="https://github.com/firebug/firebug">https://github.com/firebug/firebug</a> 一款开源WAF <a href="https://github.com/SpiderLabs/ModSecurity">https://github.com/SpiderLabs/ModSecurity</a> windows域渗透工具： windows渗透神器 <a href="https://github.com/gentilkiwi/mimikatz">https://github.com/gentilkiwi/mimikatz</a> Powershell渗透库合集 <a href="https://github.com/PowerShellMafia/PowerSploit">https://github.com/PowerShellMafia/PowerSploit</a> Powershell tools合集 <a href="https://github.com/clymb3r/PowerShell">https://github.com/clymb3r/PowerShell</a> Fuzz: Web向Fuzz工具 <a href="https://github.com/xmendez/wfuzz">https://github.com/xmendez/wfuzz</a> HTTP暴力破解，撞库攻击脚本 <a href="https://github.com/lijiejie/htpwdScan">https://github.com/lijiejie/htpwdScan</a> 漏洞利用及攻击框架： msf <a href="https://github.com/rapid7/metasploit-framework">https://github.com/rapid7/metasploit-framework</a> Poc调用框架，可加载Pocsuite,Tangscan，Beebeeto等 <a href="https://github.com/erevus-cn/pocscan">https://github.com/erevus-cn/pocscan</a> Pocsuite <a href="https://github.com/knownsec/Pocsuite">https://github.com/knownsec/Pocsuite</a> Beebeeto <a href="https://github.com/n0tr00t/Beebeeto-framework">https://github.com/n0tr00t/Beebeeto-framework</a> 漏洞POC&amp;EXP: ExploitDB官方git版本 <a href="https://github.com/offensive-security/exploit-database">https://github.com/offensive-security/exploit-database</a> php漏洞代码分析 <a href="https://github.com/80vul/phpcodz">https://github.com/80vul/phpcodz</a> Simple test for CVE-2016-2107 <a href="https://github.com/FiloSottile/CVE-2016-2107">https://github.com/FiloSottile/CVE-2016-2107</a> CVE-2015-7547 POC <a href="https://github.com/fjserna/CVE-2015-7547">https://github.com/fjserna/CVE-2015-7547</a> JAVA反序列化POC生成工具 <a href="https://github.com/frohoff/ysoserial">https://github.com/frohoff/ysoserial</a> JAVA反序列化EXP <a href="https://github.com/foxglovesec/JavaUnserializeExploits">https://github.com/foxglovesec/JavaUnserializeExploits</a> Jenkins CommonCollections EXP <a href="https://github.com/CaledoniaProject/jenkins-cli-exploit">https://github.com/CaledoniaProject/jenkins-cli-exploit</a> CVE-2015-2426 EXP (windows内核提权) <a href="https://github.com/vlad902/hacking-team-windows-kernel-lpe">https://github.com/vlad902/hacking-team-windows-kernel-lpe</a> use docker to show web attack(php本地文件包含结合phpinfo getshell 以及ssrf结合curl的利用演示) <a href="https://github.com/hxer/vulnapp">https://github.com/hxer/vulnapp</a> php7缓存覆写漏洞Demo及相关工具 <a href="https://github.com/GoSecure/php7-opcache-override">https://github.com/GoSecure/php7-opcache-override</a> XcodeGhost木马样本 <a href="https://github.com/XcodeGhostSource/XcodeGhost">https://github.com/XcodeGhostSource/XcodeGhost</a> 中间人攻击及钓鱼 中间人攻击框架 <a href="https://github.com/secretsquirrel/the-backdoor-factory">https://github.com/secretsquirrel/the-backdoor-factory</a> <a href="https://github.com/secretsquirrel/BDFProxy">https://github.com/secretsquirrel/BDFProxy</a> <a href="https://github.com/byt3bl33d3r/MITMf">https://github.com/byt3bl33d3r/MITMf</a> Inject code, jam wifi, and spy on wifi users <a href="https://github.com/DanMcInerney/LANs.py">https://github.com/DanMcInerney/LANs.py</a> 可扩展的中间人代理工具 <a href="https://github.com/intrepidusgroup/mallory">https://github.com/intrepidusgroup/mallory</a> wifi钓鱼 <a href="https://github.com/sophron/wifiphisher">https://github.com/sophron/wifiphisher</a> 密码破解： 密码破解工具 <a href="https://github.com/shinnok/johnny">https://github.com/shinnok/johnny</a> 本地存储的各类密码提取利器 <a href="https://github.com/AlessandroZ/LaZagne">https://github.com/AlessandroZ/LaZagne</a> 二进制及代码分析工具： 二进制分析工具 <a href="https://github.com/devttys0/binwalk">https://github.com/devttys0/binwalk</a> 系统扫描器，用于寻找程序和库然后收集他们的依赖关系，链接等信息 <a href="https://github.com/quarkslab/binmap">https://github.com/quarkslab/binmap</a> rp++ is a full-cpp written tool that aims to find ROP sequences in PE/Elf/Mach-O (doesn’t support the FAT binaries) x86/x64 binaries. <a href="https://github.com/0vercl0k/rp">https://github.com/0vercl0k/rp</a> Windows Exploit Development工具 <a href="https://github.com/lillypad/badger">https://github.com/lillypad/badger</a> 二进制静态分析工具（python） <a href="https://github.com/bdcht/amoco">https://github.com/bdcht/amoco</a> Python Exploit Development Assistance for GDB <a href="https://github.com/longld/peda">https://github.com/longld/peda</a> 对BillGates Linux Botnet系木马活动的监控工具 <a href="https://github.com/ValdikSS/billgates-botnet-tracker">https://github.com/ValdikSS/billgates-botnet-tracker</a> 木马配置参数提取工具 <a href="https://github.com/kevthehermit/RATDecoders">https://github.com/kevthehermit/RATDecoders</a> Shellphish编写的二进制分析工具（CTF向） <a href="https://github.com/angr/angr">https://github.com/angr/angr</a> 针对python的静态代码分析工具 <a href="https://github.com/yinwang0/pysonar2">https://github.com/yinwang0/pysonar2</a> 一个自动化的脚本（shell）分析工具，用来给出警告和建议 <a href="https://github.com/koalaman/shellcheck">https://github.com/koalaman/shellcheck</a> 基于AST变换的简易Javascript反混淆辅助工具 <a href="https://github.com/ChiChou/etacsufbo">https://github.com/ChiChou/etacsufbo</a> EXP编写框架及工具： 二进制EXP编写工具 <a href="https://github.com/t00sh/rop-tool">https://github.com/t00sh/rop-tool</a> CTF Pwn 类题目脚本编写框架 <a href="https://github.com/Gallopsled/pwntools">https://github.com/Gallopsled/pwntools</a> an easy-to-use io library for pwning development <a href="https://github.com/zTrix/zio">https://github.com/zTrix/zio</a> 跨平台注入工具（ Inject JavaScript to explore native apps on Windows, Mac, Linux, iOS and Android.） <a href="https://github.com/frida/frida">https://github.com/frida/frida</a> 隐写： 隐写检测工具 <a href="https://github.com/abeluck/stegdetect">https://github.com/abeluck/stegdetect</a> 各类安全资料: 域渗透教程 <a href="https://github.com/l3m0n/pentest\_study">https://github.com/l3m0n/pentest\_study</a> python security教程（原文链接<a href="http://www.primalsecurity.net/tutorials/python-tutorials/）">http://www.primalsecurity.net/tutorials/python-tutorials/）</a> <a href="https://github.com/smartFlash/pySecurity">https://github.com/smartFlash/pySecurity</a> data_hacking合集 <a href="https://github.com/ClickSecurity/data\_hacking">https://github.com/ClickSecurity/data\_hacking</a> mobile-security-wiki <a href="https://github.com/exploitprotocol/mobile-security-wiki">https://github.com/exploitprotocol/mobile-security-wiki</a> 书籍《reverse-engineering-for-beginners》 <a href="https://github.com/veficos/reverse-engineering-for-beginners">https://github.com/veficos/reverse-engineering-for-beginners</a> 一些信息安全标准及设备配置 <a href="https://github.com/luyg24/IT\_security">https://github.com/luyg24/IT\_security</a> APT相关笔记 <a href="https://github.com/kbandla/APTnotes">https://github.com/kbandla/APTnotes</a> Kcon资料 <a href="https://github.com/knownsec/KCon">https://github.com/knownsec/KCon</a> ctf及黑客资源合集 <a href="https://github.com/bt3gl/My-Gray-Hacker-Resources">https://github.com/bt3gl/My-Gray-Hacker-Resources</a> ctf和安全工具大合集 <a href="https://github.com/zardus/ctf-tools">https://github.com/zardus/ctf-tools</a> 《DO NOT FUCK WITH A HACKER》 <a href="https://github.com/citypw/DNFWAH">https://github.com/citypw/DNFWAH</a> 各类CTF资源 近年ctf writeup大全 <a href="https://github.com/ctfs/write-ups-2016">https://github.com/ctfs/write-ups-2016</a> <a href="https://github.com/ctfs/write-ups-2015">https://github.com/ctfs/write-ups-2015</a> <a href="https://github.com/ctfs/write-ups-2014">https://github.com/ctfs/write-ups-2014</a> fbctf竞赛平台Demo <a href="https://github.com/facebook/fbctf">https://github.com/facebook/fbctf</a> ctf Resources <a href="https://github.com/ctfs/resources">https://github.com/ctfs/resources</a> 各类编程资源: 大礼包（什么都有） <a href="https://github.com/bayandin/awesome-awesomeness">https://github.com/bayandin/awesome-awesomeness</a> bash-handbook <a href="https://github.com/denysdovhan/bash-handbook">https://github.com/denysdovhan/bash-handbook</a> python资源大全 <a href="https://github.com/jobbole/awesome-python-cn">https://github.com/jobbole/awesome-python-cn</a> git学习资料 <a href="https://github.com/xirong/my-git">https://github.com/xirong/my-git</a> 安卓开源代码解析 <a href="https://github.com/android-cn/android-open-project-analysis">https://github.com/android-cn/android-open-project-analysis</a> python框架，库，资源大合集 <a href="https://github.com/vinta/awesome-python">https://github.com/vinta/awesome-python</a> JS 正则表达式库（用于简化构造复杂的JS正则表达式） <a href="https://github.com/VerbalExpressions/JSVerbalExpressions">https://github.com/VerbalExpressions/JSVerbalExpressions</a> Python： python 正则表达式库（用于简化构造复杂的python正则表达式） <a href="https://github.com/VerbalExpressions/PythonVerbalExpressions">https://github.com/VerbalExpressions/PythonVerbalExpressions</a> python任务管理以及命令执行库 <a href="https://github.com/pyinvoke/invoke">https://github.com/pyinvoke/invoke</a> python exe打包库 <a href="https://github.com/pyinstaller/pyinstaller">https://github.com/pyinstaller/pyinstaller</a> py3 爬虫框架 <a href="https://github.com/orf/cyborg">https://github.com/orf/cyborg</a> 一个提供底层接口数据包编程和网络协议支持的python库 <a href="https://github.com/CoreSecurity/impacket">https://github.com/CoreSecurity/impacket</a> python requests 库 <a href="https://github.com/kennethreitz/requests">https://github.com/kennethreitz/requests</a> python 实用工具合集 <a href="https://github.com/mahmoud/boltons">https://github.com/mahmoud/boltons</a> python爬虫系统 <a href="https://github.com/binux/pyspider">https://github.com/binux/pyspider</a> ctf向 python工具包 <a href="https://github.com/P1kachu/v0lt">https://github.com/P1kachu/v0lt</a> 科学上网： 科学上网工具 <a href="https://github.com/XX-net/XX-Net">https://github.com/XX-net/XX-Net</a> 福利： 微信自动抢红包动态库 <a href="https://github.com/east520/AutoGetRedEnv">https://github.com/east520/AutoGetRedEnv</a> 微信抢红包插件（安卓版） <a href="https://github.com/geeeeeeeeek/WeChatLuckyMoney">https://github.com/geeeeeeeeek/WeChatLuckyMoney</a> 神器 <a href="https://github.com/yangyangwithgnu/hardseed">https://github.com/yangyangwithgnu/hardseed</a></p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
   </section>
 
   
@@ -2427,7 +2314,7 @@ void search(bool ans=1) {
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">55</span>
+                    <span class="site-state-item-count">54</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
