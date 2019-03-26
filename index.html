@@ -380,7 +380,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-03-27 00:04:55" itemprop="dateModified" datetime="2019-03-27T00:04:55+08:00">2019-03-27</time>
+                <time title="Modified: 2019-03-27 00:13:47" itemprop="dateModified" datetime="2019-03-27T00:13:47+08:00">2019-03-27</time>
               
             
           </span>
@@ -427,6 +427,7 @@
 <p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1g1fdfls0qej30oi065ta4.jpg" alt="image-20190325214108051"></p>
 <p>为了实现RCE,karaf会自动加载deploy目录下的bundle包，调用其Activator的start函数，因此我们只需要构造一个恶意的osgi bundle包在start函数中写入反弹shell的操作即可。</p>
 <p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1g1gn68dq8ej30dm077q32.jpg" alt="60EBB403F976DE0E087E4BD1751D897D"></p>
+<p>这里使用的bundle包源码放到了<a href="https://github.com/imagemlt/osgi-bundle-backdoor">https://github.com/imagemlt/osgi-bundle-backdoor</a>中，<code>mvn install</code>后再<code>mvn package</code>即可在target目录下找到生成的jar包。</p>
 
           
         
