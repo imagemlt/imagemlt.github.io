@@ -317,6 +317,170 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/flask自定义decorator的坑点/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/flask自定义decorator的坑点/index.html" itemprop="url">
+                  flask自定义decorator的坑点
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-06-28 01:23:54" itemprop="dateCreated datePublished" datetime="2018-06-28T01:23:54+08:00">2018-06-28</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="flask自定义decorator的坑点"><a href="#flask自定义decorator的坑点" class="headerlink" title="flask自定义decorator的坑点"></a>flask自定义decorator的坑点</h2><p>在一次开发中需要做一个权限验证的修饰器，由于之前并没有太多的flask编程经验，没有写过这种修饰器，于是便直接写出了以下的代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">is_admin</span><span class="params">(func)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">wrapper</span><span class="params">(*args,**kargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> session[<span class="string">'is_admin'</span>]:</span><br><span class="line">            <span class="keyword">return</span> redirect(<span class="string">'/admin/login'</span>)</span><br><span class="line">        <span class="keyword">return</span> func(args,kargs)</span><br><span class="line">    <span class="keyword">return</span> wrapper</span><br></pre></td></tr></table></figure>
+<p>写完后直接运行报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">existing endpoint function: %s&apos; % endpoint)</span><br><span class="line">AssertionError: View function mapping is overwriting an existing endpoint function: admin.wrapper</span><br></pre></td></tr></table></figure>
+<p>一开始的时候百思不得其解，并不懂这个错误出现的原因。后来联系报错的提示为已经存在了一个注册过的函数admin.wrapper.<br>可以判断为，经过修饰器修饰后，当传入flask自己的修饰器后修饰器获取到的当前函数的名称为wrapper，所以所有被这个修饰器修饰过得函数传入flask的修饰器中获取到的函数名都是wrapper，因此产生了冲突从而报错。</p>
+<p>查看报错的地方的源码，位于<em>app.py</em>中：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add_url_rule</span><span class="params">(self, rule, endpoint=None, view_func=None,</span></span></span><br><span class="line"><span class="function"><span class="params">                 provide_automatic_options=None, **options)</span>:</span></span><br><span class="line">    <span class="string">"""Connects a URL rule.  Works exactly like the :meth:`route`</span></span><br><span class="line"><span class="string">    decorator.  If a view_func is provided it will be registered with the</span></span><br><span class="line"><span class="string">    endpoint.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Basically this example::</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        @app.route('/')</span></span><br><span class="line"><span class="string">        def index():</span></span><br><span class="line"><span class="string">            pass</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Is equivalent to the following::</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        def index():</span></span><br><span class="line"><span class="string">            pass</span></span><br><span class="line"><span class="string">        app.add_url_rule('/', 'index', index)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    If the view_func is not provided you will need to connect the endpoint</span></span><br><span class="line"><span class="string">    to a view function like so::</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        app.view_functions['index'] = index</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Internally :meth:`route` invokes :meth:`add_url_rule` so if you want</span></span><br><span class="line"><span class="string">    to customize the behavior via subclassing you only need to change</span></span><br><span class="line"><span class="string">    this method.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    For more information refer to :ref:`url-route-registrations`.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    .. versionchanged:: 0.2</span></span><br><span class="line"><span class="string">       `view_func` parameter added.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    .. versionchanged:: 0.6</span></span><br><span class="line"><span class="string">       ``OPTIONS`` is added automatically as method.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    :param rule: the URL rule as string</span></span><br><span class="line"><span class="string">    :param endpoint: the endpoint for the registered URL rule.  Flask</span></span><br><span class="line"><span class="string">                     itself assumes the name of the view function as</span></span><br><span class="line"><span class="string">                     endpoint</span></span><br><span class="line"><span class="string">    :param view_func: the function to call when serving a request to the</span></span><br><span class="line"><span class="string">                      provided endpoint</span></span><br><span class="line"><span class="string">    :param provide_automatic_options: controls whether the ``OPTIONS``</span></span><br><span class="line"><span class="string">        method should be added automatically. This can also be controlled</span></span><br><span class="line"><span class="string">        by setting the ``view_func.provide_automatic_options = False``</span></span><br><span class="line"><span class="string">        before adding the rule.</span></span><br><span class="line"><span class="string">    :param options: the options to be forwarded to the underlying</span></span><br><span class="line"><span class="string">                    :class:`~werkzeug.routing.Rule` object.  A change</span></span><br><span class="line"><span class="string">                    to Werkzeug is handling of method options.  methods</span></span><br><span class="line"><span class="string">                    is a list of methods this rule should be limited</span></span><br><span class="line"><span class="string">                    to (``GET``, ``POST`` etc.).  By default a rule</span></span><br><span class="line"><span class="string">                    just listens for ``GET`` (and implicitly ``HEAD``).</span></span><br><span class="line"><span class="string">                    Starting with Flask 0.6, ``OPTIONS`` is implicitly</span></span><br><span class="line"><span class="string">                    added and handled by the standard request handling.</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="keyword">if</span> endpoint <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">        endpoint = _endpoint_from_view_func(view_func)</span><br><span class="line">    options[<span class="string">'endpoint'</span>] = endpoint</span><br><span class="line">    methods = options.pop(<span class="string">'methods'</span>, <span class="keyword">None</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># if the methods are not given and the view_func object knows its</span></span><br><span class="line">    <span class="comment"># methods we can use that instead.  If neither exists, we go with</span></span><br><span class="line">    <span class="comment"># a tuple of only ``GET`` as default.</span></span><br><span class="line">    <span class="keyword">if</span> methods <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">        methods = getattr(view_func, <span class="string">'methods'</span>, <span class="keyword">None</span>) <span class="keyword">or</span> (<span class="string">'GET'</span>,)</span><br><span class="line">    <span class="keyword">if</span> isinstance(methods, string_types):</span><br><span class="line">        <span class="keyword">raise</span> TypeError(<span class="string">'Allowed methods have to be iterables of strings, '</span></span><br><span class="line">                        <span class="string">'for example: @app.route(..., methods=["POST"])'</span>)</span><br><span class="line">    methods = set(item.upper() <span class="keyword">for</span> item <span class="keyword">in</span> methods)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Methods that should always be added</span></span><br><span class="line">    required_methods = set(getattr(view_func, <span class="string">'required_methods'</span>, ()))</span><br><span class="line"></span><br><span class="line">    <span class="comment"># starting with Flask 0.8 the view_func object can disable and</span></span><br><span class="line">    <span class="comment"># force-enable the automatic options handling.</span></span><br><span class="line">    <span class="keyword">if</span> provide_automatic_options <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">        provide_automatic_options = getattr(view_func,</span><br><span class="line">            <span class="string">'provide_automatic_options'</span>, <span class="keyword">None</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> provide_automatic_options <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">        <span class="keyword">if</span> <span class="string">'OPTIONS'</span> <span class="keyword">not</span> <span class="keyword">in</span> methods:</span><br><span class="line">            provide_automatic_options = <span class="keyword">True</span></span><br><span class="line">            required_methods.add(<span class="string">'OPTIONS'</span>)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            provide_automatic_options = <span class="keyword">False</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># Add the required methods now.</span></span><br><span class="line">    methods |= required_methods</span><br><span class="line"></span><br><span class="line">    rule = self.url_rule_class(rule, methods=methods, **options)</span><br><span class="line">    rule.provide_automatic_options = provide_automatic_options</span><br><span class="line"></span><br><span class="line">    self.url_map.add(rule)</span><br><span class="line">    <span class="keyword">if</span> view_func <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">        old_func = self.view_functions.get(endpoint)</span><br><span class="line">        <span class="keyword">if</span> old_func <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span> <span class="keyword">and</span> old_func != view_func:</span><br><span class="line">            <span class="keyword">raise</span> AssertionError(<span class="string">'View function mapping is overwriting an '</span></span><br><span class="line">                                 <span class="string">'existing endpoint function: %s'</span> % endpoint)</span><br><span class="line">        self.view_functions[endpoint] = view_func</span><br></pre></td></tr></table></figure>
+<p>这里的view_functions是一个dict，存储endpoint-view_func键值对。而endpoint是指一个标记各个url的一个字符串，通常为函数的名称。endpoint与不同的函数一一对应。<br>出错的原因在于相同的endpoint被指向了两次，且指向的函数不同，但是这两个不同的函数却拥有相同的名字<strong><strong>name</strong></strong>，因此便对应了相同的endpoint。所以便导致了重复出现的错误。</p>
+<p>那么怎么解决这个问题？这里使用了一个叫做functools的库中定义的一个修饰器@functool.wraps.<br>更改后的代码为:<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">is_admin</span><span class="params">(func)</span>:</span></span><br><span class="line"><span class="meta">    @functools.wraps(func)</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">wrapper</span><span class="params">(*args,**kargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> session[<span class="string">'is_admin'</span>]:</span><br><span class="line">            <span class="keyword">return</span> redirect(<span class="string">'/admin/login'</span>)</span><br><span class="line">        <span class="keyword">return</span> func(args,kargs)</span><br><span class="line">    <span class="keyword">return</span> wrapper</span><br></pre></td></tr></table></figure></p>
+<p>再次调试可以看到这次程序运行后对应的函数的<strong>name</strong>不同，从而没有再出现bug。再次调试可以发现最后的函数的<strong>name</strong>与对应的endpoint值均不同。</p>
+<p>注：@functools.wraps(func)的作用就是保留原有函数的名称和docstring</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://segmentfault.com/a/1190000006658289">记录一次使用Flask开发过程中的bug</a></p>
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>经过这次拍错发现自己对flask的实现机制产生了浓厚的兴趣。。。。那就立个flag，今年要把flask的源码好好看一看，至少弄懂flask背后的设计原理。</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/红帽杯线下赛AWD题目分析/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -3175,289 +3339,6 @@ public function init() {
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/socket-structures/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/socket-structures/index.html" itemprop="url">
-                  socket网络编程笔记 与地址相关的常见struct
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2017-11-27 20:51:20" itemprop="dateCreated datePublished" datetime="2017-11-27T20:51:20+08:00">2017-11-27</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <hr>
-<h3 id="addrinfo"><a href="#addrinfo" class="headerlink" title="addrinfo"></a>addrinfo</h3><pre><code>struct addrinfo {
-    int              ai_flags;     // AI_PASSIVE, AI_CANONNAME, etc.
-    int              ai_family;    // AF_INET(ipv4), AF_INET6(ipv6), AF_UNSPEC
-    int              ai_socktype;  // SOCK_STREAM, SOCK_DGRAM
-    int              ai_protocol;  // use 0 for &quot;any&quot;
-    size_t           ai_addrlen;   // size of ai_addr in bytes
-    struct sockaddr *ai_addr;      // struct sockaddr_in or _in6
-    char            *ai_canonname; // full canonical hostname
-    struct addrinfo *ai_next;      // linked list, next node
-};
-</code></pre><ul>
-<li>获取此结构的函数:getaddrinfo()</li>
-</ul>
-<h3 id="sockaddr"><a href="#sockaddr" class="headerlink" title="sockaddr"></a>sockaddr</h3><pre><code>struct sockaddr {
-    unsigned short    sa_family;    // address family, AF_xxx
-    char              sa_data[14];  // 14 bytes of protocol address,contains a destination address and port number for the socket. 
-}; 
-</code></pre><h3 id="sockaddr-in"><a href="#sockaddr-in" class="headerlink" title="sockaddr_in"></a>sockaddr_in</h3><pre><code>// (IPv4 only--see struct sockaddr_in6 for IPv6)
-struct sockaddr_in {
-    short int          sin_family;  // Address family, AF_INET
-    unsigned short int sin_port;    // Port number
-    struct in_addr     sin_addr;    // Internet address
-    unsigned char      sin_zero[8]; // Same size as struct sockaddr
-};
-</code></pre><ul>
-<li><strong>sin_zero</strong>(which is included to pad the structure to the length of a struct sockaddr) should be set to all zeros with the function <strong>memset()</strong></li>
-<li><strong>sin_family</strong> corresponds to <strong>sa_family</strong> in a struct <strong>sockaddr</strong> and should be set to <strong>_AF_INET_</strong>.</li>
-<li>the <strong>sin_port</strong> must be in <strong><em>Network Byte Order</em></strong> (by using <strong>htons()</strong>!)</li>
-</ul>
-<h3 id="in-addr"><a href="#in-addr" class="headerlink" title="in_addr"></a>in_addr</h3><pre><code>// (IPv4 only--see struct in6_addr for IPv6)
-// Internet address (a structure for historical reasons)
-struct in_addr {
-    uint32_t s_addr; // that&apos;s a 32-bit int (4 bytes)
-};
-</code></pre><ul>
-<li>used to be a union</li>
-<li>referes to the 4-byte IP address</li>
-</ul>
-<h3 id="structs-in-ipv6-similar"><a href="#structs-in-ipv6-similar" class="headerlink" title="structs in ipv6(similar)"></a>structs in ipv6(similar)</h3><pre><code>// (IPv6 only--see struct sockaddr_in and struct in_addr for IPv4)
-struct sockaddr_in6 {
-    u_int16_t       sin6_family;   // address family, AF_INET6
-    u_int16_t       sin6_port;     // port number, Network Byte Order
-    u_int32_t       sin6_flowinfo; // IPv6 flow information
-    struct in6_addr sin6_addr;     // IPv6 address
-    u_int32_t       sin6_scope_id; // Scope ID
-};
-struct in6_addr {
-    unsigned char   s6_addr[16];   // IPv6 address
-};
-</code></pre><h3 id="sockaddr-storage-a-structure-large-enough-to-hold-both-ipv4-and-ipv6-structrues"><a href="#sockaddr-storage-a-structure-large-enough-to-hold-both-ipv4-and-ipv6-structrues" class="headerlink" title="sockaddr_storage (a structure large enough to hold both ipv4 and ipv6 structrues)"></a>sockaddr_storage (a structure large enough to hold both ipv4 and ipv6 structrues)</h3><pre><code>struct sockaddr_storage {
-    sa_family_t  ss_family;     // address family
-    // all this is padding, implementation specific, ignore it:
-    char      __ss_pad1[_SS_PAD1SIZE];
-    int64_t   __ss_align;
-    char      __ss_pad2[_SS_PAD2SIZE];
-};
-</code></pre><ul>
-<li>you can cast it to a struct sockaddr_in or struct sockaddr_in6 if you wanna</li>
-</ul>
-<h2 id="manipulate-IP-address"><a href="#manipulate-IP-address" class="headerlink" title="manipulate IP address"></a>manipulate IP address</h2><h3 id="inet-pton-cast-string-form-to-binary-form"><a href="#inet-pton-cast-string-form-to-binary-form" class="headerlink" title="inet_pton(): cast string form to binary form"></a>inet_pton(): cast string form to binary form</h3><pre><code>struct sockaddr_in sa; // IPv4
-struct sockaddr_in6 sa6; // IPv6
-inet_pton(AF_INET, &quot;10.12.110.57&quot;, &amp;(sa.sin_addr)); // IPv4
-inet_pton(AF_INET6, &quot;2001:db8:63b3:1::3490&quot;, &amp;(sa6.sin6_addr)); // IPv6
-</code></pre><ul>
-<li>old way: <strong>_inet_addr()_</strong> <strong>_inet_aton()_</strong> (not compatible with IPv6)</li>
-</ul>
-<h3 id="inet-ntop-cast-binary-from-to-string-from"><a href="#inet-ntop-cast-binary-from-to-string-from" class="headerlink" title="inet_ntop(): cast binary from to string from"></a>inet_ntop(): cast binary from to string from</h3><pre><code>// IPv4:
-char ip4[INET_ADDRSTRLEN];
-struct sockaddr_in sa;
-// space to hold the IPv4 string
-// pretend this is loaded with something
-inet_ntop(AF_INET, &amp;(sa.sin_addr), ip4, INET_ADDRSTRLEN);
-printf(&quot;The IPv4 address is: %s\n&quot;, ip4);
-// IPv6:
-char ip6[INET6_ADDRSTRLEN]; // space to hold the IPv6 string
-struct sockaddr_in6 sa6;
-// pretend this is loaded with something
-inet_ntop(AF_INET6, &amp;(sa6.sin6_addr), ip6, INET6_ADDRSTRLEN);
-printf(&quot;The address is: %s\n&quot;, ip6);
-</code></pre><blockquote>
-<p>only work with numeric IP addresses,won’t do any nameserver DNS lookup on a hostname. Use <strong><em>getaddrinfo()</em></strong> to do that.</p>
-</blockquote>
-<h2 id="Other-Notes"><a href="#Other-Notes" class="headerlink" title="Other Notes"></a>Other Notes</h2><ul>
-<li><strong><em>Layered Network Model</em></strong><ul>
-<li>Seven layers<ol>
-<li><strong>Application</strong> (应用层)</li>
-<li><strong>Presentaion</strong> (表示层)</li>
-<li><strong>Session</strong> (会话层)</li>
-<li><strong>Transport</strong> (传输层)</li>
-<li><strong>Network</strong> (网络层)</li>
-<li><strong>Data Link</strong> (数据链路层)</li>
-<li><strong>Physical</strong> (物理层)</li>
-</ol>
-</li>
-<li>Simplified Four Layers<ul>
-<li><strong>Application Layer</strong>(应用层:telnet,ftp,etc.)</li>
-<li><strong>Host-to-Host Layer</strong>(传输层:TCP UDP)</li>
-<li><strong>Internet Layer</strong>(网络互连层:IP and routing)</li>
-<li><strong>Network Access Layer</strong>(主机到网络层:Ethernet,wi-fi,whatever)</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>Some common IP addresses<ul>
-<li>10.x.x.x<ul>
-<li>only be used either of fully disconnected networks or the networks behind firewalls</li>
-</ul>
-</li>
-<li>192.168.x.x x in range(0,256)</li>
-<li>172.y.x.x y in rarnge(16,32)</li>
-</ul>
-</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -3507,7 +3388,7 @@ printf(&quot;The address is: %s\n&quot;, ip6);
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">54</span>
+                    <span class="site-state-item-count">55</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
