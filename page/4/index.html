@@ -317,6 +317,884 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/thinkings-on-select/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/thinkings-on-select/index.html" itemprop="url">
+                  对select()的理解
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-12-15 00:56:25" itemprop="dateCreated datePublished" datetime="2017-12-15T00:56:25+08:00">2017-12-15</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/人生杂谈/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>断断续续的看<strong>Beej’s Guide to Network Programming</strong>这本小册子,最近看了select函数的用法,感觉这个函数挺有用而且听特殊,理解上有点儿难度,因此记录下来关于这个函数的一些东西.</p>
+</blockquote>
+<h2 id="函数定义"><a href="#函数定义" class="headerlink" title="函数定义"></a>函数定义</h2><pre><code>#include &lt;sys/time.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+int select(int numfds, fd_set *readfds, fd_set *writefds,
+fd_set *exceptfds, struct timeval *timeout);
+</code></pre><h3 id="fd-set"><a href="#fd-set" class="headerlink" title="fd_set"></a><code>fd_set</code></h3><p>这里的fd_set类型相当于一个file descriptor的集合.<br>当select()函数返回时,readfs中只含有可以读的file descriptor.writefs包含可写的descriptor,exceptfds包含出错的file descriptor .(此三个参数不必都有) fd_set有一些列的操作函数:</p>
+<pre><code>FD_SET(int fd, fd_set *set); //Add fd to the set .
+FD_CLR(int fd, fd_set *set); //Remove fd from the set .
+FD_ISSET(int fd, fd_set *set); //Return true if fd is in the set .
+FD_ZERO(fd_set *set); //Clear all entries from the set .
+</code></pre><h3 id="timeval结构体"><a href="#timeval结构体" class="headerlink" title="timeval结构体"></a><code>timeval</code>结构体</h3><pre><code>struct timeval {
+int tv_sec; //seconds
+int tv_usec;// microseconds
+};
+</code></pre><p>此结构体表示select函数的超时时间.设置为NULL则永远等待. 此函数使用时,numfds应设置为最高的file descriptor的值.</p>
+<h3 id="返回值"><a href="#返回值" class="headerlink" title="返回值"></a>返回值</h3><p>返回set中最后剩下的的数目.0表示超时,-1表示出错.</p>
+<h2 id="此函数如何使用的理解"><a href="#此函数如何使用的理解" class="headerlink" title="此函数如何使用的理解"></a>此函数如何使用的理解</h2><p>我们可以在开始的时候使用<code>FD_SET</code>将我们创建的服务端套接字描述符填入一个fd_set中,然后把这个fd_set复制一下传如select的readfds参数中然后用select监听,select有返回值后则遍历所有descriptors</p>
+<ul>
+<li>如果这个descriptor在这个新的readfds中(<code>FD_ISSET</code>)则说明可以read<ul>
+<li>如果这个descriptor正好是我们最初的那个服务端套接字  <ul>
+<li>则可以进行accept操作,然后将读到的这个socksetfd就可以传入我们的fd_set中,判断这个socketfd是否比原有的最大的socketfd大,大则替换<code>select()</code>函数的第一个参数为这个新的socketfd+1.</li>
+</ul>
+</li>
+<li>如果这个descriptor不是最初的那个服务端套接字<ul>
+<li>则说明是与某个主机的一个连接,则可以调用这个套接字的<code>recv()</code>方法接收数据,如果返回0说明这个套接字已经断开,可调用<code>FD_CLR</code>将其从最初的fd_set中清除出去.否则则进行其他的一些列操作.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="一个简单的demo"><a href="#一个简单的demo" class="headerlink" title="一个简单的demo"></a>一个简单的demo</h2><pre><code>/*
+** ChatServer.cpp - a practise on select()
+*/
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;netdb.h&gt;
+
+#define PORT &quot;3456&quot;
+#define STDIN 0
+
+void *get_in_addr(struct sockaddr *sa)
+{
+    if (sa-&gt;sa_family == AF_INET)
+    {
+        return &amp;(((struct sockaddr_in *)sa)-&gt;sin_addr);
+    }
+    else
+        return &amp;(((struct sockaddr_in6 *)sa)-&gt;sin6_addr);
+}
+
+int main(void)
+{
+    fd_set master;
+    fd_set read_fds;
+    int fd_max;
+
+    int listener;
+    int newfd;
+    struct sockaddr_storage remoteaddr;
+    socklen_t addrlen;
+
+    char buf[256];
+    char mess[256];
+    int nbytes;
+
+    char remoteIP[INET6_ADDRSTRLEN];
+
+    int yes = 1;
+    int i, j, rv;
+    struct addrinfo hints, *ai, *p;
+
+    FD_ZERO(&amp;master);
+    FD_ZERO(&amp;read_fds);
+
+    memset(&amp;hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+    if ((rv = getaddrinfo(NULL, PORT, &amp;hints, &amp;ai)) != 0)
+    {
+        fprintf(stderr, &quot;selectserver:%s\n&quot;, gai_strerror(rv));
+        exit(1);
+    }
+
+    for (p = ai; p != NULL; p = p-&gt;ai_next)
+    {
+        listener = socket(p-&gt;ai_family, p-&gt;ai_socktype, p-&gt;ai_protocol);
+        if (listener &lt; 0)
+        {
+            continue;
+        }
+        setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &amp;yes, sizeof(int));
+        if (bind(listener, p-&gt;ai_addr, p-&gt;ai_addrlen) &lt; 0)
+        {
+            close(listener);
+            continue;
+        }
+        break;
+    }
+    if (p == NULL)
+    {
+        fprintf(stderr, &quot;selectserver: failed to bind\n&quot;);
+        exit(2);
+    }
+    freeaddrinfo(ai);
+    if (listen(listener, 10) == -1)
+    {
+        perror(&quot;listen&quot;);
+        exit(3);
+    }
+    FD_SET(listener, &amp;master);
+    FD_SET(STDIN, &amp;master);
+    fd_max = listener &gt; STDIN ? listener : STDIN;
+
+    for (;;)
+    {
+        read_fds = master;
+        if (select(fd_max + 1, &amp;read_fds, NULL, NULL, NULL) == -1)
+        {
+            perror(&quot;select&quot;);
+            exit(4);
+        }
+        for (i = 0; i &lt;= fd_max; i++)
+        {
+            if (FD_ISSET(i, &amp;read_fds))
+            { //we got one!!
+                if (i == STDIN)
+                {
+                    fgets(buf, sizeof buf, stdin);
+                    memset(mess, 0, sizeof mess);
+                    sprintf(mess, &quot;server said:%s&quot;, buf);
+                    for (j = 0; j &lt;= fd_max; j++)
+                    {
+                        if (FD_ISSET(j, &amp;master))
+                        {
+                            if (j != listener &amp;&amp; j != i &amp;&amp; j != STDIN)
+                            {
+                                if (send(j, mess, strlen(mess), 0) == -1)
+                                {
+                                    perror(&quot;send&quot;);
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (i == listener)
+                {
+                    addrlen = sizeof remoteaddr;
+                    newfd = accept(listener, (struct sockaddr *)&amp;remoteaddr, &amp;addrlen);
+                    if (newfd == -1)
+                    {
+                        perror(&quot;accept&quot;);
+                    }
+                    else
+                    {
+                        FD_SET(newfd, &amp;master);
+                        if (newfd &gt; fd_max)
+                        {
+                            fd_max = newfd;
+                        }
+                        printf(&quot;selectserver:new connection from %s on socket %d\n&quot;,
+                               inet_ntop(remoteaddr.ss_family, get_in_addr((struct sockaddr *)&amp;remoteaddr), remoteIP, INET6_ADDRSTRLEN), newfd);
+                        sprintf(buf, &quot;hello!!! your socket id is %d\n&quot;, newfd);
+                        if (send(newfd, buf, strlen(buf), 0) == -1)
+                        {
+                            perror(&quot;send&quot;);
+                        }
+                        sprintf(buf, &quot;socket %d joined chatroom\n&quot;, newfd);
+                        for (j = 0; j &lt; fd_max; j++)
+                        {
+                            if (FD_ISSET(j, &amp;master))
+                            {
+                                if (j != i &amp;&amp; j != listener &amp;&amp; j != STDIN)
+                                {
+                                    if (send(j, buf, strlen(buf), 0) == -1)
+                                        perror(&quot;send&quot;);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if ((nbytes = recv(i, buf, sizeof buf, 0)) &lt;= 0)
+                    {
+                        if (nbytes == 0)
+                        {
+                            sprintf(buf, &quot;select server: socket %d hung up\n&quot;, i);
+                            printf(&quot;%s&quot;, buf);
+                            for (j = 0; j &lt;= fd_max; j++)
+                            {
+                                if (FD_ISSET(j, &amp;master))
+                                    if (j != listener &amp;&amp; j != i &amp;&amp; j != STDIN)
+                                    {
+                                        if (send(j, buf, strlen(buf), 0) == -1)
+                                        {
+                                            perror(&quot;send&quot;);
+                                        }
+                                    }
+                            }
+                        }
+                        else
+                        {
+                            perror(&quot;recv&quot;);
+                        }
+                        close(i);
+                        FD_CLR(i, &amp;master);
+                    }
+                    else
+                    {
+                        if (nbytes &lt;= 2)
+                            nbytes = 3;
+                        memset(mess, 0, sizeof mess);
+                        strncpy(mess, buf, nbytes - 2);
+                        printf(&quot;recv data %s from socket %d\n&quot;, mess, i);
+                        sprintf(buf, &quot;socket %d says: %s\n&quot;, i, mess);
+                        for (j = 0; j &lt;= fd_max; j++)
+                        {
+                            if (FD_ISSET(j, &amp;master))
+                            {
+                                if (j != listener &amp;&amp; j != i &amp;&amp; j != STDIN)
+                                {
+                                    if (send(j, buf, strlen(buf), 0) == -1)
+                                    {
+                                        perror(&quot;send&quot;);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
+</code></pre><blockquote>
+<p>要特别注意一次select操作后readfs中只剩下了当前可读的fd.所以每次要复制一个副本穿进去.</p>
+</blockquote>
+<h2 id="题外话"><a href="#题外话" class="headerlink" title="题外话"></a>题外话</h2><p>还是认真学习认真思考能让人不那么丧…..庆幸自己找到了自己真正的兴趣所在.<br>不要让一些没意义的东西麻痹了自己. 要时刻提醒自己生存不易.<br>不高兴了就更更博,耐心看看技术书,让自己静一静.闲了就容易生事.<br>keep on moving!!!</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/phpcmsv9sqli/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/phpcmsv9sqli/index.html" itemprop="url">
+                  phpcms-v9.6.0sql注入漏洞分析[挖坟]
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-12-06 21:29:14" itemprop="dateCreated datePublished" datetime="2017-12-06T21:29:14+08:00">2017-12-06</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>还有几天就要翘课一个礼拜去深圳和厦门被各位大佬虐菜了…由于本菜鸡的代码审计一直是弱项,所以为了能打好这场比赛,这两天便找了一些代码和漏洞分析文章来学习学习.今天玩了一下这个好几个月之前的phpcms的漏洞,在差不多搞了个大概之后写了这篇文章来记录一下这个漏洞的原理.</p>
+</blockquote>
+<h2 id="0x01-phpcms的路由处理方式"><a href="#0x01-phpcms的路由处理方式" class="headerlink" title="0x01 phpcms的路由处理方式"></a>0x01 phpcms的路由处理方式</h2><p>index.php中,可以看到调用了pc_base::create_app()方法.跟进这个方法最后调用了_load_class()函数,参数为application.</p>
+<pre><code>private static function _load_class($classname, $path = &apos;&apos;, $initialize = 1) {
+        static $classes = array();
+        if (empty($path)) $path = &apos;libs&apos;.DIRECTORY_SEPARATOR.&apos;classes&apos;;
+
+        $key = md5($path.$classname);
+        if (isset($classes[$key])) {
+            if (!empty($classes[$key])) {
+                return $classes[$key];
+            } else {
+                return true;
+            }
+        }
+        if (file_exists(PC_PATH.$path.DIRECTORY_SEPARATOR.$classname.&apos;.class.php&apos;)) {
+            include PC_PATH.$path.DIRECTORY_SEPARATOR.$classname.&apos;.class.php&apos;;
+            $name = $classname;
+            if ($my_path = self::my_path(PC_PATH.$path.DIRECTORY_SEPARATOR.$classname.&apos;.class.php&apos;)) {
+                include $my_path;
+                $name = &apos;MY_&apos;.$classname;
+            }
+            if ($initialize) {
+                $classes[$key] = new $name;
+            } else {
+                $classes[$key] = true;
+            }
+            return $classes[$key];
+        } else {
+            return false;
+        }
+    }
+</code></pre><p>跟进phpcms/libs/classes/application.class.php文件中</p>
+<pre><code>&lt;?php
+/**
+ *  application.class.php PHPCMS应用程序创建类
+ *
+ * @copyright           (C) 2005-2010 PHPCMS
+ * @license             http://www.phpcms.cn/license/
+ * @lastmodify          2010-6-7
+ */
+class application {
+
+    /**
+     * 构造函数
+     */
+    public function __construct() {
+        $param = pc_base::load_sys_class(&apos;param&apos;);
+        define(&apos;ROUTE_M&apos;, $param-&gt;route_m());
+        define(&apos;ROUTE_C&apos;, $param-&gt;route_c());
+        define(&apos;ROUTE_A&apos;, $param-&gt;route_a());
+        $this-&gt;init();
+    }
+
+    /**
+     * 调用件事
+     */
+    private function init() {
+        $controller = $this-&gt;load_controller();
+        if (method_exists($controller, ROUTE_A)) {
+            if (preg_match(&apos;/^[_]/i&apos;, ROUTE_A)) {
+                exit(&apos;You are visiting the action is to protect the private action&apos;);
+            } else {
+                call_user_func(array($controller, ROUTE_A));
+            }
+        } else {
+            exit(&apos;Action does not exist.&apos;);
+        }
+    }
+
+    /**
+     * 加载控制器
+     * @param string $filename
+     * @param string $m
+     * @return obj
+     */
+    private function load_controller($filename = &apos;&apos;, $m = &apos;&apos;) {
+        if (empty($filename)) $filename = ROUTE_C;
+        if (empty($m)) $m = ROUTE_M;
+        $filepath = PC_PATH.&apos;modules&apos;.DIRECTORY_SEPARATOR.$m.DIRECTORY_SEPARATOR.$filename.&apos;.php&apos;;
+        if (file_exists($filepath)) {
+            $classname = $filename;
+            include $filepath;
+            if ($mypath = pc_base::my_path($filepath)) {
+                $classname = &apos;MY_&apos;.$filename;
+                include $mypath;
+            }
+            if(class_exists($classname)){
+                return new $classname;
+            }else{
+                exit(&apos;Controller does not exist.&apos;);
+            }
+        } else {
+            exit(&apos;Controller does not exist.&apos;);
+        }
+    }
+}
+</code></pre><p>可以看到构造函数中将param的<strong>route_m</strong>,<strong>route_c</strong>,<strong>route_a</strong>作为为模块名,控制器,控制器的相关函数,然后调用init函数加载这个模块的相应控制器的相应函数.跟进/phpcms/libs/classes/param.class.php文件可以得知这三个成员变量分别来自<code>$_GET[&#39;m&#39;]</code>,<code>$_GET[&#39;c&#39;]</code>,<code>$_GET[&#39;a&#39;]</code>中. 由此可确定phpcms的路由规则:<code>index.php?m=module名称&amp;c=controller名称&amp;a=函数</code></p>
+<h2 id="0x02-注入漏洞分析"><a href="#0x02-注入漏洞分析" class="headerlink" title="0x02 注入漏洞分析"></a>0x02 注入漏洞分析</h2><h3 id="phpcms中负责过滤的一个函数safe-replace"><a href="#phpcms中负责过滤的一个函数safe-replace" class="headerlink" title="phpcms中负责过滤的一个函数safe_replace"></a>phpcms中负责过滤的一个函数<strong>safe_replace</strong></h3><p>源码如下:</p>
+<pre><code>function safe_replace($string) {
+    $string = str_replace(&apos;%20&apos;,&apos;&apos;,$string);
+    $string = str_replace(&apos;%27&apos;,&apos;&apos;,$string);
+    $string = str_replace(&apos;%2527&apos;,&apos;&apos;,$string);
+    $string = str_replace(&apos;*&apos;,&apos;&apos;,$string);
+    $string = str_replace(&apos;&quot;&apos;,&apos;&quot;&apos;,$string);
+    $string = str_replace(&quot;&apos;&quot;,&apos;&apos;,$string);
+    $string = str_replace(&apos;&quot;&apos;,&apos;&apos;,$string);
+    $string = str_replace(&apos;;&apos;,&apos;&apos;,$string);
+    $string = str_replace(&apos;&lt;&apos;,&apos;&lt;&apos;,$string);
+    $string = str_replace(&apos;&gt;&apos;,&apos;&gt;&apos;,$string);
+    $string = str_replace(&quot;{&quot;,&apos;&apos;,$string);
+    $string = str_replace(&apos;}&apos;,&apos;&apos;,$string);
+    $string = str_replace(&apos;\\&apos;,&apos;&apos;,$string);
+    return $string;
+}
+</code></pre><p>可以看到这个函数是可以绕过的,只要传参%*27即可绕过过滤.</p>
+<h3 id="注入点"><a href="#注入点" class="headerlink" title="注入点"></a>注入点</h3><p>这个漏洞的注入点位于phpcms/modules/content/down.php文件中,代码如下:</p>
+<pre><code>public function init() {
+        $a_k = trim($_GET[&apos;a_k&apos;]);
+        if(!isset($a_k)) showmessage(L(&apos;illegal_parameters&apos;));
+        $a_k = sys_auth($a_k, &apos;DECODE&apos;, pc_base::load_config(&apos;system&apos;,&apos;auth_key&apos;));
+        if(empty($a_k)) showmessage(L(&apos;illegal_parameters&apos;));
+        unset($i,$m,$f);
+        parse_str($a_k);
+        if(isset($i)) $i = $id = intval($i);
+        if(!isset($m)) showmessage(L(&apos;illegal_parameters&apos;));
+        if(!isset($modelid)||!isset($catid)) showmessage(L(&apos;illegal_parameters&apos;));
+        if(empty($f)) showmessage(L(&apos;url_invalid&apos;));
+        $allow_visitor = 1;
+        $MODEL = getcache(&apos;model&apos;,&apos;commons&apos;);
+        $tablename = $this-&gt;db-&gt;table_name = $this-&gt;db-&gt;db_tablepre.$MODEL[$modelid][&apos;tablename&apos;];
+        $this-&gt;db-&gt;table_name = $tablename.&apos;_data&apos;;
+        $rs = $this-&gt;db-&gt;get_one(array(&apos;id&apos;=&gt;$id)); 
+        $siteids = getcache(&apos;category_content&apos;,&apos;commons&apos;);
+        $siteid = $siteids[$catid];
+        $CATEGORYS = getcache(&apos;category_content_&apos;.$siteid,&apos;commons&apos;);
+</code></pre><p>可以看到$a_k变量可控,对$a_k变量做一系列处理之后使用parse_str函数进行处理,这也是这个漏洞产生的一个重要原因.之后的几个变量都可以覆盖过去,可以看到$id变量被直接传递到了get_one函数中.跟进phpcms处理model相关的文件中<code>/phpcms/libs/classes/db_access.class.php</code>:</p>
+<pre><code>/**
+ * 获取单条记录查询
+ * @param $where        查询条件
+ * @param $data         需要查询的字段值[例`name`,`gender`,`birthday`]
+ * @param $order        排序方式    [默认按数据库默认方式排序]
+ * @param $group        分组方式    [默认为空]
+ * @return array/null   数据查询结果集,如果不存在，则返回空
+ */
+final public function get_one($where = &apos;&apos;, $data = &apos;*&apos;, $order = &apos;&apos;, $group = &apos;&apos;) {
+    if (is_array($where)) $where = $this-&gt;sqls($where);
+    return $this-&gt;db-&gt;get_one($data, $this-&gt;table_name, $where, $order, $group);
+}
+    /**
+ * 将数组转换为SQL语句
+ * @param array $where 要生成的数组
+ * @param string $font 连接串。
+ */
+final public function sqls($where, $font = &apos; AND &apos;) {
+    if (is_array($where)) {
+        $sql = &apos;&apos;;
+        foreach ($where as $key=&gt;$val) {
+            $sql .= $sql ? &quot; $font `$key` = &apos;$val&apos; &quot; : &quot; `$key` = &apos;$val&apos;&quot;;
+        }
+        return $sql;
+    } else {
+        return $where;
+    }
+}
+</code></pre><p>调用get_one函数,跟进文件<code>/phpcms/libs/classes/db_mysqli.class.php</code>中</p>
+<pre><code>/**
+ * 获取单条记录查询
+ * @param $data         需要查询的字段值[例`name`,`gender`,`birthday`]
+ * @param $table        数据表
+ * @param $where        查询条件
+ * @param $order        排序方式    [默认按数据库默认方式排序]
+ * @param $group        分组方式    [默认为空]
+ * @return array/null   数据查询结果集,如果不存在，则返回空
+ */
+public function get_one($data, $table, $where = &apos;&apos;, $order = &apos;&apos;, $group = &apos;&apos;) {
+    $where = $where == &apos;&apos; ? &apos;&apos; : &apos; WHERE &apos;.$where;
+    $order = $order == &apos;&apos; ? &apos;&apos; : &apos; ORDER BY &apos;.$order;
+    $group = $group == &apos;&apos; ? &apos;&apos; : &apos; GROUP BY &apos;.$group;
+    $limit = &apos; LIMIT 1&apos;;
+    $field = explode( &apos;,&apos;, $data);
+    array_walk($field, array($this, &apos;add_special_char&apos;));
+    $data = implode(&apos;,&apos;, $field);
+
+    $sql = &apos;SELECT &apos;.$data.&apos; FROM `&apos;.$this-&gt;config[&apos;database&apos;].&apos;`.`&apos;.$table.&apos;`&apos;.$where.$group.$order.$limit;
+    $this-&gt;execute($sql);
+    $res = $this-&gt;fetch_next();
+    $this-&gt;free_result();
+    return $res;
+}
+</code></pre><p>可以看到最终$id被直接拼接到了sql语句中.因此可以进行注入.那么怎么控制$id的值? 回到down.php文件中</p>
+<pre><code>public function init() {
+        $a_k = trim($_GET[&apos;a_k&apos;]);
+        if(!isset($a_k)) showmessage(L(&apos;illegal_parameters&apos;));
+        $a_k = sys_auth($a_k, &apos;DECODE&apos;, pc_base::load_config(&apos;system&apos;,&apos;auth_key&apos;));
+        if(empty($a_k)) showmessage(L(&apos;illegal_parameters&apos;));
+        unset($i,$m,$f);
+        parse_str($a_k);
+        if(isset($i)) $i = $id = intval($i);
+</code></pre><p>可以看到这个$a_k是从<code>$_GET[&#39;a_k&#39;]</code>解密得来的.只要找到一个加密的点即可控制输出.</p>
+<h3 id="加密点"><a href="#加密点" class="headerlink" title="加密点"></a>加密点</h3><p>这里师傅们用的加密的点是<code>/phpcms/modules/attachment/attachments.php</code>文件中的函数<strong>swfupload_json</strong>.</p>
+<pre><code>/**
+ * 设置swfupload上传的json格式cookie
+ */
+public function swfupload_json() {
+    $arr[&apos;aid&apos;] = intval($_GET[&apos;aid&apos;]);
+    $arr[&apos;src&apos;] = safe_replace(trim($_GET[&apos;src&apos;]));
+    $arr[&apos;filename&apos;] = urlencode(safe_replace($_GET[&apos;filename&apos;]));
+    $json_str = json_encode($arr);
+    $att_arr_exist = param::get_cookie(&apos;att_json&apos;);
+    $att_arr_exist_tmp = explode(&apos;||&apos;, $att_arr_exist);
+    if(is_array($att_arr_exist_tmp) &amp;&amp; in_array($json_str, $att_arr_exist_tmp)) {
+        return true;
+    } else {
+        $json_str = $att_arr_exist ? $att_arr_exist.&apos;||&apos;.$json_str : $json_str;
+        param::set_cookie(&apos;att_json&apos;,$json_str);
+        return true;            
+    }
+}
+</code></pre><p>在这个函数中,将$_GET[‘src’]使用safe_replace()函数处理后进入$arr[‘src’]中,再对$arr进行json_encode,只要不存在att_json这样一个cookie或者$json_str不在数组中就会进入else的循环中,而跟进set_cookie函数则可发现phpcms输出的cookie值正好为加密后的cookie.因此我们便可以利用这个点来加密我们的注入语句. 然而phpcms的attachments类会进行一个用户身份的判断</p>
+<pre><code>function __construct() {
+    pc_base::load_app_func(&apos;global&apos;);
+    $this-&gt;upload_url = pc_base::load_config(&apos;system&apos;,&apos;upload_url&apos;);
+    $this-&gt;upload_path = pc_base::load_config(&apos;system&apos;,&apos;upload_path&apos;);      
+    $this-&gt;imgext = array(&apos;jpg&apos;,&apos;gif&apos;,&apos;png&apos;,&apos;bmp&apos;,&apos;jpeg&apos;);
+    $this-&gt;userid = $_SESSION[&apos;userid&apos;] ? $_SESSION[&apos;userid&apos;] : (param::get_cookie(&apos;_userid&apos;) ? param::get_cookie(&apos;_userid&apos;) : sys_auth($_POST[&apos;userid_flash&apos;],&apos;DECODE&apos;));
+    $this-&gt;isadmin = $this-&gt;admin_username = $_SESSION[&apos;roleid&apos;] ? 1 : 0;
+    $this-&gt;groupid = param::get_cookie(&apos;_groupid&apos;) ? param::get_cookie(&apos;_groupid&apos;) : 8;
+    //判断是否登录
+    if(empty($this-&gt;userid)){
+        showmessage(L(&apos;please_login&apos;,&apos;&apos;,&apos;member&apos;));
+    }
+}
+</code></pre><p>这里通过判断$this-&gt;userid来测试用户是否登录,可以发现userid除了可以来自于cookie外还可以来自于$_POST[‘userid_flash’]中. 这里师傅们使用的生成这个加密后的$_POST[‘userid_flash’]的点在<code>/phpcms/modules/wap/index.php</code>文件中:</p>
+<pre><code>function __construct() {        
+    $this-&gt;db = pc_base::load_model(&apos;content_model&apos;);
+    $this-&gt;siteid = isset($_GET[&apos;siteid&apos;]) &amp;&amp; (intval($_GET[&apos;siteid&apos;]) &gt; 0) ? intval(trim($_GET[&apos;siteid&apos;])) : (param::get_cookie(&apos;siteid&apos;) ? param::get_cookie(&apos;siteid&apos;) : 1);
+    param::set_cookie(&apos;siteid&apos;,$this-&gt;siteid);  
+    $this-&gt;wap_site = getcache(&apos;wap_site&apos;,&apos;wap&apos;);
+    $this-&gt;types = getcache(&apos;wap_type&apos;,&apos;wap&apos;);
+    $this-&gt;wap = $this-&gt;wap_site[$this-&gt;siteid];
+    define(&apos;WAP_SITEURL&apos;, $this-&gt;wap[&apos;domain&apos;] ? $this-&gt;wap[&apos;domain&apos;].&apos;index.php?&apos; : APP_PATH.&apos;index.php?m=wap&amp;siteid=&apos;.$this-&gt;siteid);
+    if($this-&gt;wap[&apos;status&apos;]!=1) exit(L(&apos;wap_close_status&apos;));
+}
+
+//展示首页
+public function init() {
+    $WAP = $this-&gt;wap;
+    $TYPE = $this-&gt;types;
+    $WAP_SETTING = string2array($WAP[&apos;setting&apos;]);
+    $GLOBALS[&apos;siteid&apos;] = $siteid = max($this-&gt;siteid,1);
+    $template = $WAP_SETTING[&apos;index_template&apos;] ? $WAP_SETTING[&apos;index_template&apos;] : &apos;index&apos;;
+    include template(&apos;wap&apos;, $template);
+}
+</code></pre><p>设置了一个siteid的cookie,可以利用这个cookie的值传入到之前的那个$_POST[‘userid_flash’]中.</p>
+<h2 id="0x03-注入验证"><a href="#0x03-注入验证" class="headerlink" title="0x03 注入验证"></a>0x03 注入验证</h2><h3 id="Step1-获取之前的userid"><a href="#Step1-获取之前的userid" class="headerlink" title="Step1 获取之前的userid"></a>Step1 获取之前的userid</h3><p>访问<code>http://127.0.0.1/phpcms2/index.php?m=wap&amp;c=index&amp;a=init&amp;siteid=1</code>,获取cookie中的siteid值. <img src="http://blog.imagemlt.xyz/wp-content/uploads/2017/12/1.png" alt="图片1"></p>
+<h3 id="Step2-获取加密后的sql语句"><a href="#Step2-获取加密后的sql语句" class="headerlink" title="Step2 获取加密后的sql语句"></a>Step2 获取加密后的sql语句</h3><p>访问<code>http://127.0.0.1/phpcms2/index.php?m=attachment&amp;c=attachments&amp;a=swfupload_json&amp;aid=1&amp;src=%26id%3d%25*27+and+updatexml(1,concat(0x7e,database()),0x7e)%23%26m%3d1%26f%3dhaha%26modelid%3d2%26catid%3d7%26&amp;</code>,获取cookie中att_json值. <img src="http://blog.imagemlt.xyz/wp-content/uploads/2017/12/2.png" alt="图片2"></p>
+<h3 id="Step3-执行注入"><a href="#Step3-执行注入" class="headerlink" title="Step3 执行注入"></a>Step3 执行注入</h3><p>访问<code>http://127.0.0.1/phpcms2/index.php?m=content&amp;c=down&amp;a=init&amp;a_k=加密后的字符串</code>,即可验证. <img src="http://blog.imagemlt.xyz/wp-content/uploads/2017/12/3.png" alt="图片3"></p>
+<h2 id="0x04-参考文件"><a href="#0x04-参考文件" class="headerlink" title="0x04 参考文件"></a>0x04 参考文件</h2><ul>
+<li><a href="https://www.bertramc.cn/2017/06/16/34.html">【挖坟】PHPCMS v9.6.0 SQL注入</a></li>
+<li><a href="http://www.venenof.com/index.php/archives/347/">PHPCMS V9.6.0注入分析</a></li>
+</ul>
+<h2 id="0x05-题外话"><a href="#0x05-题外话" class="headerlink" title="0x05 题外话"></a>0x05 题外话</h2><p>比赛求各位大佬们轻虐!</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/socket-structures/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -1928,456 +2806,6 @@ print Kruskal(V,E)
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/qzoneclick/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/qzoneclick/index.html" itemprop="url">
-                  qq空间自动点赞脚本
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2017-04-18 19:01:16" itemprop="dateCreated datePublished" datetime="2017-04-18T19:01:16+08:00">2017-04-18</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>var s=0;<br>function per(){<br>    jQuery(“body,html”).animate({“scrollTop”:s});<br>    jQuery(“.qz_like_btn_v3”).each(function(){<br>        if(jQuery(this).attr(“data-clicklog”)==”like”)<br>            jQuery(this).click();<br>    });<br>    s=s+1000;<br>    setTimeout(“per()”,1000);<br>}<br>per();</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/cmaze/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/cmaze/index.html" itemprop="url">
-                  Cmaze
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2017-04-09 16:42:55" itemprop="dateCreated datePublished" datetime="2017-04-09T16:42:55+08:00">2017-04-09</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>// ConsoleApplication12.cpp : 定义控制台应用程序的入口点。<br>//</p>
-<p>#include “stdafx.h”</p>
-<p>#include #include #include #include #include #include #define MAXSIZE 5000<br>using namespace std;</p>
-<p>struct point {<br>    int x;<br>    int y;<br>    point(int x0 = 0, int y0 = 0):x(x0),y(y0) {}<br>    point(point&amp; p) {<br>        this-&gt;x = p.x;<br>        this-&gt;y = p.y;<br>    }<br>    bool operator==(point&amp; p){<br>        return this-&gt;x == p.x&amp;&amp;this-&gt;y == p.y;<br>    }<br>    bool operator!=(point&amp; p) {<br>        return !(<em>this == p);<br>    }<br>};<br>int direction[8][2] = { { 1,1 },{ 1,-1 },{ -1,1 },{ -1,-1 } ,{1,0},{0,1},{-1,0},{0,-1}};<br>struct stkpoint {<br>    point</em> p;<br>    int dir;<br>    stkpoint(point<em> poi = NULL) :p(poi), dir(0) {};<br>    bool operator==(stkpoint&amp;q){<br>        return </em>(this-&gt;p) == <em>(q.p);<br>    }<br>};<br>templateclass pointStack {<br>    T</em> vendor;<br>    int top;<br>public:<br>    pointStack() {<br>        vendor = new T[MAXSIZE];<br>        top = -1;<br>    }<br>    void push(T p) {<br>        vendor[++top] = p;<br>    }<br>    T pop() {<br>        if (top == -1) { cout &lt;&lt; “empty”; exit(0); }<br>        return vendor[top–];<br>    }<br>    point<em> operator[](int index) {<br>        return T[index];<br>    }<br>    bool IsIn(T q) {<br>        for (int i = 0; i &lt;= top; i++) {<br>            if (vendor[i] == q) {<br>                return true;<br>            }<br>        }<br>        return false;<br>    }<br>    int getTop() {<br>        return top;<br>    }<br>};<br>class puzzle {<br>    int** puz;<br>    //pointStack path;<br>    int length;<br>protected:<br>    void opendoor(int x1, int y1, int x2, int y2) {<br>        if (puz[length - 1][length - 1] == 1)puz[length - 1][length - 1] = 0;<br>        if (x1 == x2) {<br>            int pos = y1 + rand() % ((y2 - y1) / 2 + 1) </em> 2;<br>            if (pos &gt;= length)pos–;<br>            puz[x1][pos] = 0;<br>        }<br>        else if (y1 == y2) {<br>            int pos = x1 + rand() % ((x2 - x1) / 2 + 1) <em> 2;<br>            if (pos &gt;= length)pos–;<br>            puz[pos][y1] = 0;<br>        }<br>        else {<br>            cout &lt;&lt; “error!” &lt;&lt; endl;<br>            exit(0);<br>        }<br>        //cout &lt;&lt; “opened” &lt;&lt; endl;<br>    }<br>    void formpuzzle(int x, int y, int height, int width, bool ans) {<br>        if (ans) {<br>            print(2);<br>            system(“cls”);<br>        }<br>        int xpos, ypos;<br>        if (height &lt;= 2 || width &lt;= 2)<br>        {<br>            //cout &lt;&lt; “finished one step” &lt;&lt; endl;<br>            return;<br>        }<br>        xpos = x + rand() % ((height) / 2) </em> 2 + 1;<br>        for (int i = y; i &lt; y + width; i++) {<br>            puz[xpos][i] = 1;<br>        }<br>        ypos = y + rand() % ((width) / 2) * 2 + 1;<br>        for (int i = x; i &lt; x + height; i++) {<br>            puz[i][ypos] = true;<br>        }<br>        int isClosed = rand() % 4 + 1;<br>        switch (isClosed)<br>        {<br>        case 1:<br>            opendoor(xpos + 1, ypos, x + height - 1, ypos);// 2<br>            opendoor(xpos, ypos + 1, xpos, y + width - 1);// 3<br>            opendoor(x, ypos, xpos - 1, ypos);// 4<br>            break;<br>        case 2:<br>            opendoor(xpos, ypos + 1, xpos, y + width - 1);// 3<br>            opendoor(x, ypos, xpos - 1, ypos);// 4<br>            opendoor(xpos, y, xpos, ypos - 1);// 1<br>            break;<br>        case 3:<br>            opendoor(x, ypos, xpos - 1, ypos);// 4<br>            opendoor(xpos, y, xpos, ypos - 1);// 1<br>            opendoor(xpos + 1, ypos, x + height - 1, ypos);// 2<br>            break;<br>        case 4:<br>            opendoor(xpos, y, xpos, ypos - 1);// 1<br>            opendoor(xpos + 1, ypos, x + height - 1, ypos);// 2<br>            opendoor(xpos, ypos + 1, xpos, y + width - 1);// 3<br>            break;<br>        default:<br>            break;<br>        }</p>
-<pre><code>    // 左上角
-    formpuzzle(x, y, xpos - x, ypos - y, ans);
-    // 右上角
-    formpuzzle(x, ypos + 1, xpos - x, width - ypos + y - 1, ans);
-    // 左下角
-    formpuzzle(xpos + 1, y, height - xpos + x - 1, ypos - y, ans);
-    // 右下角
-    formpuzzle(xpos + 1, ypos + 1, height - xpos + x - 1, width - ypos + y - 1, ans);
-}
-bool go(int x, int y, bool ans) {//递归算法
-    if (ans) { print(); system(&quot;cls&quot;); };
-    if (puz\[x\]\[y\] != 0)return false;
-    point *p = new point(x, y);
-    //if (!path.IsIn(\*p))path.push(\*p);
-    puz\[x\]\[y\] = 2;
-
-    if (x == length - 1 &amp;&amp; y == length - 1) { return true; }
-    if (x &lt; length - 1)
-        if (puz\[x+1\]\[y\]!=2 &amp;&amp; go(x + 1, y, ans))
-            return true;
-    if (y &lt; length - 1)
-        if (puz\[x\]\[y+1\]!=2 &amp;&amp; go(x, y + 1, ans))
-            return true;
-    if (x &gt; 0)
-        if (puz\[x-1\]\[y\]!=2 &amp;&amp; go(x - 1, y, ans))
-            return true;
-    if (y &gt; 0)
-        if (puz\[x\]\[y-1\]!=2 &amp;&amp; go(x, y - 1, ans))
-            return true;
-
-
-
-    //path.pop();
-    puz\[x\]\[y\] = 3;
-    return false;
-}
-</code></pre><p>public:<br>    puzzle(int n):length(n) {<br>        puz = new int*[n];<br>        for (int i = 0; i &lt; n; i++) {<br>            puz[i] = new int[n] {0};<br>        }<br>    }<br>    void print(int time=0) {<br>        for (int i = 0; i &lt; length + 2; i++) {</p>
-<pre><code>        for (int j = 0; j &lt; length + 2; j++) {
-            if (i == 0 || j == 0 || i == length + 1 || j == length + 1) {
-                    setfillcolor(BROWN);
-                    fillrectangle(10 * i, 10 * j, 10 * (i + 1), 10 * (j + 1));
-            }
-            else {
-                if (puz\[i - 1\]\[j - 1\] == 1) {
-                        setfillcolor(RED);
-                        fillrectangle(10 * i, 10 * j, 10 * (i + 1), 10 * (j + 1));
-                }
-                else if (puz\[i - 1\]\[j - 1\] == 2) {
-                    setfillcolor(YELLOW);
-                    fillcircle(10 * i+5, 10 * j+5, 5);
-
-                }
-                else if (puz\[i - 1\]\[j - 1\] == 3) {
-                    setfillcolor(BLUE);
-                    fillrectangle(10 * i, 10 * j, 10 * (i + 1), 10 * (j + 1));
-                }
-                else {
-                        setfillcolor(GREEN);
-                        fillrectangle(10 * i, 10 * j, 10 * (i + 1), 10 * (j + 1));
-                }
-            }
-        }
-        cout &lt;&lt; endl;
-
-    }
-}
-
-void mk(bool ans=1) {
-    formpuzzle(0, 0, length, length, ans);
-}
-void go_loop() {//非递归算法
-    pointStack s;
-    stkpoint w;
-    w.p = new point(0, 0);
-    point *q;
-    while (true) {
-        bool poped = false;
-        if (puz\[w.p-&gt;x\]\[w.p-&gt;y\] ==0) {
-            puz\[w.p-&gt;x\]\[w.p-&gt;y\] = 2;
-            //print();
-            s.push(w);
-        }
-        else {
-            poped = true;
-            w = s.pop();
-            w.dir++;
-        }
-        if (w.p-&gt;x == length - 1 &amp;&amp; w.p-&gt;y == length - 1)break;
-        if (w.dir &lt; 8) {
-            if (poped)s.push(w);
-            if (w.p-&gt;x + direction\[w.dir\]\[0\] &lt; length&amp;&amp;w.p-&gt;x + direction\[w.dir\]\[0\] &gt;= 0 &amp;&amp; w.p-&gt;y + direction\[w.dir\]\[1\] &lt; length&amp;&amp;w.p-&gt;y + direction\[w.dir\]\[1\] &gt;= 0) {
-                q = new point(w.p-&gt;x + direction\[w.dir\]\[0\], w.p-&gt;y + direction\[w.dir\]\[1\]);
-                w.p = q;
-                w.dir = 0;
-            }
-        }
-        else {
-            puz\[w.p-&gt;x\]\[w.p-&gt;y\] = 3;
-            if (!poped)s.pop();
-        }
-    }
-}
-void search(bool ans=1) {
-    go(0, 0, ans);
-
-}
-</code></pre><p>};<br>int main() {<br>    int n,ans1,ans2;<br>    cout &lt;&lt; “请输入你需要的地图维度：”;<br>    cin &gt;&gt; n;<br>    cout &lt;&lt; “是否需要输出创建过程？”;<br>    cin &gt;&gt; ans1;<br>    cout &lt;&lt; “是否需要输出寻迹过程？”;<br>    cin &gt;&gt; ans2;<br>    srand(time(0));<br>    int t = 2 <em> n + 1;<br>    initgraph(10 </em> (t+2), 10 * (t+2));<br>    puzzle puzz(t);<br>    setfillcolor(YELLOW);<br>    setbkcolor(BLUE);<br>    puzz.print(1);<br>    puzz.mk(ans1);<br>    puzz.print(1);<br>    if (!ans1)Sleep(1000);<br>    //puzz.search(ans2);<br>    puzz.go_loop();<br>    puzz.print();<br>    getchar();<br>    getchar();<br>    return 0;<br>}</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2427,7 +2855,7 @@ void search(bool ans=1) {
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">55</span>
+                    <span class="site-state-item-count">57</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>

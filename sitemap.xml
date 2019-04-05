@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://hexo.imagemlt.xyz/post/php-bypass-open-basedir/index.html</loc>
+    
+    <lastmod>2019-04-05T10:29:06.628Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://hexo.imagemlt.xyz/post/##%20%E7%AE%80%E4%BB%8B/index.html</loc>
+    
+    <lastmod>2019-04-03T03:47:12.601Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://hexo.imagemlt.xyz/post/karaf-arbitrary-file-write/index.html</loc>
     
     <lastmod>2019-03-26T16:13:47.742Z</lastmod>

