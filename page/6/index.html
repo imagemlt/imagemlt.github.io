@@ -317,6 +317,176 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/c-plus-constructor-and-equal/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/c-plus-constructor-and-equal/index.html" itemprop="url">
+                  c++拷贝构造函数与赋值函数
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2016-12-21 14:41:47" itemprop="dateCreated datePublished" datetime="2016-12-21T14:41:47+08:00">2016-12-21</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>赋值运算符和复制构造函数都是用已存在的B对象来创建另一个对象A。不同之处在于：赋值运算符处理两个已有对象，即赋值前B应该是存在的；复制构造函数是生成一个全新的对象，即调用复制构造函数之前A不存在。 　　CTemp a(b); //复制构造函数，C++风格的初始化 　　CTemp a=b; //仍然是复制构造函数，不过这种风格只是为了与C兼容，与上面的效果一样，在这之前a不存在，或者说还未构造好。 　　CTemp a; 　　a=b; //赋值运算符 　　在这之前a已经通过默认构造函数构造完成。 　　实例总结： 　　重点:包含动态分配成员的类 应提供拷贝构造函数,并重载”=”赋值操作符。 　　以下讨论中将用到的例子: 　　class CExample 　　{ 　　public: 　　CExample(){pBuffer=NULL; nSize=0;} 　　~CExample(){delete pBuffer;} 　　void Init(int n){ pBuffer=new char[n]; nSize=n;} 　　private: 　　char *pBuffer; //类的对象中包含指针,指向动态分配的内存资源 　　int nSize; 　　}; 　　这个类的主要特点是包含指向其他资源的指针。 　　pBuffer指向堆中分配的一段内存空间。 　　一、拷贝构造函数 　　调用拷贝构造函数1 　　int main(int argc, char* argv[]) 　　{ 　　CExample theObjone; 　　theObjone.Init(40); 　　//现在需要另一个对象,需要将他初始化称对象一的状态 　　CExample theObjtwo=theObjone;//拷贝构造函数 　　… 　　} 　　语句”CExample theObjtwo=theObjone;”用theObjone初始化theObjtwo。 　　其完成方式是内存拷贝，复制所有成员的值。 　　完成后，theObjtwo.pBuffer==theObjone.pBuffer。 　　即它们将指向同样的地方（地址空间），指针虽然复制了，但所指向的空间内容并没有复制，而是由两个对象共用了。这样不符合要求，对象之间不独立了，并为空间的删除带来隐患。 　　所以需要采用必要的手段来避免此类情况。 　　回顾以下此语句的具体过程:通过拷贝构造函数（系统默认的）创建新对象theObjtwo，并没有调用theObjtwo的构造函数（vs2005试验过）。 　　可以在自定义的拷贝构造函数中添加输出的语句测试。 　　注意： 　　对于含有在自由空间分配的成员时，要使用深度复制，不应使用浅复制。 　　调用拷贝构造函数2 　　当对象直接作为参数传给函数时，函数将建立对象的临时拷贝，这个拷贝过程也将调同拷贝构造函数。 　　例如 　　BOOL testfunc(CExample obj); 　　testfunc(theObjone); //对象直接作为参数。 　　BOOL testfunc(CExample obj) 　　{ 　　//针对obj的操作实际上是针对复制后的临时拷贝进行的 　　} 　　调用拷贝构造函数3 　　当函数中的局部对象被被返回给函数调者时，也将建立此局部对象的一个临时拷贝，拷贝构造函数也将被调用 　　CTest func() 　　{ 　　CTest theTest; 　　return theTest 　　} 　　二、赋值符的重载 　　下面的代码与上例相似 　　int main(int argc, char<em> argv[]) 　　{ 　　CExample theObjone; 　　theObjone.Init(40); 　　CExample theObjthree; 　　theObjthree.Init(60); 　　//现在需要一个对象赋值操作,被赋值对象的原内容被清除，并用右边对象的内容填充。 　　theObjthree=theObjone; 　　return 0; 　　} 　　也用到了”=”号，但与”一、”中的例子并不同，”一、”的例子中，”=”在对象声明语句中，表示初始化。更多时候,这种初始化也可用括号表示。 　　例如 CExample theObjone(theObjtwo); 　　而本例子中，”=”表示赋值操作。将对象theObjone的内容复制到对象theObjthree;，这其中涉及到对象theObjthree原有内容的丢弃，新内容的复制。 　　但”=”的缺省操作只是将成员变量的值相应复制。旧的值被自然丢弃。 　　由于对象内包含指针，将造成不良后果:为了避免内存泄露，指针成员将释放指针所指向的空间，以便接受新的指针值，这正是由赋值运算符的特征所决定的。但如果是”x=x”即自己给自己赋值，会出现什么情况呢？x将释放分配给自己的内存，然后，从赋值运算符右边指向的内存中复制值时，发现值不见了。 　　因此，包含动态分配成员的类除提供拷贝构造函数外，还应该考虑重载”=”赋值操作符号。 　　类定义变为: 　　class CExample 　　{ 　　… 　　CExample(const CExample&amp;); //拷贝构造函数 　　CExample&amp; operator = (const CExample&amp;); //赋值符重载 　　… 　　}; 　　//赋值操作符重载 　　CExample &amp; CExample::operator = (const CExample&amp; RightSides) 　　{ 　　nSize=RightSides.nSize; //复制常规成员 　　char \</em>temp=new char[nSize]; //复制指针指向的内容 　　memcpy(temp, RightSides.pBuffer, nSize*sizeof(char)); 　　delete []pBuffer; //删除原指针指向内容 (将删除操作放在后面，避免X=X特殊情况下，内容的丢失) 　　pBuffer=temp; //建立新指向 　　return *this 　　} 　　三、拷贝构造函数使用赋值运算符重载的代码。 　　CExample::CExample(const CExample&amp; RightSides) 　　{ 　　pBuffer=NULL; 　　*this=RightSides //调用重载后的”=” 　　}</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/brainfuck-interpreter/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -1478,7 +1648,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">56</span>
+                    <span class="site-state-item-count">57</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>

