@@ -121,7 +121,7 @@
 <meta property="og:image" content="https://ws4.sinaimg.cn/large/006tKfTcly1g16q4h0wdej30sb0a9gns.jpg">
 <meta property="og:image" content="https://ws1.sinaimg.cn/large/006tKfTcly1g16q6l8dpmj30i706y0tn.jpg">
 <meta property="og:image" content="https://ws2.sinaimg.cn/large/006tKfTcly1g16q845gxxj311f0crq5y.jpg">
-<meta property="og:updated_time" content="2019-07-06T15:27:08.114Z">
+<meta property="og:updated_time" content="2019-03-18T02:21:38.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="javamelody XXE(CVE-2018-15531) 复现分析">
 <meta name="twitter:description" content="javamelody XXE(CVE-2018-15531) 复现分析javaMelody是Spring Boot框架可用的一个监视服务器运行信息的插件，这个插件去年爆出了一个XXE的漏洞。这篇文章便分析一下这个漏洞。 漏洞复现环境搭建这里我使用了Idea来搭建spring boot的环境，创建好spring boot项目后在pom.xml的dependencies中加入 12345&amp;lt;dep">
@@ -182,7 +182,7 @@
 
 </head>
 
-<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
 	<a href="https://github.com/imagemlt"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:1" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
   
   
@@ -192,7 +192,7 @@
   <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
-    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
       <div class="header-inner"><div class="site-brand-wrapper">
   <div class="site-meta ">
     
@@ -318,20 +318,20 @@
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/melodyXXE/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -365,24 +365,12 @@
                 
               
 
-              <time title="Created: 2019-03-18 10:20:23" itemprop="dateCreated datePublished" datetime="2019-03-18T10:20:23+08:00">2019-03-18</time>
+              <time title="Created: 2019-03-18 10:20:23 / Modified: 10:21:38" itemprop="dateCreated datePublished" datetime="2019-03-18T10:20:23+08:00">2019-03-18</time>
             
 
             
               
 
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
               
             
           </span>
@@ -550,7 +538,7 @@
 
       <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
-          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
               <img class="site-author-image" itemprop="image" src="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4" alt="Imagemlt">
             
@@ -608,9 +596,7 @@
                     
                       
                     
-                      
-                    
-                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-count">15</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
@@ -645,9 +631,7 @@
                     
                       
                     
-                      
-                    
-                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-count">11</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>

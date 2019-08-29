@@ -117,7 +117,7 @@
 <meta property="og:description" content="打包发布于安全客https://www.anquanke.com/post/id/173459  fastjson反序列化的两种利用方法的原理剖析JdbcRowSetImpl利用JdbcRowSetImpl的payload如下： 12345&amp;#123;    &quot;@type&quot;:&quot;com.sun.rowset.JdbcRowSetImpl&quot;,    &quot;dataSourceName&quot;:&quot;rmi://1">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://ws2.sinaimg.cn/large/006tKfTcly1g0609qk6oij30ja06u0tv.jpg">
-<meta property="og:updated_time" content="2019-07-06T15:27:08.106Z">
+<meta property="og:updated_time" content="2019-03-22T00:32:58.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="fastjson反序列化的两种利用方法的原理剖析">
 <meta name="twitter:description" content="打包发布于安全客https://www.anquanke.com/post/id/173459  fastjson反序列化的两种利用方法的原理剖析JdbcRowSetImpl利用JdbcRowSetImpl的payload如下： 12345&amp;#123;    &quot;@type&quot;:&quot;com.sun.rowset.JdbcRowSetImpl&quot;,    &quot;dataSourceName&quot;:&quot;rmi://1">
@@ -178,7 +178,7 @@
 
 </head>
 
-<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
 	<a href="https://github.com/imagemlt"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:1" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
   
   
@@ -188,7 +188,7 @@
   <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
-    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
       <div class="header-inner"><div class="site-brand-wrapper">
   <div class="site-meta ">
     
@@ -314,20 +314,20 @@
 
   
 
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/java-unserialize-learning-3/index.html">
 
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Imagemlt">
       <meta itemprop="description" content="personal blog">
       <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
     </span>
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Image's blog">
     </span>
 
@@ -378,7 +378,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-07-06 23:27:08" itemprop="dateModified" datetime="2019-07-06T23:27:08+08:00">2019-07-06</time>
+                <time title="Modified: 2019-03-22 08:32:58" itemprop="dateModified" datetime="2019-03-22T08:32:58+08:00">2019-03-22</time>
               
             
           </span>
@@ -434,7 +434,7 @@
 <p>可以看到该方法将会遍历我们传入的<code>_bytecodes</code>数组，执行<code>loader.defineClass</code>方法，而<code>TransletClassLoader</code>类的defineClass方法如下:</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Class <span class="title">defineClass</span><span class="params">(<span class="keyword">final</span> <span class="keyword">byte</span>[] b)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> defineClass(<span class="keyword">null</span>, b, <span class="number">0</span>, b.length);</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
 <p>可见直接实现于<code>ClassLoader</code>类的<code>defineClass</code>方法。查询jdk1.8的文档</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1g0609qk6oij30ja06u0tv.jpg" alt=""></p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1g0609qk6oij30ja06u0tv.jpg" alt></p>
 <p>可以看到该方法会将我们传入的编码后的class文件加载入jvm。</p>
 <p>而我们的恶意类继承于<code>ABSTRACT_TRANSLET</code>，即<code>com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet</code>，因此便会设置<code>_transletIndex</code>为0。再回到我们的<code>getTransletInstance</code>方法中，</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AbstractTranslet translet = (AbstractTranslet) _class[_transletIndex].newInstance();</span><br></pre></td></tr></table></figure>
@@ -548,7 +548,7 @@
 
       <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
-          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
               <img class="site-author-image" itemprop="image" src="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4" alt="Imagemlt">
             
@@ -606,9 +606,7 @@
                     
                       
                     
-                      
-                    
-                    <span class="site-state-item-count">16</span>
+                    <span class="site-state-item-count">15</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
@@ -643,9 +641,7 @@
                     
                       
                     
-                      
-                    
-                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-count">11</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>
