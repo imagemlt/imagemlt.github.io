@@ -108,13 +108,13 @@
 
 
 
-  <meta name="description" content="周末打了一下XNUCA，可以说这是打CTF以来难度最高的一个比赛，全场交的flag不到100个也是十分真实，膜精心准备这次比赛的NESE的大师傅们。这里贴一下做出来的两个web题目的writeup与题目分析。  HardJS我们的解法比赛时听说ROIS的师傅们拿了一血而且是直接RCE的，因此便将重点放到了后端的代码审计上。 拿到一个nodejs项目的源码进行审计，第一步便是运行npm audit">
+  <meta name="description" content="首发于https://www.anquanke.com/post/id/185377   周末打了一下XNUCA，可以说这是打CTF以来难度最高的一个比赛，全场交的flag不到100个也是十分真实，膜精心准备这次比赛的NESE的大师傅们。这里贴一下做出来的两个web题目的writeup与题目分析。  HardJS我们的解法比赛时听说ROIS的师傅们拿了一血而且是直接RCE的，因此便将重点放到了后">
 <meta name="keywords" content="Web">
 <meta property="og:type" content="article">
 <meta property="og:title" content="XNUCA qualifier writeup">
 <meta property="og:url" content="https://hexo.imagemlt.xyz/post/XNUCA-qualifier-md/index.html">
 <meta property="og:site_name" content="Image&#39;s blog">
-<meta property="og:description" content="周末打了一下XNUCA，可以说这是打CTF以来难度最高的一个比赛，全场交的flag不到100个也是十分真实，膜精心准备这次比赛的NESE的大师傅们。这里贴一下做出来的两个web题目的writeup与题目分析。  HardJS我们的解法比赛时听说ROIS的师傅们拿了一血而且是直接RCE的，因此便将重点放到了后端的代码审计上。 拿到一个nodejs项目的源码进行审计，第一步便是运行npm audit">
+<meta property="og:description" content="首发于https://www.anquanke.com/post/id/185377   周末打了一下XNUCA，可以说这是打CTF以来难度最高的一个比赛，全场交的flag不到100个也是十分真实，膜精心准备这次比赛的NESE的大师傅们。这里贴一下做出来的两个web题目的writeup与题目分析。  HardJS我们的解法比赛时听说ROIS的师傅们拿了一血而且是直接RCE的，因此便将重点放到了后">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1567017506/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%882.33.58_k7scsn.png">
 <meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1567017747/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%882.42.08_tjlghj.png">
@@ -131,10 +131,10 @@
 <meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1567047371/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%8810.55.54_xb4td6.png">
 <meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1567047546/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%8810.58.31_zzuevv.png">
 <meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1567047922/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%8811.05.09_hvkhnw.png">
-<meta property="og:updated_time" content="2019-08-29T03:44:01.162Z">
+<meta property="og:updated_time" content="2019-09-03T02:50:04.738Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="XNUCA qualifier writeup">
-<meta name="twitter:description" content="周末打了一下XNUCA，可以说这是打CTF以来难度最高的一个比赛，全场交的flag不到100个也是十分真实，膜精心准备这次比赛的NESE的大师傅们。这里贴一下做出来的两个web题目的writeup与题目分析。  HardJS我们的解法比赛时听说ROIS的师傅们拿了一血而且是直接RCE的，因此便将重点放到了后端的代码审计上。 拿到一个nodejs项目的源码进行审计，第一步便是运行npm audit">
+<meta name="twitter:description" content="首发于https://www.anquanke.com/post/id/185377   周末打了一下XNUCA，可以说这是打CTF以来难度最高的一个比赛，全场交的flag不到100个也是十分真实，膜精心准备这次比赛的NESE的大师傅们。这里贴一下做出来的两个web题目的writeup与题目分析。  HardJS我们的解法比赛时听说ROIS的师傅们拿了一血而且是直接RCE的，因此便将重点放到了后">
 <meta name="twitter:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1567017506/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%882.33.58_k7scsn.png">
 
 
@@ -375,12 +375,24 @@
                 
               
 
-              <time title="Created: 2019-08-29 02:26:12 / Modified: 11:44:01" itemprop="dateCreated datePublished" datetime="2019-08-29T02:26:12+08:00">2019-08-29</time>
+              <time title="Created: 2019-08-29 02:26:12" itemprop="dateCreated datePublished" datetime="2019-08-29T02:26:12+08:00">2019-08-29</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-09-03 10:50:04" itemprop="dateModified" datetime="2019-09-03T10:50:04+08:00">2019-09-03</time>
               
             
           </span>
@@ -414,6 +426,9 @@
 
       
         <blockquote>
+<p>首发于<a href="https://www.anquanke.com/post/id/185377">https://www.anquanke.com/post/id/185377</a></p>
+</blockquote>
+<blockquote>
 <p>周末打了一下XNUCA，可以说这是打CTF以来难度最高的一个比赛，全场交的flag不到100个也是十分真实，膜精心准备这次比赛的NESE的大师傅们。这里贴一下做出来的两个web题目的writeup与题目分析。</p>
 </blockquote>
 <h2 id="HardJS"><a href="#HardJS" class="headerlink" title="HardJS"></a>HardJS</h2><h3 id="我们的解法"><a href="#我们的解法" class="headerlink" title="我们的解法"></a>我们的解法</h3><p>比赛时听说ROIS的师傅们拿了一血而且是直接RCE的，因此便将重点放到了后端的代码审计上。</p>
