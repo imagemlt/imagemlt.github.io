@@ -317,6 +317,193 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/idf-three-ways/index.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/idf-three-ways/index.html" itemprop="url">
+                  三种语言实现idf实验室字符统计
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-01-27 13:00:40" itemprop="dateCreated datePublished" datetime="2017-01-27T13:00:40+08:00">2017-01-27</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Crypto/" itemprop="url" rel="index"><span itemprop="name">Crypto</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Crypto/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>php:</p>
+<p>((.|\n)*?)</p>
+<hr>
+<p>/iU”,$content,$conse);<br>$w=0;<br>$o=0;<br>$l=0;<br>$d=0;<br>$y=0;<br>for($i=0;$i$ans);<br>curl_setopt($ch,CURLOPT_POST,true);<br>curl_setopt($ch,CURLOPT_POSTFIELDS,$data);</p>
+<p>$result=curl_exec($ch);<br>preg_match(“/你(.*?)}/iU”,$result,$str);<br>echo $str[0].”\n”;<br>?&gt; </p>
+<p>python:</p>
+<p>#! /usr/bin/env python</p>
+<p>#coding=utf-8<br>import cookielib<br>import urllib<br>import urllib2<br>from bs4 import BeautifulSoup<br>cookie=cookielib.MozillaCookieJar()<br>handler=urllib2.HTTPCookieProcessor(cookie)<br>opener=urllib2.build_opener(handler)<br>response=opener.open(‘<a href="http://ctf.idf.cn/game/pro/37/&#39;">http://ctf.idf.cn/game/pro/37/&#39;</a>)<br>s=BeautifulSoup(response.read(),”lxml”)<br>query=unicode(s.body.text)<br>w=query.count(‘w’)-1<br>o=query.count(‘o’)-1<br>l=query.count(‘l’)-1<br>d=query.count(‘d’)-1<br>y=query.count(‘y’)-1<br>answer=’%d%d%d%d%d’%(w,o,l,d,y)<br>value={“anwser”:answer}<br>DATA=urllib.urlencode(value)<br>req=urllib2.Request(“<a href="http://ctf.idf.cn/game/pro/37/&quot;,DATA">http://ctf.idf.cn/game/pro/37/&quot;,DATA</a>)<br>ans=opener.open(req)<br>text=unicode(BeautifulSoup(ans.read(),”lxml”).body.text)<br>print text[text.index(u”你”):text.index(‘}’)+1]</p>
+<p>java:</p>
+<p>import java.util.HashMap;<br>import java.util.List;<br>import java.util.Map;</p>
+<p>import org.jsoup.Connection;<br>import org.jsoup.Jsoup;<br>import org.jsoup.Connection.Method;<br>import org.jsoup.Connection.Response;<br>import org.jsoup.nodes.Document;<br>import org.jsoup.nodes.Element;<br>import java.io.IOException;<br>class solve{<br>    public static void main(String args[]){<br>        try{<br>            String url=”<a href="http://ctf.idf.cn/game/pro/37/&quot;">http://ctf.idf.cn/game/pro/37/&quot;</a>;<br>            Map cookies=null;<br>            Response res=Jsoup.connect(url).execute();<br>            cookies=res.cookies();<br>            Document doc=res.parse();<br>            String conse=doc.text();<br>            int w=-1,o=-1,l=-1,d=-1,y=-1;<br>            for(int i=0;i</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/c-plus-reference/index.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1818,7 +2005,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">58</span>
+                    <span class="site-state-item-count">59</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
@@ -1896,7 +2083,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">11</span>
+                      
+                    
+                    <span class="site-state-item-count">12</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>

