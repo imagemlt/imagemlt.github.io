@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.3.0" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.3.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.3.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.3.0" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.3.0',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="EIS中有一道cms 后台getshell的实战类题目，其中写入配置文件从而getshell的方式很经典，这里简单一下这个getshell的原理，仅作学习  来看写入配置文件的逻辑,全局搜索file_put_contents就可以找到 12345678910111213141516/** * 设置config文件 * @param $config 配置信息 */function set_conf">
+<meta name="keywords" content="Web安全">
+<meta property="og:type" content="article">
+<meta property="og:title" content="EIS_yzmcms_getshell">
+<meta property="og:url" content="https://hexo.imagemlt.xyz/post/EIS-yzmcms-getshell/index.html">
+<meta property="og:site_name" content="Image&#39;s blog">
+<meta property="og:description" content="EIS中有一道cms 后台getshell的实战类题目，其中写入配置文件从而getshell的方式很经典，这里简单一下这个getshell的原理，仅作学习  来看写入配置文件的逻辑,全局搜索file_put_contents就可以找到 12345678910111213141516/** * 设置config文件 * @param $config 配置信息 */function set_conf">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1574758722/blog/下载_pdhepw.png">
+<meta property="og:updated_time" content="2019-11-26T09:04:16.776Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="EIS_yzmcms_getshell">
+<meta name="twitter:description" content="EIS中有一道cms 后台getshell的实战类题目，其中写入配置文件从而getshell的方式很经典，这里简单一下这个getshell的原理，仅作学习  来看写入配置文件的逻辑,全局搜索file_put_contents就可以找到 12345678910111213141516/** * 设置config文件 * @param $config 配置信息 */function set_conf">
+<meta name="twitter:image" content="https://res.cloudinary.com/durtftgrv/image/upload/v1574758722/blog/下载_pdhepw.png">
+
+
+
+
+
+
+  <link rel="canonical" href="https://hexo.imagemlt.xyz/post/EIS-yzmcms-getshell/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>EIS_yzmcms_getshell | Image's blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+	<a href="https://github.com/imagemlt"><img style="position: absolute; top: 0; right: 0; border: 0;z-index:1" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Image's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <h1 class="site-subtitle" itemprop="description">Welcome to Image's Blog</h1>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-links">
+    <a href="/links/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-link"></i> <br>Links</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/EIS-yzmcms-getshell/index.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">EIS_yzmcms_getshell
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-11-26 16:43:43 / Modified: 17:04:16" itemprop="dateCreated datePublished" datetime="2019-11-26T16:43:43+08:00">2019-11-26</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>EIS中有一道cms 后台getshell的实战类题目，其中写入配置文件从而getshell的方式很经典，这里简单一下这个getshell的原理，仅作学习</p>
+</blockquote>
+<p>来看写入配置文件的逻辑,全局搜索file_put_contents就可以找到</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 设置config文件</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> $config 配置信息</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">set_config</span><span class="params">($config)</span> </span>&#123;</span><br><span class="line">	$configfile = YZMPHP_PATH.<span class="string">'common'</span>.DIRECTORY_SEPARATOR.<span class="string">'config/config.php'</span>;</span><br><span class="line">	<span class="keyword">if</span>(!is_writable($configfile)) showmsg(<span class="string">'Please chmod '</span>.$configfile.<span class="string">' to 0777 !'</span>, <span class="string">'stop'</span>);</span><br><span class="line">	$pattern = $replacement = <span class="keyword">array</span>();</span><br><span class="line">	<span class="keyword">foreach</span>($config <span class="keyword">as</span> $k=&gt;$v) &#123;</span><br><span class="line">		$pattern[$k] = <span class="string">"/'"</span>.$k.<span class="string">"'\s*=&gt;\s*([']?)[^']*([']?)(\s*),/is"</span>;</span><br><span class="line">		$replacement[$k] = <span class="string">"'"</span>.$k.<span class="string">"' =&gt; \$&#123;1&#125;"</span>.$v.<span class="string">"\$&#123;2&#125;\$&#123;3&#125;,"</span>;					</span><br><span class="line">	&#125;</span><br><span class="line">	$str = file_get_contents($configfile);</span><br><span class="line">	$str = preg_replace($pattern, $replacement, $str);</span><br><span class="line">	<span class="keyword">return</span> file_put_contents($configfile, $str, LOCK_EX);		</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Config.php的内容如下</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="keyword">return</span> <span class="keyword">array</span>(</span><br><span class="line"></span><br><span class="line">    <span class="comment">//系统配置</span></span><br><span class="line">    <span class="string">'site_theme'</span>         =&gt; <span class="string">'default'</span>,    <span class="comment">//站点默认主题目录</span></span><br><span class="line">    <span class="string">'url_html_suffix'</span>    =&gt; <span class="string">'.html'</span>,      <span class="comment">//URL伪静态后缀</span></span><br><span class="line">    <span class="string">'set_pathinfo'</span>       =&gt; <span class="keyword">false</span>,         <span class="comment">//Nginx默认不支持PATHINFO模式，需配置此项为true，则Nginx可支持PATHINFO，系统默认为false</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//数据库配置</span></span><br><span class="line">    <span class="string">'db_type'</span> =&gt; <span class="string">'pdo'</span>,     	  <span class="comment">// 数据库链接扩展 , 支持 pdo | mysqli | mysql</span></span><br><span class="line">    <span class="string">'db_host'</span> =&gt; <span class="string">'mysql'</span>,  <span class="comment">// 服务器地址</span></span><br><span class="line">    <span class="string">'db_name'</span> =&gt; <span class="string">'yzmcms'</span>,		<span class="comment">// 数据库名</span></span><br><span class="line">    <span class="string">'db_user'</span> =&gt; <span class="string">'root'</span>,       <span class="comment">// 用户名</span></span><br><span class="line">    <span class="string">'db_pwd'</span> =&gt; <span class="string">'root@3556'</span>,       		<span class="comment">// 密码</span></span><br><span class="line">    <span class="string">'db_port'</span> =&gt; <span class="number">3306</span>,         <span class="comment">// 端口</span></span><br><span class="line">    <span class="string">'db_prefix'</span> =&gt; <span class="string">'yzm_'</span>,        <span class="comment">// 数据库表前缀</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//路由配置</span></span><br><span class="line">    <span class="string">'route'</span>              =&gt; <span class="keyword">array</span>(<span class="string">'m'</span> =&gt; <span class="string">'index'</span>, <span class="string">'c'</span> =&gt; <span class="string">'index'</span>, <span class="string">'a'</span> =&gt; <span class="string">'init'</span>),  <span class="comment">//默认加载配置，基中“m”为模块,“c”为控制器，“a”为方法</span></span><br><span class="line">    <span class="string">'route_mapping'</span>      =&gt; <span class="keyword">true</span>,         <span class="comment">//是否开启路由映射</span></span><br><span class="line">    <span class="comment">//路由映射规则</span></span><br><span class="line">    <span class="string">'route_rules'</span>        =&gt; <span class="keyword">array</span>(),</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//Cookie配置</span></span><br><span class="line">    <span class="string">'cookie_domain'</span>      =&gt; <span class="string">''</span>,           <span class="comment">//Cookie 作用域</span></span><br><span class="line">    <span class="string">'cookie_path'</span>        =&gt; <span class="string">'/'</span>,          <span class="comment">//Cookie 作用路径</span></span><br><span class="line">    <span class="string">'cookie_ttl'</span>         =&gt; <span class="number">0</span>,            <span class="comment">//Cookie 生命周期，0 表示随浏览器进程</span></span><br><span class="line">    <span class="string">'cookie_pre'</span>         =&gt; <span class="string">'yzmphp_'</span>,    <span class="comment">//Cookie 前缀，同一域名下安装多套系统时，请修改Cookie前缀</span></span><br><span class="line">    <span class="string">'cookie_secure'</span>      =&gt; <span class="keyword">false</span>,        <span class="comment">//是否通过安全的 HTTPS 连接来传输 cookie</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//缓存配置</span></span><br><span class="line">    <span class="string">'cache_type'</span>         =&gt; <span class="string">'file'</span>,     	<span class="comment">// 缓存类型【暂支持 file , redis , memcache 】</span></span><br><span class="line">    <span class="comment">//缓存类型为file缓存时的配置项</span></span><br><span class="line">    <span class="string">'file_config'</span>        =&gt; <span class="keyword">array</span> (</span><br><span class="line">		<span class="string">'cache_dir'</span>      =&gt; YZMPHP_PATH.<span class="string">'cache/chche_file/'</span>,    <span class="comment">//缓存文件目录</span></span><br><span class="line">		<span class="string">'suffix'</span>         =&gt; <span class="string">'.cache.php'</span>,  <span class="comment">//缓存文件后缀</span></span><br><span class="line">		<span class="string">'mode'</span>           =&gt; <span class="string">'2'</span>,           <span class="comment">//缓存格式：mode 1 为serialize序列化, mode 2 为保存为可执行文件array</span></span><br><span class="line">    ), </span><br><span class="line">    <span class="comment">//缓存类型为redis缓存时的配置项</span></span><br><span class="line">    <span class="string">'redis_config'</span>       =&gt; <span class="keyword">array</span> (</span><br><span class="line">		<span class="string">'host'</span>           =&gt; <span class="string">'127.0.0.1'</span>,    <span class="comment">// redis主机</span></span><br><span class="line">		<span class="string">'port'</span>           =&gt; <span class="number">6379</span>,           <span class="comment">// redis端口</span></span><br><span class="line">		<span class="string">'password'</span>       =&gt; <span class="string">''</span>,             <span class="comment">// 密码</span></span><br><span class="line">		<span class="string">'select'</span>         =&gt; <span class="number">0</span>,              <span class="comment">// 操作库</span></span><br><span class="line">		<span class="string">'timeout'</span>        =&gt; <span class="number">0</span>,              <span class="comment">// 超时时间(秒)</span></span><br><span class="line">		<span class="string">'expire'</span>         =&gt; <span class="number">3600</span>,           <span class="comment">// 有效期(秒)</span></span><br><span class="line">		<span class="string">'persistent'</span>     =&gt; <span class="keyword">false</span>,          <span class="comment">// 是否长连接</span></span><br><span class="line">		<span class="string">'prefix'</span>         =&gt; <span class="string">''</span>,             <span class="comment">// 前缀</span></span><br><span class="line">    ), </span><br><span class="line">    <span class="comment">//缓存类型为memcache缓存时的配置项</span></span><br><span class="line">    <span class="string">'memcache_config'</span>    =&gt; <span class="keyword">array</span> (</span><br><span class="line">		<span class="string">'host'</span>           =&gt; <span class="string">'127.0.0.1'</span>,    <span class="comment">// memcache主机</span></span><br><span class="line">		<span class="string">'port'</span>           =&gt; <span class="number">11211</span>,          <span class="comment">// memcache端口</span></span><br><span class="line">		<span class="string">'timeout'</span>        =&gt; <span class="number">0</span>,              <span class="comment">// 超时时间(秒)</span></span><br><span class="line">		<span class="string">'expire'</span>         =&gt; <span class="number">3600</span>,           <span class="comment">// 有效期(秒)</span></span><br><span class="line">		<span class="string">'persistent'</span>     =&gt; <span class="keyword">false</span>,          <span class="comment">// 是否长连接</span></span><br><span class="line">		<span class="string">'prefix'</span>         =&gt; <span class="string">''</span>,             <span class="comment">// 前缀</span></span><br><span class="line">    ),</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//系统语言</span></span><br><span class="line">    <span class="string">'language'</span>           =&gt; <span class="string">'zh_cn'</span>,      <span class="comment">//【暂支持 简体中文zh_cn 和 美式英语en_us】</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//附件相关配置</span></span><br><span class="line">    <span class="string">'upload_file'</span>        =&gt; <span class="string">'uploads'</span>,    <span class="comment">//上传文件目录，后面一定不要加斜杠（“/”）</span></span><br><span class="line">    <span class="string">'watermark_enable'</span>   =&gt; <span class="string">'1'</span>,          <span class="comment">//是否开启图片水印</span></span><br><span class="line">    <span class="string">'watermark_name'</span>     =&gt; <span class="string">'mark.png'</span>,   <span class="comment">//水印名称</span></span><br><span class="line">    <span class="string">'watermark_position'</span> =&gt; <span class="string">'9'</span>,          <span class="comment">//水印位置</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//其他设置</span></span><br><span class="line">    <span class="string">'sql_execute'</span>        =&gt; <span class="keyword">false</span>,        <span class="comment">//是否允许在线执行SQL命令</span></span><br><span class="line">    <span class="string">'edit_template'</span>      =&gt; <span class="keyword">false</span>,        <span class="comment">//是否允许在线编辑模板</span></span><br><span class="line"></span><br><span class="line">);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这里的逻辑是正则匹配出原<code>config.php</code>文件的key=&gt;value对，然后替换为新的配置。</p>
+<p>这个cms存在全局过滤，过滤机制类似phpcms的过滤函数：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 安全过滤函数</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> $string</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> string</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">safe_replace</span><span class="params">($string)</span> </span>&#123;</span><br><span class="line">	$string = str_replace(<span class="string">'%20'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'%27'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'%2527'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'*'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'"'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">"'"</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">';'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'&lt;'</span>,<span class="string">'&amp;lt;'</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'&gt;'</span>,<span class="string">'&amp;gt;'</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">"&#123;"</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'&#125;'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'\\'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	<span class="keyword">return</span> $string;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到我们想要的单引号被过滤了，没有办法直接拼接单引号来注入代码到config.php中。</p>
+<p>然而可以注意到replacement的内容为：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$replacement[$k] = <span class="string">"'"</span>.$k.<span class="string">"' =&gt; \$&#123;1&#125;"</span>.$v.<span class="string">"\$&#123;2&#125;\$&#123;3&#125;,"</span>;</span><br></pre></td></tr></table></figure>
+<p>再查看我们的匹配正则</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$pattern[$k] = <span class="string">"/'"</span>.$k.<span class="string">"'\s*=&gt;\s*([']?)[^']*([']?)(\s*),/is"</span>;</span><br></pre></td></tr></table></figure>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1574758722/blog/下载_pdhepw.png" alt="https://res.cloudinary.com/durtftgrv/image/upload/v1574758722/blog/%E4%B8%8B%E8%BD%BD_pdhepw.png"></p>
+<p>可以看到匹配到的<code>${1}</code>正是单引号本身，因此我们只要添加值为<code>${1}.phpinfo().${1}</code>即可重新引入被</p>
+<p>过滤掉的单引号，从而逃逸出来成功注入任意代码。</p>
+<p>参考文档</p>
+<p><a href="https://blog.wonderkun.cc/2017/02/28/php写入配置文件的经典漏洞/">https://blog.wonderkun.cc/2017/02/28/php%E5%86%99%E5%85%A5%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E7%9A%84%E7%BB%8F%E5%85%B8%E6%BC%8F%E6%B4%9E/</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Web安全/" rel="tag"># Web安全</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/fastjson1-2-47反序列化分析/index.html" rel="next" title="fastjson1.2.47反序列化分析">
+                <i class="fa fa-chevron-left"></i> fastjson1.2.47反序列化分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4" alt="Imagemlt">
+            
+              <p class="site-author-name" itemprop="name">Imagemlt</p>
+              <p class="site-description motion-element" itemprop="description">personal blog</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">60</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">15</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/imagemlt" target="_blank" title="GitHub" rel="external nofollow"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Imagemlt</span>
+
+  
+
+  
+</div>
+
+
+  
+
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" rel="external nofollow" href="https://hexo.io">Hexo</a> v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a>
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" rel="external nofollow" href="https://github.com/theme-next/hexo-theme-next">NexT.Pisces</a> v6.3.0</div>
+
+
+
+
+  <script src="https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js"></script>
+  <script>
+    if (window.mermaid) {
+//alert("mermaid!!!");
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.3.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.3.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.3.0"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.3.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.3.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.3.0"></script>
+
+
+
+  
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

