@@ -317,6 +317,233 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/html5-mutation-observer-2/index.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/html5-mutation-observer-2/index.html" itemprop="url">
+                  html5新特性: MutationObeserver
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-08-11 00:43:56" itemprop="dateCreated datePublished" datetime="2017-08-11T00:43:56+08:00">2017-08-11</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>帮一哥们儿搞node-red的前端，需要实时获取node-red数据并在canvas上做相应的绘图工作，几番百度之后百度到了Mutation-Observer这样一个神奇的新特性。因此引用一下别的表哥写的关于MutationObserver的使用说明作为以后的参考。转自：<a href="http://www.cnblogs.com/jscode/p/3600060.html">http://www.cnblogs.com/jscode/p/3600060.html</a></p>
+<h1 id="1、概述"><a href="#1、概述" class="headerlink" title="1、概述"></a>1、概述</h1><p>Mutation Observer（变动观察器）是监视DOM变动的接口。当DOM对象树发生任何变动时，Mutation Observer会得到通知。 要概念上，它很接近事件。可以理解为，当DOM发生变动会触发Mutation Observer事件。但是，它与事件有一个本质不同：事件是同步触发，也就是说DOM发生变动立刻会触发相应的事件；Mutation Observer则是异步触发，DOM发生变动以后，并不会马上触发，而是要等到当前所有DOM操作都结束后才触发。 这样设计是为了应付DOM变动频繁的情况。举例来说，如果在文档中连续插入1000个段落（p元素），会连续触发1000个插入事件，执行每个事件的回调函数，这很可能造成浏览器的卡顿；而Mutation Observer完全不同，只在1000个段落都插入结束后才会触发，而且只触发一次。 Mutation Observer有以下特点：</p>
+<ul>
+<li>它等待所有脚本任务完成后，才会运行，即采用异步方式</li>
+<li>它把DOM变动记录封装成一个数组进行处理，而不是一条条地个别处理DOM变动。</li>
+<li>它即可以观察发生在DOM节点的所有变动，也可以观察某一类变动</li>
+</ul>
+<p>目前，Firefox(14+)、Chrome(26+)、Opera(15+)、IE(11+)和Safari(6.1+)支持这个API。Safari 6.0和Chrome 18-25使用这个API的时候，需要加上WebKit前缀（WebKitMutationObserver）。可以使用下面的表达式检查浏览器是否支持这个API。</p>
+<p>var MutationObserver = window.MutationObserver ||<br>    window.WebKitMutationObserver ||<br>    window.MozMutationObserver;</p>
+<p>var mutationObserverSupport = !!MutationObserver;</p>
+<h1 id="2、使用方法"><a href="#2、使用方法" class="headerlink" title="2、使用方法"></a>2、使用方法</h1><p>首先，使用MutationObserver构造函数，新建一个实例，同时指定这个实例的回调函数。</p>
+<p>var observer = new MutationObserver(callback);</p>
+<h2 id="2-1-observer方法"><a href="#2-1-observer方法" class="headerlink" title="2.1 observer方法"></a>2.1 observer方法</h2><p>observer方法指定所要观察的DOM元素，以及要观察的特定变动。</p>
+<p>var article = document.querySelector(‘article’);</p>
+<p>var options = {<br>    ‘childList’: true,<br>    ‘arrtibutes’: true<br>};</p>
+<p>observer.observer(article, options);</p>
+<p>上面代码首先指定，所要观察的DOM元素提article，然后指定所要观察的变动是子元素的变动和属性变动。最后，将这两个限定条件作为参数，传入observer对象的observer方法。 MutationObserver所观察的DOM变动（即上面代码的option对象），包含以下类型：</p>
+<ul>
+<li>childList：子元素的变动</li>
+<li>attributes：属性的变动</li>
+<li>characterData：节点内容或节点文本的变动</li>
+<li>subtree：所有下属节点（包括子节点和子节点的子节点）的变动</li>
+</ul>
+<p>想要观察哪一种变动类型，就在option对象中指定它的值为true。需要注意的是，不能单独观察subtree变动，必须同时指定childList、attributes和characterData中的一种或多种。 除了变动类型，option对象还可以设定以下属性：</p>
+<ul>
+<li>attributeOldValue：值为true或者为false。如果为true，则表示需要记录变动前的属性值。</li>
+<li>characterDataOldValue：值为true或者为false。如果为true，则表示需要记录变动前的数据值。</li>
+<li>attributesFilter：值为一个数组，表示需要观察的特定属性（比如[‘class’, ‘str’]）。</li>
+</ul>
+<h2 id="2-2-disconnect方法和takeRecord方法"><a href="#2-2-disconnect方法和takeRecord方法" class="headerlink" title="2.2 disconnect方法和takeRecord方法"></a>2.2 disconnect方法和takeRecord方法</h2><p>disconnect方法用来停止观察。发生相应变动时，不再调用回调函数。</p>
+<p>observer.disconnect();</p>
+<p>takeRecord方法用来清除变动记录，即不再处理未处理的变动。</p>
+<p>observer.takeRecord</p>
+<h2 id="2-3-MutationRecord对象"><a href="#2-3-MutationRecord对象" class="headerlink" title="2.3 MutationRecord对象"></a>2.3 MutationRecord对象</h2><p>DOM对象每次发生变化，就会生成一条变动记录。这个变动记录对应一个MutationRecord对象，该对象包含了与变动相关的所有信息。Mutation Observer进行处理的一个个变动对象所组成的数组。 MutationRecord对象包含了DOM的相关信息，有如下属性：</p>
+<ul>
+<li>type:观察的变动类型（attribute、characterData或者childList）。</li>
+<li>target:发生变动的DOM对象。</li>
+<li>addedNodes:新增的DOM对象。</li>
+<li>removeNodes:删除的DOM对象。</li>
+<li>previousSibling:前一个同级的DOM对象，如果没有则返回null。</li>
+<li>nextSibling:下一个同级的DOM对象，如果没有就返回null。</li>
+<li>attributeName:发生变动的属性。如果设置了attributeFilter，则只返回预先指定的属性。</li>
+<li>oldValue:变动前的值。这个属性只对attribute和characterData变动有效，如果发生childList变动，则返回null。</li>
+</ul>
+<h1 id="3、实例"><a href="#3、实例" class="headerlink" title="3、实例"></a>3、实例</h1><h2 id="3-1-子元素的变动"><a href="#3-1-子元素的变动" class="headerlink" title="3.1 子元素的变动"></a>3.1 子元素的变动</h2><p>下面的例子说明如果读取变动记录。</p>
+<p>var callback = function(records) {<br>    records.map(function(record) {<br>        console.log(‘Mutation type: ‘ + record.type);<br>        console.log(‘Mutation target: ‘ + record.target);<br>    });<br>};</p>
+<p>var mo = new MutationObserver(callback);</p>
+<p>var option = {<br>    ‘childList’: true,<br>    ‘subtree’: true<br>};</p>
+<p>mo.observer(document.body, option);</p>
+<p>上面代码的观察器，观察body元素的所有下级元素（childList表示观察子元素，subtree表示观察子元素的下级元素）的变动。回调函数会在控制台显示所有变动的类型和目标元素。</p>
+<h2 id="3-2、属性的变动"><a href="#3-2、属性的变动" class="headerlink" title="3.2、属性的变动"></a>3.2、属性的变动</h2><p>下面的例子说明如何追踪属性的变动。</p>
+<p>var callback = function(records) {<br>    records.map(function(record) {<br>        console.log(‘Previous attribute value: ‘ + record.oldValue);<br>    });<br>};</p>
+<p>var mo = new MutationObserver(callback);</p>
+<p>var element = document.getElementById(‘#my_element’);</p>
+<p>var option = {<br>    ‘attribute’: true,<br>    ‘attributeOldValue’: true<br>};</p>
+<p>mo.observer(element, option);</p>
+<p>上面代码先设定追踪属性变动（’attributes’: true），然后设定记录变动前的值。实际发生变动时，会将变动前的值显示在控制台。</p>
+<h1 id="4、参考链接"><a href="#4、参考链接" class="headerlink" title="4、参考链接"></a>4、参考链接</h1><p>[1] Tiffany Brown, <a href="http://dev.opera.com/articles/view/mutation-observers-tutorial/">Getting to know mutation observers</a> [2] Michal Budzynski, <a href="http://michalbe.blogspot.com/2013/04/javascript-less-known-parts-dom.html">JavaScript: The less know parts.DOM Mutations</a> [3] Jeff Griffiths, <a href="https://hacks.mozilla.org/2012/05/dom-mutationobserver-reacting-to-dom-changes-without-killing-browser-performance/">DOM MutationObserver - reacting to DOM changes without killing browser performance</a> [4] Ruanyf, <a href="http://javascript.ruanyifeng.com/dom/mutationobserver.html">Mutation Observer</a></p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/nmapguide/index.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1973,264 +2200,11 @@ void search(bool ans=1) {
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/greedy-snake/index.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/greedy-snake/index.html" itemprop="url">
-                  双向链表与easyx实现简易贪吃蛇
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2017-01-29 11:30:10" itemprop="dateCreated datePublished" datetime="2017-01-29T11:30:10+08:00">2017-01-29</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/" itemprop="url" rel="index"><span itemprop="name">人生杂谈</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/人生杂谈/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>/<strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>**</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong><br><strong>文件:snake.cpp
-</strong>编写者:image<br><strong>编写日期:2017年1月28号
-</strong>简要描述:贪吃蛇游戏，可加速<br><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>**</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong>/</p>
-<p>#include “stdafx.h”</p>
-<p>#include #include #include #include #define FRAME_WIDTH 50</p>
-<p>#define FRAME_HEIGHT 50<br>using namespace std;<br>enum direction { t, b, l, r };<br>class Snake;<br>struct food{<br>    int pos_x, pos_y;<br>};<br>class section {<br>    section<em> front;<br>    section</em> rear;<br>    direction direct;<br>    int pos_x, pos_y;<br>    friend class Snake;<br>public:<br>    section(section<em> fr=NULL,direction dir=t, section</em> re = NULL ) {<br>        front=fr;<br>        rear = re;<br>        direct = dir;<br>        pos_x = pos_y = 25;<br>    }<br>    section<em> makenext() {<br>        rear = new section(this,this-&gt;direct);<br>        switch (this-&gt;direct) {<br>        case 0: {<br>            rear-&gt;pos_x = this-&gt;pos_x;<br>            rear-&gt;pos_y = this-&gt;pos_y + 1;<br>            break;<br>        }<br>        case 1: {<br>            rear-&gt;pos_x = this-&gt;pos_x;<br>            rear-&gt;pos_y = this-&gt;pos_y - 1;<br>            break;<br>        }<br>        case 2: {<br>            rear-&gt;pos_x = this-&gt;pos_x + 1;<br>            rear-&gt;pos_y = this-&gt;pos_y;<br>            break;<br>        }<br>        case 3: {<br>            rear-&gt;pos_x = this-&gt;pos_x - 1;<br>            rear-&gt;pos_y = this-&gt;pos_y;<br>            break;<br>        }<br>        }<br>        return rear;<br>    }<br>    void move() {<br>        setcolor(BLACK);<br>        setfillcolor(BLACK);<br>        fillcircle(pos_x </em> 480 / FRAME_WIDTH, pos_y <em> 480 / FRAME_HEIGHT, 480 / FRAME_WIDTH / 2);<br>            switch (this-&gt;direct) {<br>            case 0: {<br>                this-&gt;pos_x = this-&gt;pos_x;<br>                this-&gt;pos_y = this-&gt;pos_y - 1;<br>                break;<br>            }<br>            case 1: {<br>                this-&gt;pos_x = this-&gt;pos_x;<br>                this-&gt;pos_y = this-&gt;pos_y + 1;<br>                break;<br>            }<br>            case 2: {<br>                this-&gt;pos_x = this-&gt;pos_x - 1;<br>                this-&gt;pos_y = this-&gt;pos_y;<br>                break;<br>            }<br>            case 3: {<br>                this-&gt;pos_x = this-&gt;pos_x + 1;<br>                this-&gt;pos_y = this-&gt;pos_y;<br>                break;<br>            }<br>            }<br>            if (this-&gt;front == NULL)<br>                setfillcolor(RED);<br>            else<br>                setfillcolor(GREEN);<br>            fillcircle(pos_x </em> 480/FRAME_WIDTH, pos_y * 480/FRAME_HEIGHT, 480 / FRAME_WIDTH/2);<br>        if(this-&gt;rear!=NULL)<br>            this-&gt;rear-&gt;move();<br>        if (this-&gt;front != NULL&amp;&amp;this-&gt;direct != this-&gt;front-&gt;direct)<br>            this-&gt;direct = this-&gt;front-&gt;direct;<br>    }</p>
-<p>};<br>class Snake {<br>    section<em> head;<br>    section</em> tail;<br>    int length;<br>    int eatentimes;<br>public:<br>    food foo;<br>    Snake() {<br>        this-&gt;head =this-&gt;tail= new section();<br>        this-&gt;length = 1;<br>        eatentimes = 0;<br>    }<br>    void Add() {<br>        tail=tail-&gt;makenext();<br>        length++;<br>    }<br>    bool is_alive() {<br>        section<em> p = head-&gt;rear;<br>        while(p != NULL) {<br>            if (p-&gt;pos_x == head-&gt;pos_x&amp;&amp;p-&gt;pos_y == head-&gt;pos_y) {<br>                return false;<br>            }<br>            p = p-&gt;rear;<br>        }<br>        return head-&gt;pos_x != 0 &amp;&amp; head-&gt;pos_y != 0 &amp;&amp; head-&gt;pos_x != FRAME_WIDTH &amp;&amp; head-&gt;pos_y != FRAME_HEIGHT;<br>    }<br>    void move() {<br>        head-&gt;move();<br>        if (is_Food()) {<br>            if (eatentimes  == 5) {<br>                for (int i = 0; i &lt; 5; i++)<br>                    Add();<br>                eatentimes = 0;<br>                setfillcolor(BLACK);<br>                fillcircle(foo.pos_x </em> 480 / FRAME_WIDTH, foo.pos_y * 480 / FRAME_HEIGHT, 480 / FRAME_WIDTH);<br>                makeFood();</p>
-<pre><code>        }
-        else {
-            Add();
-            makeFood();
-        }
-    }
-}
-void turn(direction dir) {
-    head-&gt;direct = dir;
-}
-int getSpeed() {
-    return 5000/length;
-}
-void makeFood() {
-    int random\_X = rand() % (FRAME\_WIDTH-1)+1;
-    int random\_Y = rand() % (FRAME\_HEIGHT-1)+1;
-    section *p = head;
-    while (p != NULL) {
-        if (p-&gt;pos\_x == random\_X&amp;&amp;p-&gt;pos\_y == random\_Y) {
-            random\_X = rand() % FRAME\_WIDTH;
-            random\_Y = rand() % FRAME\_HEIGHT;
-    }
-        p = p-&gt;rear;
-    }
-    foo.pos\_x = random\_X;
-    foo.pos\_y = random\_Y;
-    setfillcolor(YELLOW);
-    if(eatentimes==4)
-        fillcircle(foo.pos\_x * 480 / FRAME\_WIDTH, foo.pos\_y * 480 / FRAME\_HEIGHT, 480 / FRAME_WIDTH );
-    else
-        fillcircle(foo.pos\_x * 480 / FRAME\_WIDTH, foo.pos\_y * 480 / FRAME\_HEIGHT, 480 / FRAME_WIDTH /2);
-    eatentimes++;
-
-}
-bool is_Food() {
-    return head-&gt;pos\_x == foo.pos\_x&amp;&amp;head-&gt;pos\_y == foo.pos\_y;
-}
-void Init() {
-    initgraph(480, 480);
-    char ch;
-    makeFood();
-    for (int i = 0; i &lt; 5; i++) {
-        Add();
-    }
-    while(true) {
-        int speed = getSpeed();
-        if (_kbhit()) {
-            if (_kbhit()) {
-                speed /= 2;
-            }
-            ch = _getch();
-            switch (ch) {
-            case &apos;w&apos;: turn(t); break;
-            case &apos;s&apos;: turn(b); break;
-            case &apos;a&apos;:turn(l); break;
-            case &apos;d&apos;:turn(r); break;
-            }
-
-        }
-        Sleep(speed);
-        move();
-        if (!is_alive())
-            break;
-    }
-    settextcolor(WHITE);
-    outtext(_T(&quot;蛇死掉了 按任意键退出游戏&quot;));
-    _getch();
-}
-</code></pre><p>};<br>int main() {<br>    srand(time(0));<br>    Snake snake;<br>    snake.Init();</p>
-<p>}</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left" aria-label="Previous page"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
+    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left" aria-label="Previous page"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
   </nav>
 
 
@@ -2275,7 +2249,7 @@ void Init() {
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">60</span>
+                    <span class="site-state-item-count">61</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
@@ -2404,7 +2378,7 @@ void Init() {
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
   <span class="with-love" id="animate">
     <i class="fa fa-user"></i>
   </span>
