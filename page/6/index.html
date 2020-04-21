@@ -317,6 +317,177 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/html5-greddy-snake/index.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/html5-greddy-snake/index.html" itemprop="url">
+                  html5实现贪吃蛇游戏
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-02-09 12:45:08" itemprop="dateCreated datePublished" datetime="2017-02-09T12:45:08+08:00">2017-02-09</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <pre><code>Greedy Snake
+</code></pre><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br></pre></td><td class="code"><pre><span class="line">       </span><br><span class="line">      </span><br><span class="line">      </span><br><span class="line"> </span><br><span class="line">      </span><br><span class="line">      </span><br><span class="line">      </span><br><span class="line">		 \* &#123; margin: 0; padding: 0; &#125;  </span><br><span class="line">       </span><br><span class="line">     html, body &#123; height: 100%; width: 100%; &#125;  </span><br><span class="line">       </span><br><span class="line">     canvas &#123; display: block; &#125; </span><br><span class="line">	     function onLoad() &#123;</span><br><span class="line">        document.addEventListener("deviceready", onDeviceReady, false);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // PhoneGap is ready</span><br><span class="line">    //</span><br><span class="line">    function onDeviceReady() &#123;</span><br><span class="line">            var h = screen.height - 40;</span><br><span class="line">            var w = screen.width - 20;</span><br><span class="line">        var c=document.getElementById("myCanvas");</span><br><span class="line">        c.setAttribute('width', w);</span><br><span class="line">        c.setAttribute('height', h);</span><br><span class="line">        var cxt=c.getContext("2d");</span><br><span class="line">        cxt.fillStyle="#FF0000";</span><br><span class="line">        cxt.fillRect(0,0,w,h);</span><br><span class="line">    &#125;</span><br><span class="line">   </span><br><span class="line">   </span><br><span class="line">      </span><br><span class="line"></span><br><span class="line"> </span><br><span class="line">      </span><br><span class="line">      </span><br><span class="line">      </span><br><span class="line">      </span><br><span class="line">	 var c=document.getElementById("canvas");</span><br><span class="line">	var ctx=c.getContext("2d");</span><br><span class="line">	</span><br><span class="line">	/*var ButtonReady=false;</span><br><span class="line">	var ButtonImage=new Image();</span><br><span class="line">	ButtonImage.onload=function()&#123;</span><br><span class="line">		ButtonReady=true;</span><br><span class="line">	&#125;;</span><br><span class="line">	ButtonImage.src="images/buttons.jpg";</span><br><span class="line">	ctx.drawImage(ButtonImage,0,$("canvas").height()/2,$("canvas").width()/3,$("canvas").height()/2);     </span><br><span class="line">*/</span><br><span class="line">	while($(window).get(0).innerWidth<span class="tag">&lt;<span class="name">$(window).get(0).innerHeight)&#123;</span></span></span><br><span class="line"><span class="tag">		<span class="attr">alert</span>("请使手机横屏");</span></span><br><span class="line"><span class="tag">	&#125;</span></span><br><span class="line"><span class="tag">	    $(<span class="attr">window</span>)<span class="attr">.resize</span>(<span class="attr">resizeCanvas</span>);  </span></span><br><span class="line"><span class="tag">    </span></span><br><span class="line"><span class="tag">     <span class="attr">function</span> <span class="attr">resizeCanvas</span>() &#123;  </span></span><br><span class="line"><span class="tag">       </span></span><br><span class="line"><span class="tag">            $("<span class="attr">canvas</span>")<span class="attr">.attr</span>("<span class="attr">width</span>", $(<span class="attr">window</span>)<span class="attr">.get</span>(<span class="attr">0</span>)<span class="attr">.innerWidth</span>);  </span></span><br><span class="line"><span class="tag">       </span></span><br><span class="line"><span class="tag">            $("<span class="attr">canvas</span>")<span class="attr">.attr</span>("<span class="attr">height</span>", $(<span class="attr">window</span>)<span class="attr">.get</span>(<span class="attr">0</span>)<span class="attr">.innerHeight</span>);  </span></span><br><span class="line"><span class="tag">				 <span class="attr">ctx.fillStyle</span>=<span class="string">"#00FF00"</span>;</span></span><br><span class="line"><span class="tag">				 </span></span><br><span class="line">	for(var m=0;m&lt;50;m++)&#123;</span><br><span class="line">		ctx.fillRect($("canvas").width()/3-$("canvas").width()/150,m*$("canvas").height()/50,$("canvas").width()/150,$("canvas").height()/50);</span><br><span class="line">		ctx.fillRect($("canvas").width()\*2/3+$("canvas").width()/150,m\*$("canvas").height()/50,$("canvas").width()/150,$("canvas").height()/50);</span><br><span class="line">	&#125;</span><br><span class="line">			/*ctx.fillStyle="#FFFFFF";</span><br><span class="line">            ctx.fillRect(0, 0, $("canvas").width(), $("canvas").height());  </span><br><span class="line">			</span><br><span class="line">			ctx.drawImage(ButtonImage,0,$("canvas").height()/2,$("canvas").width()/3,$("canvas").height()/2);   */      &#125;;  </span><br><span class="line">       </span><br><span class="line">     resizeCanvas(); </span><br><span class="line"></span><br><span class="line">	</span><br><span class="line">	var time=500;</span><br><span class="line">	var x=y=8;</span><br><span class="line">	var food_x=0;</span><br><span class="line">	var food_y=0;</span><br><span class="line">	var snake=\[\];</span><br><span class="line">	var dir=2;</span><br><span class="line">	var grow=true;</span><br><span class="line">	function is_alive()&#123;</span><br><span class="line">		for(var i=1;i<span class="tag">&lt;<span class="name">snake.length;i++)&#123;</span></span></span><br><span class="line"><span class="tag">			<span class="attr">if</span>(<span class="attr">snake</span>\[<span class="attr">i</span>\]<span class="attr">.x</span>==<span class="string">snake\[0\].x</span> &amp;&amp; <span class="attr">snake</span>\[<span class="attr">i</span>\]<span class="attr">.y</span>==<span class="string">snake\[0\].y)</span></span></span><br><span class="line"><span class="tag">				<span class="attr">return</span> <span class="attr">false</span>;</span></span><br><span class="line"><span class="tag">		&#125;</span></span><br><span class="line"><span class="tag">		<span class="attr">if</span>(<span class="attr">snake</span>\[<span class="attr">0</span>\]<span class="attr">.x</span>==<span class="string">0</span> || <span class="attr">snake</span>\[<span class="attr">0</span>\]<span class="attr">.y</span>==<span class="string">0</span> || <span class="attr">snake</span>\[<span class="attr">0</span>\]<span class="attr">.x</span>==<span class="string">50</span> || <span class="attr">snake</span>\[<span class="attr">0</span>\]<span class="attr">.y</span>==<span class="string">50)&#123;</span></span></span><br><span class="line"><span class="tag">				<span class="attr">return</span> <span class="attr">false</span>;</span></span><br><span class="line"><span class="tag">		&#125;</span></span><br><span class="line"><span class="tag">		<span class="attr">return</span> <span class="attr">true</span>;</span></span><br><span class="line"><span class="tag">	&#125;</span></span><br><span class="line"><span class="tag">	<span class="attr">function</span>  <span class="attr">formFood</span>()&#123;</span></span><br><span class="line"><span class="tag">		</span></span><br><span class="line"><span class="tag">		<span class="attr">while</span>(<span class="attr">true</span>)&#123;</span></span><br><span class="line"><span class="tag">		<span class="attr">food_x</span>=<span class="string">Math.floor(Math.random()*49+1);</span></span></span><br><span class="line"><span class="tag">		<span class="attr">food_y</span>=<span class="string">Math.floor(Math.random()*49+1);</span></span></span><br><span class="line"><span class="tag">		<span class="attr">var</span> <span class="attr">flag</span>=<span class="string">true;</span></span></span><br><span class="line"><span class="tag">		<span class="attr">for</span>(<span class="attr">sec</span> <span class="attr">in</span> <span class="attr">snake</span>)&#123;</span></span><br><span class="line"><span class="tag">			<span class="attr">if</span>(<span class="attr">sec.x</span>==<span class="string">food\_x&amp;&amp;sec.y</span>==<span class="string">food\_y)&#123;</span></span></span><br><span class="line"><span class="tag">				<span class="attr">flag</span>=<span class="string">false;</span></span></span><br><span class="line"><span class="tag">				<span class="attr">break</span>;</span></span><br><span class="line"><span class="tag">			&#125;</span></span><br><span class="line"><span class="tag">			</span></span><br><span class="line"><span class="tag">		&#125;</span></span><br><span class="line"><span class="tag">		<span class="attr">if</span>(<span class="attr">flag</span>)</span></span><br><span class="line"><span class="tag">			<span class="attr">break</span>;</span></span><br><span class="line"><span class="tag">		&#125;</span></span><br><span class="line"><span class="tag">		<span class="attr">ctx.fillStyle</span>=<span class="string">"#FF0000"</span>;</span></span><br><span class="line"><span class="tag">		<span class="attr">ctx.fillRect</span>($("<span class="attr">canvas</span>")<span class="attr">.width</span>()/<span class="attr">3</span>+<span class="attr">food_x</span>*$("<span class="attr">canvas</span>")<span class="attr">.width</span>()/<span class="attr">150</span>,</span></span><br><span class="line"><span class="tag">			<span class="attr">food_y</span>*$("<span class="attr">canvas</span>")<span class="attr">.height</span>()/<span class="attr">50</span>,</span></span><br><span class="line"><span class="tag">			$("<span class="attr">canvas</span>")<span class="attr">.width</span>()/<span class="attr">150</span>,</span></span><br><span class="line"><span class="tag">			$("<span class="attr">canvas</span>")<span class="attr">.height</span>()/<span class="attr">50</span>);</span></span><br><span class="line"><span class="tag">		</span></span><br><span class="line"><span class="tag">	&#125;</span></span><br><span class="line"><span class="tag">	<span class="attr">function</span>  <span class="attr">movesnake</span>()&#123;</span></span><br><span class="line"><span class="tag">		<span class="attr">if</span>(!<span class="attr">grow</span>)&#123;</span></span><br><span class="line"><span class="tag">		</span></span><br><span class="line"><span class="tag">			<span class="attr">ctx.clearRect</span>($("<span class="attr">canvas</span>")<span class="attr">.width</span>()/<span class="attr">3</span>+<span class="attr">snake</span>\[<span class="attr">snake.length-1</span>\]<span class="attr">.x</span>*$("<span class="attr">canvas</span>")<span class="attr">.width</span>()/<span class="attr">150-1</span>,</span></span><br><span class="line"><span class="tag">			<span class="attr">snake</span>\[<span class="attr">snake.length-1</span>\]<span class="attr">.y</span>*$("<span class="attr">canvas</span>")<span class="attr">.height</span>()/<span class="attr">50-1</span>,</span></span><br><span class="line"><span class="tag">			$("<span class="attr">canvas</span>")<span class="attr">.width</span>()/<span class="attr">150</span>+<span class="attr">2</span>,</span></span><br><span class="line"><span class="tag">			$("<span class="attr">canvas</span>")<span class="attr">.height</span>()/<span class="attr">50</span>+<span class="attr">2</span>);</span></span><br><span class="line"><span class="tag">			<span class="attr">for</span>(<span class="attr">var</span> <span class="attr">i</span>=<span class="string">snake.length-1;i</span>&gt;</span>0;i--)&#123;</span><br><span class="line">				snake\[i\].x=snake\[i-1\].x;</span><br><span class="line">				snake\[i\].y=snake\[i-1\].y;</span><br><span class="line">			&#125;</span><br><span class="line">			</span><br><span class="line">		&#125;</span><br><span class="line">		else&#123;</span><br><span class="line">			snake.push(&#123;x:snake\[snake.length-1\].x,y:snake\[snake.length-1\].y&#125;);</span><br><span class="line">			for(var i=snake.length-2;i&gt;0;i--)&#123;</span><br><span class="line">				snake\[i\].x=snake\[i-1\].x;</span><br><span class="line">				snake\[i\].y=snake\[i-1\].y;</span><br><span class="line">			&#125;</span><br><span class="line">			grow=false;</span><br><span class="line">		&#125;</span><br><span class="line">		switch(dir)&#123;</span><br><span class="line">			case 1:&#123;</span><br><span class="line">				snake\[0\].x--;</span><br><span class="line">				break;</span><br><span class="line">			&#125;</span><br><span class="line">			case 2:&#123;</span><br><span class="line">				snake\[0\].x++;</span><br><span class="line">				break;</span><br><span class="line">			&#125;</span><br><span class="line">			case 3:&#123;</span><br><span class="line">				snake\[0\].y--;</span><br><span class="line">				break;</span><br><span class="line">			&#125;</span><br><span class="line">			case 4:&#123;</span><br><span class="line">				snake\[0\].y++;</span><br><span class="line">				break;</span><br><span class="line">			&#125;</span><br><span class="line">			default:&#123;</span><br><span class="line">				alert("call on defult");</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		ctx.fillStyle="#000000";</span><br><span class="line">		ctx.fillRect($("canvas").width()/3+snake\[0\].x*$("canvas").width()/150,</span><br><span class="line">			snake\[0\].y*$("canvas").height()/50,</span><br><span class="line">			$("canvas").width()/150,</span><br><span class="line">			$("canvas").height()/50);</span><br><span class="line">		</span><br><span class="line">		if(!is_alive())&#123;</span><br><span class="line">		alert("蛇死掉了！蛇的最终长度为："+snake.length);</span><br><span class="line">		window.location.reload();</span><br><span class="line">		&#125;</span><br><span class="line">		if(snake\[0\].x==food\_x&amp;&amp;snake\[0\].y==food\_y)&#123;</span><br><span class="line">		grow=true;</span><br><span class="line">		formFood();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	snake.push(&#123;x:25,y:25&#125;);</span><br><span class="line">	snake.push(&#123;x:24,y:25&#125;);</span><br><span class="line">	snake.push(&#123;x:23,y:25&#125;);</span><br><span class="line">	snake.push(&#123;x:22,y:25&#125;);</span><br><span class="line">	for(var i=0;i<span class="tag">&lt;<span class="name">snake.length;i++)&#123;</span></span></span><br><span class="line"><span class="tag">	<span class="attr">ctx.fillStyle</span>=<span class="string">"#000000"</span>;</span></span><br><span class="line"><span class="tag">			<span class="attr">ctx.fillRect</span>($("<span class="attr">canvas</span>")<span class="attr">.width</span>()/<span class="attr">3</span>+<span class="attr">snake</span>\[<span class="attr">i</span>\]<span class="attr">.x</span>*$("<span class="attr">canvas</span>")<span class="attr">.width</span>()/<span class="attr">150</span>,</span></span><br><span class="line"><span class="tag">			<span class="attr">snake</span>\[<span class="attr">i</span>\]<span class="attr">.y</span>*$("<span class="attr">canvas</span>")<span class="attr">.height</span>()/<span class="attr">50</span>,</span></span><br><span class="line"><span class="tag">			$("<span class="attr">canvas</span>")<span class="attr">.width</span>()/<span class="attr">150</span>,</span></span><br><span class="line"><span class="tag">			$("<span class="attr">canvas</span>")<span class="attr">.height</span>()/<span class="attr">50</span>);</span></span><br><span class="line"><span class="tag">		</span></span><br><span class="line"><span class="tag">	&#125;</span></span><br><span class="line"><span class="tag">	<span class="attr">formFood</span>();</span></span><br><span class="line"><span class="tag">	<span class="attr">setInterval</span>("<span class="attr">movesnake</span>()",<span class="attr">500</span>);</span></span><br><span class="line"><span class="tag">	<span class="attr">canvas.onmousedown</span> = <span class="string">function(e)&#123;</span></span></span><br><span class="line"><span class="tag">			<span class="attr">switch</span>(<span class="attr">dir</span>)&#123;</span></span><br><span class="line"><span class="tag">			<span class="attr">case</span> <span class="attr">1:</span>&#123;</span></span><br><span class="line"><span class="tag">			&#125;</span></span><br><span class="line"><span class="tag">			<span class="attr">case</span> <span class="attr">2:</span>&#123;</span></span><br><span class="line"><span class="tag">				<span class="attr">if</span>(<span class="attr">e.pageY</span>&gt;</span>snake\[0\].y*$("canvas").height()/50)dir=4;</span><br><span class="line">				else dir=3;</span><br><span class="line">				break;</span><br><span class="line">			&#125;</span><br><span class="line">			case 3:&#123;</span><br><span class="line">			&#125;</span><br><span class="line">			case 4:&#123;</span><br><span class="line">				if(e.pageX&gt;$("canvas").width()/3+snake\[0\].x*$("canvas").width()/150)dir=2;</span><br><span class="line">				else dir=1;</span><br><span class="line">				break;</span><br><span class="line">			&#125;</span><br><span class="line">			default:&#123;</span><br><span class="line">				alert("call on defult");</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;	;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/ichunqiu-xiangqi-crack-py/index.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2049,186 +2220,6 @@ void Init() {
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/rot13/index.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/rot13/index.html" itemprop="url">
-                  rot13加密
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2016-12-13 00:06:03" itemprop="dateCreated datePublished" datetime="2016-12-13T00:06:03+08:00">2016-12-13</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-02-02 08:29:25" itemprop="dateModified" datetime="2019-02-02T08:29:25+08:00">2019-02-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Crypto/" itemprop="url" rel="index"><span itemprop="name">Crypto</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Crypto/Ctf/" itemprop="url" rel="index"><span itemprop="name">Ctf</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>最近做百度杯的Ctf遇到了这样一道题，后得知为rot13加密。 rot13加密秘钥:</p>
-<p>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</p>
-<p>NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm</p>
-<p>rot13加密可回转。</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2278,7 +2269,7 @@ void Init() {
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">62</span>
+                    <span class="site-state-item-count">63</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>

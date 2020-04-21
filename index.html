@@ -317,6 +317,209 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/javascript-codeql-learning/index.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Imagemlt">
+      <meta itemprop="description" content="personal blog">
+      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Image's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/post/javascript-codeql-learning/index.html" itemprop="url">
+                  codeql挖掘React应用的XSS实践
+                </a>
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2020-04-07 16:41:52" itemprop="dateCreated datePublished" datetime="2020-04-07T16:41:52+08:00">2020-04-07</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2020-04-21 15:38:07" itemprop="dateModified" datetime="2020-04-21T15:38:07+08:00">2020-04-21</time>
+              
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>近日研究了一下<a href="https://help.semmle.com/QL/learn-ql/javascript/ql-for-javascript.html">codeql</a>这个源代码分析工具，由于工作中接触到的React框架的web应用较多，往日人工审计源码挖掘XSS通常是在Webstorm中寻找dangerouslySetInnerHTML等调用点，人工工作量较为复杂且可能遗漏一些东西，所以便尝试能否用codeql来辅助挖掘React应用中的XSS。</p>
+<h2 id="React应用中常见的XSS类型"><a href="#React应用中常见的XSS类型" class="headerlink" title="React应用中常见的XSS类型"></a>React应用中常见的XSS类型</h2><p>React应用的XSS的产生情况一般有：</p>
+<ul>
+<li>调用dangerouslySetInnerHTML<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Hello</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</span><br><span class="line">  render() &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="xml"><span class="tag">&lt;<span class="name">div</span></span></span></span><br><span class="line">        dangerouslySetInnerHTML=&#123;&#123;html:'&lt;img/src="x"/onerror="alert(1)"/&gt;'&#125;&#125;</span><br><span class="line"><span class="xml">    &gt;<span class="tag">&lt;/<span class="name">div</span>&gt;</span>;</span></span><br><span class="line"><span class="xml">  &#125;</span></span><br><span class="line"><span class="xml">&#125;</span></span><br><span class="line"><span class="xml"></span></span><br><span class="line"><span class="xml">ReactDOM.render(</span></span><br><span class="line">  &lt;Hello name="World" /&gt;,</span><br><span class="line">  document.getElementById('container')</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>直接将恶意html渲染到DOM中；</p>
+<ul>
+<li>a标签的链接判断不严格<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> userWebsite = <span class="string">"javascript:alert('Hacked!');"</span>;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserProfilePage</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</span><br><span class="line">  render() &#123;</span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">      &lt;a href=&#123;userWebsite&#125;&gt;My Website&lt;<span class="regexp">/a&gt;</span></span><br><span class="line"><span class="regexp">    )</span></span><br><span class="line"><span class="regexp">  &#125;</span></span><br><span class="line"><span class="regexp">&#125;</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">ReactDOM.render(&lt;UserProfilePage /</span>&gt;, <span class="built_in">document</span>.querySelector(<span class="string">"#app"</span>));</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>a标签对于链接缺少过滤，可以通过插入javascript类的url来实现oneclick XSS.</p>
+<ul>
+<li><p>直接调用innerHTML/outerHTML</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x=<span class="built_in">document</span>.createElement(<span class="string">'div'</span>)</span><br><span class="line">x.innerHTML=<span class="string">"user controllable data"</span>;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>直接设置href</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x=<span class="built_in">document</span>.createElement(<span class="string">'a'</span>)</span><br><span class="line">x.href=<span class="string">"javascript:alert(1)"</span>;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>参数注入(注入dangerouslySetInnerHTML的情况)</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> r=&#123;...input&#125;</span><br><span class="line"><span class="keyword">return</span> (</span><br><span class="line">    &lt;div </span><br><span class="line">    ...r</span><br><span class="line">    &gt;<span class="xml"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>参数注入的情况在我们的业务中较为少见，因此重点考虑前四种XSS情形的挖掘方式。</p>
+<h2 id="codeql实现"><a href="#codeql实现" class="headerlink" title="codeql实现"></a>codeql实现</h2><p>codeql一个重要功能便是能够跟踪数据流，我们只需要编写继承于<code>TaintTracking::Configuration</code>类的数据流设置类，定义好<code>isSource</code>,<code>isSink</code>,<code>isAdditionalTaintStep</code>这几个方法即可，其中<code>isSource</code>表示数据流的源头，<code>isSink</code>表示数据流流向目标，<code>isAdditionalTaintStep</code>表示额外的连接数据流的判断。<br>对于React应用而言Source点其实不是很容易确定，而且盲目设置Source来源于location.hash/XHR如果<code>isAdditionalTaintStep</code>函数设置不好的话很难能达到预期结果。因此我仅仅判断了Source是否是常量的情形。</p>
+<h3 id="dangerouslySetInnerHTML"><a href="#dangerouslySetInnerHTML" class="headerlink" title="dangerouslySetInnerHTML"></a>dangerouslySetInnerHTML</h3><p>Source 定义如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">override predicate isSource(DataFlow::Node nd)&#123;</span><br><span class="line">       not (nd.asExpr() instanceof ConstantExpr)</span><br><span class="line">       and not exists(nd.toString().toLowerCase().indexOf(&quot;icon&quot;))</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里的第一行的判断便是判断Source点是否是一个常量类型的表达式，而第二行则是由于dangerouslySetInnerHTML经常被应用于加载某些svg图片，我们需要确定一下Source是否仅仅是一个图标类型的变量。</p>
+<p>Sink则只需要判断这个节点是否是一个jsx的标签属性即可，实现如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"> class ReactDangerousSetInnerHTMLSinks extends DataFlow::Node &#123;</span><br><span class="line">   ReactDangerousSetInnerHTMLSinks() &#123;</span><br><span class="line">    exists(JSXAttribute attr |</span><br><span class="line">      attr.getName() = &quot;dangerouslySetInnerHTML&quot; and attr.getValue() = this.asExpr()</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>对于dangerouslySetInnerHTML的情况，我们还需要注意判断对于html属性的写操作，因为dangerouslySetInnerHTML的html属性才是真正的恶意输入点，否则codeql语句判断数据流时可能会停止到<code>{html:xxx}</code>这个语句，不会继续跟进<code>xxx</code>经过了哪些数据流。因此这里的<code>isAdditionalTaintStep</code>方法定义如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">override predicate isAdditionalTaintStep(DataFlow::Node pred, DataFlow::Node succ) &#123;</span><br><span class="line">        exists(DataFlow::ObjectLiteralNode obj, DataFlow::Node html_value |</span><br><span class="line">        obj.hasPropertyWrite(&quot;__html&quot;, html_value) and</span><br><span class="line">        succ = obj and</span><br><span class="line">        pred = html_value</span><br><span class="line">        )</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>针对dangerouslySetInnerHTML的codeql语句最终如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">import javascript</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">class ReactDangerousSetInnerHTMLSinks extends DataFlow::Node &#123;</span><br><span class="line">   ReactDangerousSetInnerHTMLSinks() &#123;</span><br><span class="line">    exists(JSXAttribute attr |</span><br><span class="line">      attr.getName() = &quot;dangerouslySetInnerHTML&quot; and attr.getValue() = this.asExpr()</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class ReactSetInnerHtmlTracker extends TaintTracking::Configuration&#123;</span><br><span class="line">    ReactSetInnerHtmlTracker() &#123;</span><br><span class="line">        this = &quot;ReactSetInnerHtmlTracker&quot;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    override predicate isSource(DataFlow::Node nd)&#123;</span><br><span class="line">       not (nd.asExpr() instanceof ConstantExpr)</span><br><span class="line">       and not exists(nd.toString().toLowerCase().indexOf(&quot;icon&quot;))</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    override predicate isSink(DataFlow::Node nd)&#123;</span><br><span class="line">        nd instanceof ReactDangerousSetInnerHTMLSinks</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    override predicate isAdditionalTaintStep(DataFlow::Node pred, DataFlow::Node succ) &#123;</span><br><span class="line">        exists(DataFlow::ObjectLiteralNode obj, DataFlow::Node html_value |</span><br><span class="line">        obj.hasPropertyWrite(&quot;__html&quot;, html_value) and</span><br><span class="line">        succ = obj and</span><br><span class="line">        pred = html_value</span><br><span class="line">        )</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">from ReactSetInnerHtmlTracker pt, DataFlow::Node source, DataFlow::Node sink</span><br><span class="line">where pt.hasFlow(source, sink)</span><br><span class="line">select source,sink</span><br></pre></td></tr></table></figure></p>
+<p>isAdditionalTaintStep方法也可以继续优化，加入是否经过了Dompurify过滤、是否经过编码转换函数等。</p>
+<h3 id="a标签判断不严格的情况"><a href="#a标签判断不严格的情况" class="headerlink" title="a标签判断不严格的情况"></a>a标签判断不严格的情况</h3><p>只需要对上面的例子做更改即可，可以只修改Sink将属性改为href，去掉<code>isAdditionalTaintStep</code>方法，这里的实现如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">import javascript</span><br><span class="line"></span><br><span class="line">class ReactSetHrefSinks extends DataFlow::Node &#123;</span><br><span class="line">   ReactSetHrefSinks() &#123;</span><br><span class="line">    exists(JSXAttribute attr |</span><br><span class="line">      attr.getName() = &quot;href&quot; and attr.getValue() = this.asExpr()</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class ReactSetHrefTracker extends TaintTracking::Configuration&#123;</span><br><span class="line">    ReactSetHrefTracker() &#123;</span><br><span class="line">        this = &quot;ReactSetHrefTracker&quot;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    override predicate isSource(DataFlow::Node nd)&#123;</span><br><span class="line">       exists(|</span><br><span class="line">       not (nd.asExpr() instanceof ConstantExpr)</span><br><span class="line">       and not exists(nd.toString().toLowerCase().indexOf(&quot;icon&quot;))</span><br><span class="line">       )</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    override predicate isSink(DataFlow::Node nd)&#123;</span><br><span class="line">      nd instanceof ReactSetHrefSinks</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">from ReactSetHrefTracker pt, DataFlow::Node source, DataFlow::Node sink</span><br><span class="line">where pt.hasFlow(source, sink)</span><br><span class="line">select source,sink</span><br></pre></td></tr></table></figure>
+<h3 id="innerHTML-outerHTML-href"><a href="#innerHTML-outerHTML-href" class="headerlink" title="innerHTML/outerHTML/href"></a>innerHTML/outerHTML/href</h3><p>Sink只需要判断是存在PropWrite事件，写入的属性为innerHTML/outerHTML/href即可</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">import javascript</span><br><span class="line"></span><br><span class="line">class InnerHTMLSinks extends DataFlow::Node &#123;</span><br><span class="line">   InnerHTMLSinks()&#123;</span><br><span class="line">       exists(DataFlow::PropWrite pw |</span><br><span class="line">       pw.getPropertyName().regexpMatch(&quot;(innerHTML|outerHTML)&quot;)</span><br><span class="line">       and pw.getRhs() = this</span><br><span class="line">       )</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class InnerHtmlTracker extends TaintTracking::Configuration&#123;</span><br><span class="line">    InnerHtmlTracker() &#123;</span><br><span class="line">        this = &quot;InnerHtmlTracker&quot;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    override predicate isSource(DataFlow::Node nd)&#123;</span><br><span class="line">       not nd.asExpr() instanceof ConstantExpr</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    override predicate isSink(DataFlow::Node nd)&#123;</span><br><span class="line">        nd instanceof InnerHTMLSinks</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">from InnerHtmlTracker pt, DataFlow::Node source, DataFlow::Node sink</span><br><span class="line">where pt.hasFlow(source, sink)</span><br><span class="line">select source,sink</span><br></pre></td></tr></table></figure>
+<h2 id="一个针对DOMXSS的判断例子"><a href="#一个针对DOMXSS的判断例子" class="headerlink" title="一个针对DOMXSS的判断例子"></a>一个针对DOMXSS的判断例子</h2><p>这里用一个针对DOMXSS的判断来说明一下怎样充分利用DataFlow功能的<code>isSource</code>,<code>isSink</code>，<code>isAdditionalTaintStep</code>函数来追踪一个比较完整的数据流。</p>
+<p>有网友发来一个邮件请求帮忙针对以下的DOMXSS例子编写codeql查询：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"utf-8"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">title</span>&gt;</span>DoraBox - DOM_XSS<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">''</span> <span class="attr">method</span>=<span class="string">'GET'</span>&gt;</span></span><br><span class="line">name: </span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">'text'</span> <span class="attr">name</span>=<span class="string">'name'</span> <span class="attr">id</span>=<span class="string">'form1'</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">'submit'</span> <span class="attr">name</span>=<span class="string">'submit'</span> <span class="attr">value</span>=<span class="string">'submit'</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">hr</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">'text/javascript'</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">getURLValue</span>(<span class="params">name</span>)</span>&#123;</span></span><br><span class="line"><span class="javascript"> 	<span class="keyword">var</span> reg = <span class="keyword">new</span> <span class="built_in">RegExp</span>(<span class="string">'(^|&amp;)'</span>+ name +<span class="string">'=([^&amp;]*)(&amp;|$)'</span>);</span></span><br><span class="line"><span class="javascript">	<span class="keyword">var</span> r = <span class="built_in">window</span>.location.search.substr(<span class="number">1</span>).match(reg);</span></span><br><span class="line"><span class="javascript">	<span class="keyword">if</span>(r != <span class="literal">null</span>)&#123;</span></span><br><span class="line"><span class="javascript"> 		<span class="keyword">return</span> <span class="built_in">unescape</span>(r[<span class="number">2</span>]);</span></span><br><span class="line"><span class="javascript"> 	&#125;<span class="keyword">else</span>&#123;</span></span><br><span class="line"><span class="javascript">	 	<span class="keyword">return</span> <span class="string">""</span>;</span></span><br><span class="line"> 	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="javascript"><span class="built_in">document</span>.write(getURLValue(<span class="string">'name'</span>));</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>这里的XSS例子是从location.search中取出内容来输出到网页上。</p>
+<p>针对来自url的DOMXSS,我们可以按如下的方式定义Source：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">class LocationHashSource extends DataFlow::Node &#123;</span><br><span class="line">    LocationHashSource() &#123;</span><br><span class="line">        exists(CallExpr dollarCall, PropAccess pr |</span><br><span class="line">      this.asExpr() instanceof CallExpr and</span><br><span class="line">      (dollarCall.getCalleeName() = &quot;split&quot;</span><br><span class="line">       or dollarCall.getCalleeName() = &quot;substr&quot;</span><br><span class="line">        or dollarCall.getCalleeName() = &quot;substring&quot;</span><br><span class="line">      ) and dollarCall.getReceiver() = pr</span><br><span class="line">      and  (pr.getBase().toString() = &quot;window.location&quot; </span><br><span class="line">      or pr.getBase().toString() = &quot;location&quot;)</span><br><span class="line">      and this.asExpr() = dollarCall</span><br><span class="line">      )</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里主要判断是否存在函数调用，其中调用了split/substr/substring等方法，且这些方法的Receiver为window.location/location.</p>
+<p>Sink点比较简单，直接参考上面React应用XSS的判断即可，这里定义了innerHTML和document.write两种类型<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">class DocumentWriteSinks extends DataFlow::Node &#123;</span><br><span class="line">   DocumentWriteSinks() &#123;</span><br><span class="line">    exists(CallExpr call|</span><br><span class="line">        call.getCalleeName() = &quot;write&quot; </span><br><span class="line">        and call.getReceiver().toString() = &quot;document&quot; </span><br><span class="line">        and this.asExpr() = call.getArgument(0)</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class InnerHTMLSinks extends DataFlow::Node &#123;</span><br><span class="line">    InnerHTMLSinks()&#123;</span><br><span class="line">        exists(DataFlow::PropWrite pw |</span><br><span class="line">        pw.getPropertyName().regexpMatch(&quot;(innerHTML|outerHTML)&quot;)</span><br><span class="line">        and pw.getRhs() = this</span><br><span class="line">       )</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>而为了能够保证经过unescape/decodeURI等编码类函数数据流仍然不断开，需要编写<code>isAdditionalTaintStep</code>函数来添加额外的数据流判断</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">override predicate isAdditionalTaintStep(DataFlow::Node pred, DataFlow::Node succ) &#123;</span><br><span class="line">    exists(CallExpr call |</span><br><span class="line">    (call.getCalleeName() = &quot;unescape&quot;</span><br><span class="line">        or call.getCalleeName() = &quot;atob&quot;</span><br><span class="line">        or call.getCalleeName() = &quot;decodeURI&quot;</span><br><span class="line">        or call.getCalleeName() = &quot;decodeURIComponent&quot;</span><br><span class="line">    ) and succ.asExpr() = call and</span><br><span class="line">    pred.asExpr() = call.getArgument(0)</span><br><span class="line">    )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里判断条件只判断了是否调用了unescape/atob/decodeURI/decodeURIComponent等方法，如果调用则方法的参数为前驱，方法的结果为后继，从而保证数据流流经这些函数仍然能够继续追踪。</p>
+<p>综上，针对这种DOMXSS的codeql语句实现如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line">import javascript</span><br><span class="line"></span><br><span class="line">class DocumentWriteSinks extends DataFlow::Node &#123;</span><br><span class="line">   DocumentWriteSinks() &#123;</span><br><span class="line">    exists(CallExpr call|</span><br><span class="line">        call.getCalleeName() = &quot;write&quot; </span><br><span class="line">        and call.getReceiver().toString() = &quot;document&quot; </span><br><span class="line">        and this.asExpr() = call.getArgument(0)</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class InnerHTMLSinks extends DataFlow::Node &#123;</span><br><span class="line">    InnerHTMLSinks()&#123;</span><br><span class="line">        exists(DataFlow::PropWrite pw |</span><br><span class="line">        pw.getPropertyName().regexpMatch(&quot;(innerHTML|outerHTML)&quot;)</span><br><span class="line">        and pw.getRhs() = this</span><br><span class="line">       )</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class LocationHashSource extends DataFlow::Node &#123;</span><br><span class="line">    LocationHashSource() &#123;</span><br><span class="line">        exists(CallExpr dollarCall, PropAccess pr |</span><br><span class="line">      this.asExpr() instanceof CallExpr and</span><br><span class="line">      (dollarCall.getCalleeName() = &quot;split&quot;</span><br><span class="line">       or dollarCall.getCalleeName() = &quot;substr&quot;</span><br><span class="line">        or dollarCall.getCalleeName() = &quot;substring&quot;</span><br><span class="line">      ) and dollarCall.getReceiver() = pr</span><br><span class="line">      and  (pr.getBase().toString() = &quot;window.location&quot; </span><br><span class="line">      or pr.getBase().toString() = &quot;location&quot;)</span><br><span class="line">      and this.asExpr() = dollarCall</span><br><span class="line">      )</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class DocumentWriteTracker extends TaintTracking::Configuration&#123;</span><br><span class="line">   DocumentWriteTracker() &#123;</span><br><span class="line">        this = &quot;DocumentWriteTracker&quot;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    override predicate isSource(DataFlow::Node nd)&#123;</span><br><span class="line">       nd instanceof LocationHashSource</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    override predicate isSink(DataFlow::Node nd)&#123;</span><br><span class="line">        nd instanceof DocumentWriteSinks</span><br><span class="line">        or nd instanceof InnerHTMLSinks</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    override predicate isAdditionalTaintStep(DataFlow::Node pred, DataFlow::Node succ) &#123;</span><br><span class="line">        exists(CallExpr call |</span><br><span class="line">        (call.getCalleeName() = &quot;unescape&quot;</span><br><span class="line">            or call.getCalleeName() = &quot;atob&quot;</span><br><span class="line">            or call.getCalleeName() = &quot;decodeURI&quot;</span><br><span class="line">            or call.getCalleeName() = &quot;decodeURIComponent&quot;</span><br><span class="line">        ) and succ.asExpr() = call and</span><br><span class="line">        pred.asExpr() = call.getArgument(0)</span><br><span class="line">        )</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">from DocumentWriteTracker pt, DataFlow::Node source, DataFlow::Node sink</span><br><span class="line">where pt.hasFlow(source, sink) </span><br><span class="line">select source,sink</span><br></pre></td></tr></table></figure>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://help.semmle.com/QL/learn-ql/javascript/ql-for-javascript.html">https://help.semmle.com/QL/learn-ql/javascript/ql-for-javascript.html</a></li>
+<li><a href="https://msrc-blog.microsoft.com/2019/11/06/vulnerability-hunting-with-semmle-ql-dom-xss/">https://msrc-blog.microsoft.com/2019/11/06/vulnerability-hunting-with-semmle-ql-dom-xss/</a></li>
+<li><a href="https://msrc-blog.microsoft.com/2019/03/19/vulnerability-hunting-with-semmle-ql-part-2/">https://msrc-blog.microsoft.com/2019/03/19/vulnerability-hunting-with-semmle-ql-part-2/</a></li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/ctfd-v2-acccount-takeover/index.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1933,225 +2136,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://hexo.imagemlt.xyz/post/tp5_rce/index.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Imagemlt">
-      <meta itemprop="description" content="personal blog">
-      <meta itemprop="image" content="https://avatars0.githubusercontent.com/u/26888704?s=460&v=4">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Image's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/post/tp5_rce/index.html" itemprop="url">
-                  thinkphp5.0 RCE分析
-                </a>
-              
-            
-          </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2019-03-07 00:13:14 / Modified: 13:37:25" itemprop="dateCreated datePublished" datetime="2019-03-07T00:13:14+08:00">2019-03-07</time>
-            
-
-            
-              
-
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/web/CTF/" itemprop="url" rel="index"><span itemprop="name">CTF</span></a></span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/web/CTF/技术学习/" itemprop="url" rel="index"><span itemprop="name">技术学习</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="Thinkphp5-0-RCE分析"><a href="#Thinkphp5-0-RCE分析" class="headerlink" title="Thinkphp5.0 RCE分析"></a>Thinkphp5.0 RCE分析</h2><p>迟到的关于年末爆出的tp5的RCE的分析文章。</p>
-<p>我们先来分析以下的poc</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?s=index/\think\app/invokefunction&amp;function=call_user_func_array&amp;vars[0]=phpinfo&amp;vars[1][]=1</span><br></pre></td></tr></table></figure>
-<p>分析一个MVC的框架首先最重要的一步就是要搞清楚这个框架的路由规则。我们从<code>index.php</code>开始，</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">define(<span class="string">'APP_PATH'</span>, <span class="keyword">__DIR__</span> . <span class="string">'/../application/'</span>);</span><br><span class="line"><span class="comment">// 加载框架引导文件</span></span><br><span class="line"><span class="keyword">require</span> <span class="keyword">__DIR__</span> . <span class="string">'/../thinkphp/start.php'</span>;</span><br></pre></td></tr></table></figure>
-<p>直接require了<code>./../thinkphp/start.php</code>,跟入该文件</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="comment">// +----------------------------------------------------------------------</span></span><br><span class="line"><span class="comment">// | ThinkPHP [ WE CAN DO IT JUST THINK ]</span></span><br><span class="line"><span class="comment">// +----------------------------------------------------------------------</span></span><br><span class="line"><span class="comment">// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.</span></span><br><span class="line"><span class="comment">// +----------------------------------------------------------------------</span></span><br><span class="line"><span class="comment">// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )</span></span><br><span class="line"><span class="comment">// +----------------------------------------------------------------------</span></span><br><span class="line"><span class="comment">// | Author: liu21st &lt;liu21st@gmail.com&gt;</span></span><br><span class="line"><span class="comment">// +----------------------------------------------------------------------</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> <span class="title">think</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ThinkPHP 引导文件</span></span><br><span class="line"><span class="comment">// 1. 加载基础文件</span></span><br><span class="line"><span class="keyword">require</span> <span class="keyword">__DIR__</span> . <span class="string">'/base.php'</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. 执行应用</span></span><br><span class="line">App::run()-&gt;send();</span><br></pre></td></tr></table></figure>
-<p>进入<code>App.php</code>的<code>run()</code>方法，该方法的实现主要步骤可简化为:</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">run</span><span class="params">(Request $request = null)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $request = is_null($request) ? Request::instance() : $request;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">/*</span></span><br><span class="line"><span class="comment">          ...</span></span><br><span class="line"><span class="comment">              */</span></span><br><span class="line">            $dispatch = <span class="keyword">self</span>::$dispatch;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 未设置调度信息则进行 URL 路由检测</span></span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">empty</span>($dispatch)) &#123;</span><br><span class="line">                $dispatch = <span class="keyword">self</span>::routeCheck($request, $config);</span><br><span class="line">            &#125;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">           ...</span></span><br><span class="line"><span class="comment">*/</span>               </span><br><span class="line">            $data = <span class="keyword">self</span>::exec($dispatch, $config);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (HttpResponseException $exception) &#123;</span><br><span class="line">            $data = $exception-&gt;getResponse();</span><br><span class="line">        &#125;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">...</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">        <span class="keyword">return</span> $response;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>路由检测位于<code>routeCheck($request,$config)</code>中，跟入该函数</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">routeCheck</span><span class="params">($request, array $config)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $path   = $request-&gt;path();</span><br><span class="line">        $depr   = $config[<span class="string">'pathinfo_depr'</span>];</span><br><span class="line">        $result = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 路由检测</span></span><br><span class="line">       ...</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 路由检测（根据路由定义返回不同的URL调度）</span></span><br><span class="line">            $result = Route::check($request, $path, $depr, $config[<span class="string">'url_domain_deploy'</span>]);</span><br><span class="line">            $must   = !is_null(<span class="keyword">self</span>::$routeMust) ? <span class="keyword">self</span>::$routeMust : $config[<span class="string">'url_route_must'</span>];</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> ($must &amp;&amp; <span class="keyword">false</span> === $result) &#123;</span><br><span class="line">                <span class="comment">// 路由无效</span></span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RouteNotFoundException();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 路由无效 解析模块/控制器/操作/参数... 支持控制器自动搜索</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">false</span> === $result) &#123;</span><br><span class="line">            $result = Route::parseUrl($path, $depr, $config[<span class="string">'controller_auto_search'</span>]);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> $result;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>routeCheck函数中首先通过<code>$request-&gt;path()</code>获取了请求的path，跟进可知该值在允许兼容模式时可以通过<code>$_GET[Config::get(&#39;var_pathinfo&#39;)]</code>获取，默认情况下即<code>$_GET[s]</code>,因此我们的poc获取到的path即为<code>index/\think\app/invokefunction</code>。之后由于路由规则中并无此规则，则进入控制器自动搜索,即<code>Route::parseUrl($path, $depr, $config[&#39;controller_auto_search&#39;]);</code></p>
-<p>跟进parseUrl可知thinkphp在处理路由时会用<code>/</code>分割path,对应分割结果分别匹配为模块|控制器|操作|操作参数,</p>
-<p>因此最后获取到的路由为</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1g0tiza25n5j309p05owey.jpg" alt="50ECD0B6-F5D3-4829-9D3C-0F2B1741CE81"></p>
-<p>回到<code>App.php</code>中,</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$data = <span class="keyword">self</span>::exec($dispatch, $config);</span><br></pre></td></tr></table></figure>
-<p>这行操作是整个RCE实现的关键。我们跟入<code>exec</code>方法的实现</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">exec</span><span class="params">($dispatch, $config)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">switch</span> ($dispatch[<span class="string">'type'</span>]) &#123;</span><br><span class="line">           ...</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'module'</span>: <span class="comment">// 模块/控制器/操作</span></span><br><span class="line">                $data = <span class="keyword">self</span>::module(</span><br><span class="line">                    $dispatch[<span class="string">'module'</span>],</span><br><span class="line">                    $config,</span><br><span class="line">                    <span class="keyword">isset</span>($dispatch[<span class="string">'convert'</span>]) ? $dispatch[<span class="string">'convert'</span>] : <span class="keyword">null</span></span><br><span class="line">                );</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">           ...</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> $data;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>跟入<code>module</code>方法</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">module</span><span class="params">($result, $config, $convert = null)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (is_string($result)) &#123;</span><br><span class="line">            $result = explode(<span class="string">'/'</span>, $result);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        $request = Request::instance();</span><br><span class="line"></span><br><span class="line">       ...</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 获取控制器名</span></span><br><span class="line">        $controller = strip_tags($result[<span class="number">1</span>] ?: $config[<span class="string">'default_controller'</span>]);</span><br><span class="line">        $controller = $convert ? strtolower($controller) : $controller;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 获取操作名</span></span><br><span class="line">        $actionName = strip_tags($result[<span class="number">2</span>] ?: $config[<span class="string">'default_action'</span>]);</span><br><span class="line">       ...</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            $instance = Loader::controller(</span><br><span class="line">                $controller,</span><br><span class="line">                $config[<span class="string">'url_controller_layer'</span>],</span><br><span class="line">                $config[<span class="string">'controller_suffix'</span>],</span><br><span class="line">                $config[<span class="string">'empty_controller'</span>]</span><br><span class="line">            );</span><br><span class="line">        &#125; <span class="keyword">catch</span> (ClassNotFoundException $e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> HttpException(<span class="number">404</span>, <span class="string">'controller not exists:'</span> . $e-&gt;getClass());</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<p>进入<code>Loader::controller</code>方法</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">controller</span><span class="params">($name, $layer = <span class="string">'controller'</span>, $appendSuffix = false, $empty = <span class="string">''</span>)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">list</span>($module, $class) = <span class="keyword">self</span>::getModuleAndClass($name, $layer, $appendSuffix);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (class_exists($class)) &#123;</span><br><span class="line">            <span class="keyword">return</span> App::invokeClass($class);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ($empty) &#123;</span><br><span class="line">            $emptyClass = <span class="keyword">self</span>::parseClass($module, $layer, $empty, $appendSuffix);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (class_exists($emptyClass)) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> $emptyClass(Request::instance());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> ClassNotFoundException(<span class="string">'class not exists:'</span> . $class, $class);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>跟入<code>App::invokeClass</code>方法，</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">invokeClass</span><span class="params">($class, $vars = [])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    $reflect     = <span class="keyword">new</span> \ReflectionClass($class);</span><br><span class="line">    $constructor = $reflect-&gt;getConstructor();</span><br><span class="line">    $args        = $constructor ? <span class="keyword">self</span>::bindParams($constructor, $vars) : [];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> $reflect-&gt;newInstanceArgs($args);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>该方法使用php的反射机制返回指定类的一个对象，因此由我们的poc,<code>Loader::controller</code>返回了<code>\think\app</code>类的一个实例。</p>
-<p>继续回到<code>App::module</code>方法</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">$action = $actionName . $config[<span class="string">'action_suffix'</span>];</span><br><span class="line"></span><br><span class="line">      $vars = [];</span><br><span class="line">      <span class="keyword">if</span> (is_callable([$instance, $action])) &#123;</span><br><span class="line">          <span class="comment">// 执行操作方法</span></span><br><span class="line">          $call = [$instance, $action];</span><br><span class="line">          <span class="comment">// 严格获取当前操作方法名</span></span><br><span class="line">          $reflect    = <span class="keyword">new</span> \ReflectionMethod($instance, $action);</span><br><span class="line">          $methodName = $reflect-&gt;getName();</span><br><span class="line">          $suffix     = $config[<span class="string">'action_suffix'</span>];</span><br><span class="line">          $actionName = $suffix ? substr($methodName, <span class="number">0</span>, -strlen($suffix)) : $methodName;</span><br><span class="line">          $request-&gt;action($actionName);</span><br><span class="line"></span><br><span class="line">      &#125; <span class="keyword">elseif</span> (is_callable([$instance, <span class="string">'_empty'</span>])) &#123;</span><br><span class="line">          <span class="comment">// 空操作</span></span><br><span class="line">          $call = [$instance, <span class="string">'_empty'</span>];</span><br><span class="line">          $vars = [$actionName];</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="comment">// 操作不存在</span></span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> HttpException(<span class="number">404</span>, <span class="string">'method not exists:'</span> . get_class($instance) . <span class="string">'-&gt;'</span> . $action . <span class="string">'()'</span>);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      Hook::listen(<span class="string">'action_begin'</span>, $call);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">self</span>::invokeMethod($call, $vars);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-<p>可以看到<code>App::module</code>方法之后会判断之前生成的实例是否有对应的方法,存在的话便会设置<code>$call</code>变量为<code>[\think\App类的实例,&#39;invokefunction&#39;]</code>,最后调用<code>self::invokeMethod($call,$vars)</code>。跟入该方法</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">invokeMethod</span><span class="params">($method, $vars = [])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (is_array($method)) &#123;</span><br><span class="line">        $class   = is_object($method[<span class="number">0</span>]) ? $method[<span class="number">0</span>] : <span class="keyword">self</span>::invokeClass($method[<span class="number">0</span>]);</span><br><span class="line">        $reflect = <span class="keyword">new</span> \ReflectionMethod($class, $method[<span class="number">1</span>]);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 静态方法</span></span><br><span class="line">        $reflect = <span class="keyword">new</span> \ReflectionMethod($method);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    $args = <span class="keyword">self</span>::bindParams($reflect, $vars);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">self</span>::$debug &amp;&amp; Log::record(<span class="string">'[ RUN ] '</span> . $reflect-&gt;class . <span class="string">'-&gt;'</span> . $reflect-&gt;name . <span class="string">'[ '</span> . $reflect-&gt;getFileName() . <span class="string">' ]'</span>, <span class="string">'info'</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> $reflect-&gt;invokeArgs(<span class="keyword">isset</span>($class) ? $class : <span class="keyword">null</span>, $args);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>跟入<code>self::bindParams</code>,该方法用于获取最后执行的函数的参数</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">bindParams</span><span class="params">($reflect, $vars = [])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">// 自动获取请求变量</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">empty</span>($vars)) &#123;</span><br><span class="line">        $vars = Config::get(<span class="string">'url_param_type'</span>) ?</span><br><span class="line">        Request::instance()-&gt;route() :</span><br><span class="line">        Request::instance()-&gt;param();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    $args = [];</span><br><span class="line">    <span class="keyword">if</span> ($reflect-&gt;getNumberOfParameters() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 判断数组类型 数字数组时按顺序绑定参数</span></span><br><span class="line">        reset($vars);</span><br><span class="line">        $type = key($vars) === <span class="number">0</span> ? <span class="number">1</span> : <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">foreach</span> ($reflect-&gt;getParameters() <span class="keyword">as</span> $param) &#123;</span><br><span class="line">            $args[] = <span class="keyword">self</span>::getParamValue($param, $vars, $type);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> $args;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>默认情况下<code>Config::get(&#39;url_param_type&#39;)</code>为0,因此<code>$vars</code>被设置为<code>Request::instance()-&gt;param()</code>,在我们的poc中<code>$vars</code>即</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1g0tiz4gwrjj309r04saaf.jpg" alt="1D9D22C4-D7CC-42C1-A409-DDF852FEF696"></p>
-<p>即为我们的请求参数。之后通过判断<code>$reflect</code>的方法中需要的参数最后返回参数列表<code>$args</code></p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1g0tjby7hrij309903d3yo.jpg" alt="39BE1DE5-F2C4-4374-8B77-CCBC3F425C31"></p>
-<p>回到<code>invokeMethod</code>方法,</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> $reflect-&gt;invokeArgs(<span class="keyword">isset</span>($class) ? $class : <span class="keyword">null</span>, $args);</span><br></pre></td></tr></table></figure>
-<p>这里调用了<code>$reflect</code>的<code>invokeArgs</code>方法，即通过反射调用<code>/think/App</code>类的<code>invokefunction</code>方法。</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="function"><span class="keyword">function</span> <span class="title">invokeFunction</span><span class="params">($function, $vars = [])</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        $reflect = <span class="keyword">new</span> \ReflectionFunction($function);</span><br><span class="line">        $args    = <span class="keyword">self</span>::bindParams($reflect, $vars);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 记录执行信息</span></span><br><span class="line">        <span class="keyword">self</span>::$debug &amp;&amp; Log::record(<span class="string">'[ RUN ] '</span> . $reflect-&gt;__toString(), <span class="string">'info'</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> $reflect-&gt;invokeArgs($args);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>可以看到最后<code>invokeFunction()</code>相当于直接调用<code>call_user_func_array(&quot;phpinfo&quot;,[1])</code></p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1g0tiz031joj30zq05t765.jpg" alt="5DD9C4E3-7EC3-49FE-B316-63F18FEDF455"></p>
-<p>可见整个RCE的原因便是由于thinkphp在获取控制器时过滤不足导致可以任意生成类的实例调用指定的方法而导致的。怎样获取其他的可用的RCE的poc？我们可以在<code>Loader::controller</code>方法中添加一行代码:</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$t=get_declared_classes();</span><br></pre></td></tr></table></figure>
-<p>在这行代码后的代码处下断点调试</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1g0tiyvyb17j30iv08x0tr.jpg" alt="7A4DEE2D-287B-4B00-852A-7D593E6308C7"></p>
-<p>可以看到这些类都是tp中可用的用来RCE的类，我们只需要再多研究便可发现其他的利用链。</p>
-<p>修复方法也是很简单粗暴，只需要过滤掉反斜杠即可。</p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2201,7 +2185,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">62</span>
+                    <span class="site-state-item-count">63</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
